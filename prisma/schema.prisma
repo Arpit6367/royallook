@@ -1,142 +1,94 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "mysql" // or postgresql
   url      = env("DATABASE_URL")
-}
-
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  password      String
-  role          UserRole  @default(STUDENT)
-  stage         Stage     @default(NONE)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  accounts      Account[]
-  sessions      Session[]
-  enrollments   Enrollment[]
-  payments      Payment[]
-  progress      Progress[]
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-model Payment {
-  id              String        @id @default(cuid())
-  userId          String
-  stage           Stage
-  amount          Float
-  currency        String        @default("usd")
-  status          PaymentStatus @default(PENDING)
-  stripePaymentId String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Enrollment {
-  id        String   @id @default(cuid())
-  userId    String
-  stage     Stage
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, stage])
-}
-
-model Puzzle {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  fen         String
-  solution    String
-  stage       Stage
-  difficulty  Int      @default(1)
-  category    String?
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  progress Progress[]
-
-  @@index([stage, order])
-}
-
-model Progress {
-  id          String   @id @default(cuid())
-  userId      String
-  puzzleId    String
-  completed   Boolean  @default(false)
-  attempts    Int      @default(0)
-  lastAttempt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  puzzle Puzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, puzzleId])
 }
 
 enum UserRole {
   ADMIN
+  COACH
   STUDENT
 }
 
 enum Stage {
-  NONE
   BEGINNER
   INTERMEDIATE
   ADVANCED
 }
 
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(STUDENT)
+  
+  // Student Specifics
+  stage     Stage    @default(BEGINNER)
+  coachId   String?
+  coach     User?    @relation("CoachStudents", fields: [coachId], references: [id])
+  students  User[]   @relation("CoachStudents") // For Coaches
+
+  assignments Assignment[]
+  progress    Progress[]
+}
+
+model Folder {
+  id        String   @id @default(uuid())
+  name      String
+  
+  // Hierarchy
+  stage     Stage?   // Only root folders have a stage
+  parentId  String?
+  parent    Folder?  @relation("SubFolders", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Folder[] @relation("SubFolders")
+  
+  puzzles   Puzzle[]
+}
+
+model Puzzle {
+  id          String   @id @default(uuid())
+  title       String
+  fen         String   @db.Text
+  solution    String   @db.Text // Space separated moves "e4 e5 Nf3"
+  
+  folderId    String
+  folder      Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  assignments Assignment[]
+  progress    Progress[]
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  studentId   String
+  student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  puzzleId    String
+  puzzle      Puzzle   @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+  
+  assignedBy  String   // Name/ID of Coach/Admin
+  isCompleted Boolean  @default(false)
+  assignedAt  DateTime @default(now())
+}
+
+model Progress {
+  id          String   @id @default(uuid())
+  studentId   String
+  student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  puzzleId    String
+  puzzle      Puzzle   @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+
+  isSolved    Boolean  @default(false)
+  attempts    Int      @default(0)
+  timeSpent   Int      @default(0) // Seconds
+  mistakes    Json     @default("[]") // Array of wrong move strings
+  
+  lastPlayed  DateTime @updatedAt
+  
+  @@unique([studentId, puzzleId])
 }

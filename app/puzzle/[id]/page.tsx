@@ -2,256 +2,202 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, XCircle, Lightbulb } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, CheckCircle, XCircle, Lightbulb, RotateCcw, Play, Loader2 } from "lucide-react";
+import { toast } from "sonner"; // Remove if you don't use Sonner
 
 interface Puzzle {
   id: string;
   fen: string;
-  solution: string; // space-separated: "e2e4 e7e5 d2d4 d7d5"
+  solution: string;
   stage: string;
   title: string;
   description?: string;
 }
 
 export default function PuzzlePage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
   const puzzleId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
-  const [game, setGame] = useState<Chess | null>(null);
-  const [currentFen, setCurrentFen] = useState("");
-  const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
-  const [hint, setHint] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [game, setGame] = useState(new Chess());
+  const [solutionMoves, setSolutionMoves] = useState<string[]>([]);
+  const [moveIndex, setMoveIndex] = useState(0);
+  
+  const [statusState, setStatusState] = useState<"IDLE" | "CORRECT" | "WRONG" | "COMPLETED">("IDLE");
+  const [containerWidth, setContainerWidth] = useState(500);
+  const boardContainerRef = useRef<HTMLDivElement>(null);
 
-  // NEW — index of next expected solution move
-  const [solutionIndex, setSolutionIndex] = useState(0);
-  const [isSolving, setIsSolving] = useState(false);
-
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
+  // --- 1. RESPONSIVE BOARD ---
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    } else if (status === "authenticated" && puzzleId) {
-      fetchPuzzle(puzzleId);
+    if (!boardContainerRef.current) return;
+    const resizeObserver = new ResizeObserver(() => {
+      if (boardContainerRef.current) setContainerWidth(boardContainerRef.current.offsetWidth);
+    });
+    resizeObserver.observe(boardContainerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // --- 2. FETCH DATA ---
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/api/auth/signin");
+    if (status === "authenticated" && puzzleId) {
+      fetch(`/api/puzzles/${puzzleId}/details`)
+        .then((res) => {
+          if(!res.ok) throw new Error("Failed");
+          return res.json();
+        })
+        .then((data) => {
+          setPuzzle(data);
+          const newGame = new Chess(data.fen);
+          setGame(newGame);
+          setSolutionMoves(data.solution.trim().split(" "));
+          setMoveIndex(0);
+        })
+        .catch(() => router.push("/learn"));
     }
-  }, [status, router, puzzleId]);
+  }, [status, puzzleId, router]);
 
-  const fetchPuzzle = useCallback(
-    async (id: string) => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/puzzles/${id}/details`);
-        if (!res.ok) {
-          toast.error("You do not have access to this puzzle.");
-          router.push("/learn");
-          return;
-        }
+  // --- 3. MOVE LOGIC ---
+  const onDrop = (source: string, target: string) => {
+    if (statusState === "COMPLETED" || statusState === "WRONG") return false;
 
-        const data: Puzzle = await res.json();
-        setPuzzle(data);
-
-        const g = new Chess(data.fen);
-        setGame(g);
-        setCurrentFen(data.fen);
-        setSolutionIndex(0); // RESET PROGRESS
-
-      } catch (err) {
-        toast.error("Failed to load puzzle.");
-        router.push("/learn");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [router]
-  );
-
-  const updateProgress = async (completed: boolean) => {
     try {
-      await fetch("/api/progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          puzzleId,
-          completed,
-        }),
-      });
-    } catch (err) {
-      toast.error("Failed to save progress.");
-    }
-  };
+      // 1. Validate Chess Move
+      const gameCopy = new Chess(game.fen());
+      const move = gameCopy.move({ from: source, to: target, promotion: "q" });
+      if (!move) return false;
 
-  // ⭐⭐⭐ — FULL SEQUENTIAL SOLUTION LOGIC HERE
-  const onDrop = useCallback(
-    (source: string, target: string) => {
-      if (!game || result || isSolving) return false;
-
-      const solutionMoves = puzzle?.solution.split(" ") || [];
-      const expectedMove = solutionMoves[solutionIndex]; // ← expected next user move
-
-      const userMove = `${source}${target}`;
-
-      // Check if user's move equals expected solution move
-      if (userMove !== expectedMove) {
-        toast.error("Incorrect move. Try again!");
-        setResult("incorrect");
-        updateProgress(false);
+      // 2. Validate Solution
+      const expectedMoveSan = solutionMoves[moveIndex];
+      if (move.san === expectedMoveSan) {
+        setGame(gameCopy);
+        handleCorrectStep();
+        return true;
+      } else {
+        handleIncorrect(move.san);
         return false;
       }
-
-      // ============================
-      // USER PLAYED CORRECT MOVE
-      // ============================
-      game.move({ from: source, to: target, promotion: "q" });
-      setCurrentFen(game.fen());
-
-      const nextIndex = solutionIndex + 1;
-
-      // If puzzle still expects engine reply move at odd index
-      const engineMove = solutionMoves[nextIndex];
-      const isEngineTurn = nextIndex < solutionMoves.length;
-
-      if (isEngineTurn) {
-        // Engine moves automatically
-        const engineFrom = engineMove.slice(0, 2);
-        const engineTo = engineMove.slice(2, 4);
-
-        game.move({ from: engineFrom, to: engineTo, promotion: "q" });
-        setCurrentFen(game.fen());
-      }
-
-      const newIndex = solutionIndex + 2; // player + engine
-      setSolutionIndex(newIndex);
-
-      // Check if puzzle is completed
-      if (newIndex >= solutionMoves.length) {
-        setResult("correct");
-        toast.success("🎉 Puzzle Completed!");
-        updateProgress(true);
-      }
-
-      return true;
-    },
-    [game, puzzle, solutionIndex, result, isSolving]
-  );
-
-  const resetPuzzle = () => {
-    if (!game || !puzzle) return;
-    game.load(puzzle.fen);
-    setCurrentFen(puzzle.fen);
-    setResult(null);
-    setHint("");
-    setSolutionIndex(0);
+    } catch { return false; }
   };
 
-  const showHint = () => {
-    if (!puzzle) return;
-    const moves = puzzle.solution.split(" ");
-    const nextMove = moves[solutionIndex];
-    if (!nextMove) {
-      toast.info("Puzzle is already completed.");
+  const handleCorrectStep = () => {
+    const nextIndex = moveIndex + 1;
+    if (nextIndex >= solutionMoves.length) {
+      setStatusState("COMPLETED");
+      updateProgress(true, null);
+      toast.success("Puzzle Solved!");
       return;
     }
-    toast.info(`Hint: Move ${nextMove.slice(0, 2)} → ${nextMove.slice(2, 4)}`);
-    setHint(`Try moving from ${nextMove.slice(0, 2)} to ${nextMove.slice(2, 4)}`);
+    setMoveIndex(nextIndex);
+    setStatusState("CORRECT");
+    
+    // Auto-play Opponent
+    setTimeout(() => {
+      const opponentMoveSan = solutionMoves[nextIndex];
+      if (opponentMoveSan) {
+        setGame((prev) => {
+          const g = new Chess(prev.fen());
+          g.move(opponentMoveSan);
+          return g;
+        });
+        setMoveIndex(nextIndex + 1);
+        setStatusState("IDLE");
+      }
+    }, 500);
   };
 
-  const boardWidth = useMemo(() => {
-    if (!mounted) return 600;
-    return Math.min(600, window.innerWidth - 40);
-  }, [mounted]);
+  const handleIncorrect = (wrongMoveSan: string) => {
+    setStatusState("WRONG");
+    toast.error("Incorrect move");
+    updateProgress(false, wrongMoveSan);
+    setTimeout(() => setStatusState("IDLE"), 1500);
+  };
 
-  if (loading || status === "loading")
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
-    );
+  // --- 4. API ---
+  const updateProgress = async (isSolved: boolean, wrongMove: string | null) => {
+    const studentId = (session?.user as any)?.id;
+    if (!studentId) return;
 
-  if (!puzzle)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Button onClick={() => router.push("/learn")}>Back</Button>
-      </div>
-    );
+    await fetch("/api/progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        studentId, 
+        puzzleId, 
+        isCorrect: isSolved,
+        wrongMove
+      }),
+    });
+  };
+
+  const resetPuzzle = () => {
+    if (!puzzle) return;
+    setGame(new Chess(puzzle.fen));
+    setMoveIndex(0);
+    setStatusState("IDLE");
+  };
+
+  if (!puzzle) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin mr-2"/> Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <Button onClick={() => router.push("/learn")} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Learning
-        </Button>
+    <div className="min-h-screen bg-stone-100 py-8 px-4 flex flex-col items-center">
+      <div className="w-full max-w-5xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={() => router.push('/learn')} className="flex items-center text-stone-500 hover:text-black font-bold transition">
+            <ArrowLeft className="mr-2 h-5 w-5" /> Back to Dashboard
+          </button>
+          <div className="text-center">
+             <h1 className="text-2xl font-bold text-stone-800">{puzzle.title}</h1>
+             <span className="text-xs font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase tracking-wider">{puzzle.stage}</span>
+          </div>
+          <div className="w-20" />
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
-            {mounted && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          {/* Board */}
+          <div className="flex justify-center md:justify-end">
+            <div ref={boardContainerRef} className="w-full max-w-[550px] aspect-square shadow-2xl rounded-lg overflow-hidden border-[6px] border-stone-300 bg-white">
               <Chessboard
-                position={currentFen}
+                position={game.fen()}
                 onPieceDrop={onDrop}
-                boardWidth={boardWidth}
-                customDarkSquareStyle={{ backgroundColor: "#769656" }}
-                customLightSquareStyle={{ backgroundColor: "#eeeed2" }}
-                arePiecesDraggable={result !== "correct"}
+                boardWidth={containerWidth}
+                animationDuration={200}
+                customDarkSquareStyle={{ backgroundColor: "#779556" }}
+                customLightSquareStyle={{ backgroundColor: "#ebecd0" }}
               />
-            )}
-
-            <div className="mt-6 flex gap-4 w-full max-w-[600px]">
-              <Button className="flex-1" variant="outline" onClick={resetPuzzle}>
-                Reset
-              </Button>
-              <Button className="flex-1" variant="outline" onClick={showHint}>
-                <Lightbulb className="mr-2" /> Hint
-              </Button>
             </div>
           </div>
 
-          {/* DETAILS */}
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <span className="bg-[#769656] text-white px-3 py-1 rounded-full text-sm">
-              {puzzle.stage}
-            </span>
+          {/* Controls */}
+          <div className="flex flex-col justify-center space-y-6 max-w-md">
+            <div className={`p-6 rounded-xl border-2 flex items-center gap-4 transition-all duration-300 ${statusState === 'COMPLETED' ? 'bg-green-50 border-green-200 text-green-800' : statusState === 'WRONG' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-white border-stone-200 text-stone-600'}`}>
+               {statusState === 'COMPLETED' ? <CheckCircle className="h-10 w-10 text-green-600" /> : statusState === 'WRONG' ? <XCircle className="h-10 w-10 text-red-600" /> : <Play className="h-10 w-10 text-stone-400" />}
+               <div>
+                 <h2 className="font-bold text-lg">{statusState === 'COMPLETED' ? "Puzzle Solved!" : statusState === 'WRONG' ? "Incorrect Move" : `${game.turn() === 'w' ? "White" : "Black"} to Move`}</h2>
+                 <p className="text-sm opacity-80">{statusState === 'COMPLETED' ? "Great job! Return to menu." : "Find the best continuation."}</p>
+               </div>
+            </div>
 
-            <h1 className="text-3xl font-bold mt-4">{puzzle.title}</h1>
+            <div className="grid grid-cols-2 gap-4">
+               <button onClick={resetPuzzle} className="flex items-center justify-center gap-2 py-4 bg-white border-2 border-stone-200 rounded-xl font-bold text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition">
+                 <RotateCcw className="h-5 w-5"/> Reset
+               </button>
+               <button onClick={() => alert("Look for checks, captures, and threats!")} className="flex items-center justify-center gap-2 py-4 bg-white border-2 border-stone-200 rounded-xl font-bold text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition">
+                 <Lightbulb className="h-5 w-5"/> Hint
+               </button>
+            </div>
 
-            {puzzle.description && (
-              <p className="mt-3 text-gray-700">{puzzle.description}</p>
-            )}
-
-            {hint && (
-              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mt-6">
-                <Lightbulb className="inline-block mr-2 text-blue-600" />
-                {hint}
-              </div>
-            )}
-
-            {result === "correct" && (
-              <div className="bg-green-50 border border-green-200 p-4 rounded-lg mt-6 flex items-center gap-3">
-                <CheckCircle className="text-green-600" />
-                Puzzle Completed!
-              </div>
-            )}
-
-            {result === "incorrect" && (
-              <div className="bg-red-50 border border-red-200 p-4 rounded-lg mt-6 flex items-center gap-3">
-                <XCircle className="text-red-600" />
-                Incorrect move. Try again!
-              </div>
-            )}
-
-            {result === "correct" && (
-              <Button className="mt-4 w-full bg-[#769656]">
-                Next Puzzle
-              </Button>
+            {statusState === 'COMPLETED' && (
+              <button onClick={() => router.push('/learn')} className="w-full py-4 bg-green-600 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-green-700 transition transform active:scale-95">
+                Continue Learning
+              </button>
             )}
           </div>
         </div>

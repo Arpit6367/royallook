@@ -1,48 +1,77 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import prisma from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const { studentId, puzzleId, isCorrect, wrongMove } = await req.json();
 
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    // 1. Get current progress to handle mistakes array safely
+    const existingProgress = await prisma.progress.findUnique({
+      where: {
+        studentId_puzzleId: { studentId, puzzleId }
+      }
+    });
+
+    // Handle Mistakes Array (JSON)
+    let mistakesList = existingProgress ? (existingProgress.mistakes as string[]) || [] : [];
+    if (wrongMove) {
+      mistakesList.push(wrongMove);
     }
 
-    const { puzzleId, completed } = await req.json()
-
+    // 2. Update or Create Progress (Stats)
     const progress = await prisma.progress.upsert({
       where: {
-        userId_puzzleId: {
-          userId: session.user.id,
-          puzzleId
-        }
+        studentId_puzzleId: { studentId, puzzleId }
       },
       update: {
-        completed,
+        // If it was already solved, keep it solved. If new solve, mark true.
+        isSolved: isCorrect ? true : existingProgress?.isSolved, 
         attempts: { increment: 1 },
-        lastAttempt: new Date()
+        mistakes: mistakesList,
+        lastPlayed: new Date()
       },
       create: {
-        userId: session.user.id,
+        studentId,
         puzzleId,
-        completed,
+        isSolved: isCorrect,
         attempts: 1,
-        lastAttempt: new Date()
+        mistakes: wrongMove ? [wrongMove] : []
       }
-    })
+    });
 
-    return NextResponse.json(progress)
+    // 3. CRITICAL FIX: Update the Assignment Table
+    // This removes it from "To Do" and moves it to "History"
+    if (isCorrect) {
+      await prisma.assignment.updateMany({
+        where: {
+          studentId: studentId,
+          puzzleId: puzzleId
+        },
+        data: {
+          isCompleted: true
+        }
+      });
+    }
+
+    return NextResponse.json(progress);
+
   } catch (error) {
-    console.error('Error updating progress:', error)
-    return NextResponse.json(
-      { error: 'Failed to update progress' },
-      { status: 500 }
-    )
+    console.error("Progress Error:", error);
+    return NextResponse.json({ error: "Failed to save progress" }, { status: 500 });
   }
+}
+
+// GET method for fetching progress history
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const studentId = searchParams.get("studentId");
+
+  if (!studentId) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+
+  const progress = await prisma.progress.findMany({
+    where: { studentId },
+    orderBy: { lastPlayed: 'desc' }
+  });
+
+  return NextResponse.json(progress);
 }
