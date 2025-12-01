@@ -2,16 +2,35 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  // We now expect 'folderId' in the body
-  const puzzle = await prisma.puzzle.create({
-    data: {
-      title: body.title,
-      fen: body.fen,
-      solution: body.solution,
-      category: body.category,
-      folderId: body.folderId
+  try {
+    const body = await req.json();
+
+    const { title, fen, solution, category, folderId } = body;
+
+    // Validation
+    if (!title || !fen || !solution || !folderId) {
+      return NextResponse.json(
+        { error: "title, fen, solution, and folderId are required" },
+        { status: 400 }
+      );
     }
-  });
-  return NextResponse.json(puzzle);
+
+    const puzzle = await prisma.puzzle.create({
+      data: {
+        title,
+        fen,
+        solution,
+        category: category || null, // optional
+        folderId,
+      },
+    });
+
+    return NextResponse.json(puzzle);
+  } catch (error) {
+    console.error("Puzzle Create Error:", error);
+    return NextResponse.json(
+      { error: "Failed to create puzzle" },
+      { status: 500 }
+    );
+  }
 }

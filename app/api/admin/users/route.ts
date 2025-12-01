@@ -2,68 +2,139 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
+// ------------------------------
+// GET — List all users
+// ------------------------------
 export async function GET() {
-  const users = await prisma.user.findMany({
-    include: { coach: true, _count: { select: { students: true } } }
-  });
-  return NextResponse.json(users);
-}
-
-export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    
-    // 1. Validation
-    if (!body.email || !body.password || !body.name || !body.role) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-
-    const hashedPassword = await bcrypt.hash(body.password, 10);
-
-    // 2. Prepare Data (Sanitize inputs)
-    const userData: any = {
-      name: body.name,
-      email: body.email,
-      password: hashedPassword,
-      role: body.role,
-    };
-
-    // Only add Student-specific fields if the role is STUDENT
-    if (body.role === 'STUDENT') {
-      userData.stage = body.stage || 'BEGINNER';
-      // Convert empty string to null for database compatibility
-      userData.coachId = body.coachId && body.coachId.trim() !== "" ? body.coachId : null;
-    } else {
-      // For Coaches/Admins, ensure these are null/undefined
-      userData.stage = 'BEGINNER'; // Default or null depending on schema
-      userData.coachId = null;
-    }
-
-    const user = await prisma.user.create({
-      data: userData
+    const users = await prisma.user.findMany({
+      include: {
+        coach: true,
+        _count: { select: { students: true } }
+      }
     });
 
-    return NextResponse.json(user);
-  } catch (e: any) {
-    console.error("Create User Error:", e);
-    // Return specific error if it's a unique constraint (duplicate email)
-    if (e.code === 'P2002') {
-      return NextResponse.json({ error: "Email already exists" }, { status: 400 });
-    }
-    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+    return NextResponse.json(users);
+  } catch (e) {
+    console.error("GET Users Error:", e);
+    return NextResponse.json({ error: "Failed to load users" }, { status: 500 });
   }
 }
 
-export async function PUT(req: Request) {
-  const { id, ...data } = await req.json();
-  // Handle password update if provided
-  if (data.password) data.password = await bcrypt.hash(data.password, 10);
-  const user = await prisma.user.update({ where: { id }, data });
-  return NextResponse.json(user);
+// ------------------------------
+// POST — Create user
+// ------------------------------
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { email, password, name, role, stage, coachId } = body;
+
+    // 1. Validate required fields
+    if (!email || !password || !name || !role) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // 2. Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 3. Prepare user data
+    const data: any = {
+      name,
+      email,
+      password: hashedPassword,
+      role,
+    };
+
+    if (role === "STUDENT") {
+      data.stage = stage || "BEGINNER";
+      data.coachId = coachId?.trim() ? coachId : null;
+    } else {
+      data.stage = "BEGINNER"; // Default
+      data.coachId = null;
+    }
+
+    // 4. Create user
+    const user = await prisma.user.create({ data });
+    return NextResponse.json(user);
+
+  } catch (e: any) {
+    console.error("Create User Error:", e);
+
+    if (e.code === "P2002") {
+      return NextResponse.json(
+        { error: "Email already exists" },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Failed to create user" },
+      { status: 500 }
+    );
+  }
 }
 
+// ------------------------------
+// PUT — Update user
+// ------------------------------
+export async function PUT(req: Request) {
+  try {
+    const body = await req.json();
+    const { id, password, role, ...rest } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing user id" }, { status: 400 });
+    }
+
+    const data: any = { ...rest };
+
+    // Hash new password if provided
+    if (password) {
+      data.password = await bcrypt.hash(password, 10);
+    }
+
+    // Prevent role from being updated accidentally
+    if (role) {
+      data.role = role;
+      if (role !== "STUDENT") {
+        // Coaches/Admins should not have student properties
+        data.stage = "BEGINNER";
+        data.coachId = null;
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data
+    });
+
+    return NextResponse.json(updatedUser);
+
+  } catch (e) {
+    console.error("Update User Error:", e);
+    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+  }
+}
+
+// ------------------------------
+// DELETE — Remove user
+// ------------------------------
 export async function DELETE(req: Request) {
-  const { id } = await req.json();
-  await prisma.user.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+  try {
+    const { id } = await req.json();
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing user id" }, { status: 400 });
+    }
+
+    await prisma.user.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error("Delete User Error:", e);
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
+  }
 }

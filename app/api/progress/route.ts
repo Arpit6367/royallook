@@ -5,27 +5,30 @@ export async function POST(req: Request) {
   try {
     const { studentId, puzzleId, isCorrect, wrongMove } = await req.json();
 
-    // 1. Get current progress to handle mistakes array safely
-    const existingProgress = await prisma.progress.findUnique({
-      where: {
-        studentId_puzzleId: { studentId, puzzleId }
-      }
+    if (!studentId || !puzzleId) {
+      return NextResponse.json(
+        { error: "Missing studentId or puzzleId" },
+        { status: 400 }
+      );
+    }
+
+    // 1. Fetch existing progress if it exists
+    const existing = await prisma.progress.findUnique({
+      where: { studentId_puzzleId: { studentId, puzzleId } }
     });
 
-    // Handle Mistakes Array (JSON)
-    let mistakesList = existingProgress ? (existingProgress.mistakes as string[]) || [] : [];
-    if (wrongMove) {
+    // Prepare mistake list
+    let mistakesList: string[] = existing?.mistakes ? [...(existing.mistakes as string[])] : [];
+
+    if (wrongMove && typeof wrongMove === "string") {
       mistakesList.push(wrongMove);
     }
 
-    // 2. Update or Create Progress (Stats)
+    // 2. Upsert progress stats
     const progress = await prisma.progress.upsert({
-      where: {
-        studentId_puzzleId: { studentId, puzzleId }
-      },
+      where: { studentId_puzzleId: { studentId, puzzleId } },
       update: {
-        // If it was already solved, keep it solved. If new solve, mark true.
-        isSolved: isCorrect ? true : existingProgress?.isSolved, 
+        isSolved: isCorrect ? true : existing?.isSolved ?? false,
         attempts: { increment: 1 },
         mistakes: mistakesList,
         lastPlayed: new Date()
@@ -33,23 +36,17 @@ export async function POST(req: Request) {
       create: {
         studentId,
         puzzleId,
-        isSolved: isCorrect,
+        isSolved: !!isCorrect,
         attempts: 1,
         mistakes: wrongMove ? [wrongMove] : []
       }
     });
 
-    // 3. CRITICAL FIX: Update the Assignment Table
-    // This removes it from "To Do" and moves it to "History"
+    // 3. Mark assignment completed if solved
     if (isCorrect) {
       await prisma.assignment.updateMany({
-        where: {
-          studentId: studentId,
-          puzzleId: puzzleId
-        },
-        data: {
-          isCompleted: true
-        }
+        where: { studentId, puzzleId, isCompleted: false },
+        data: { isCompleted: true }
       });
     }
 
@@ -57,21 +54,37 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error("Progress Error:", error);
-    return NextResponse.json({ error: "Failed to save progress" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to save progress" },
+      { status: 500 }
+    );
   }
 }
 
-// GET method for fetching progress history
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const studentId = searchParams.get("studentId");
+  try {
+    const { searchParams } = new URL(req.url);
+    const studentId = searchParams.get("studentId");
 
-  if (!studentId) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+    if (!studentId) {
+      return NextResponse.json(
+        { error: "Missing studentId" },
+        { status: 400 }
+      );
+    }
 
-  const progress = await prisma.progress.findMany({
-    where: { studentId },
-    orderBy: { lastPlayed: 'desc' }
-  });
+    const progress = await prisma.progress.findMany({
+      where: { studentId },
+      orderBy: { lastPlayed: "desc" }
+    });
 
-  return NextResponse.json(progress);
+    return NextResponse.json(progress);
+
+  } catch (error) {
+    console.error("Progress Fetch Error:", error);
+    return NextResponse.json(
+      { error: "Failed to load progress" },
+      { status: 500 }
+    );
+  }
 }

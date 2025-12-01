@@ -1,8 +1,28 @@
-// src/app/api/auth/[...nextauth]/route.ts
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+
+// Basic in-memory rate limiter (serverless compat)
+const attemptTracker = new Map<string, { count: number; lastAttempt: number }>();
+const MAX_ATTEMPTS = 10;
+const WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+
+function rateLimit(ip: string) {
+  const now = Date.now();
+  const record = attemptTracker.get(ip) || { count: 0, lastAttempt: now };
+
+  if (now - record.lastAttempt > WINDOW_MS) {
+    record.count = 0;
+  }
+
+  record.lastAttempt = now;
+  record.count += 1;
+
+  attemptTracker.set(ip, record);
+
+  return record.count > MAX_ATTEMPTS;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -10,51 +30,86 @@ export const authOptions: NextAuthOptions = {
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+      async authorize(credentials, req) {
+        try {
+          const ip =
+            req?.headers?.["x-forwarded-for"] ||
+            req?.socket?.remoteAddress ||
+            "unknown";
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+          // Rate limit brute-force attacks
+          if (rateLimit(String(ip))) {
+            console.warn("Rate limit triggered for:", ip);
+            return null;
+          }
 
-        if (!user) return null;
+          if (!credentials?.email || !credentials?.password) {
+            return null;
+          }
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
 
-        if (!isValid) return null;
+          if (!user) return null;
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
+          const isValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isValid) return null;
+
+          // Return only safe user data
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error("Auth Error:", error);
+          return null;
+        }
       },
     }),
   ],
+
   session: { strategy: "jwt" },
+
   callbacks: {
-    async jwt({ token, user }: any) {
+    // JWT token creation
+    async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
         token.id = user.id;
+        token.role = user.role;
+        token.name = user.name;
+        token.email = user.email;
       }
       return token;
     },
+
+    // Session object sent to client
     async session({ session, token }: any) {
       if (session.user) {
-        session.user.role = token.role;
         session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.email = token.email;
+        session.user.name = token.name;
       }
       return session;
     },
   },
+
   pages: {
-    signIn: '/auth/signin', // Optional custom page
-  }
+    signIn: "/auth/signin",
+  },
+
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);
+
 export { handler as GET, handler as POST };
