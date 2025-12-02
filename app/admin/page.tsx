@@ -314,7 +314,17 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
     if (mode === 'SETUP') {
       // Validate Board
       const f = game.current.fen()
-      if (!f.includes('w') || !f.includes('b')) return alert("Invalid board. Needs Kings.")
+      // Grab only the board layout part (before the first space)
+const boardOnly = f.split(" ")[0];
+
+// Check if it contains 'k' and 'K'
+const hasWhiteKing = boardOnly.includes("K");
+const hasBlackKing = boardOnly.includes("k");
+
+if (!hasWhiteKing || !hasBlackKing) {
+  return alert("Invalid board. Both kings are required.");
+}
+
       setStartFen(f)
       setMoves([])
       setMode('RECORD')
