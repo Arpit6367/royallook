@@ -12,6 +12,12 @@ export default function SignInPage() {
   const router = useRouter()
   const { data: session, status } = useSession()
 
+  // ✅ FIX: Define all state hooks BEFORE any return statements
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
   // Redirect when logged in
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
@@ -22,11 +28,10 @@ export default function SignInPage() {
     }
   }, [session, status, router])
 
-  // 🚀 **REQUIRED:** Avoid hydration mismatch
   const isAuth = status === 'authenticated'
   const isLoading = status === 'loading'
 
-  // Only show redirect / loading screen
+  // ✅ NOW it is safe to return early, because all hooks have been registered
   if (isLoading || isAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -36,11 +41,6 @@ export default function SignInPage() {
   }
 
   // ---- Normal sign in screen ----
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -52,8 +52,11 @@ export default function SignInPage() {
       redirect: false
     })
 
-    if (result?.error) setError('Invalid email or password')
-    else router.refresh()
+    if (result?.error) {
+      setError('Invalid email or password')
+    } else {
+      router.refresh()
+    }
 
     setLoading(false)
   }
