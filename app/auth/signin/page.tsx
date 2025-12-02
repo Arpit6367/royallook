@@ -14,25 +14,28 @@ export default function SignInPage() {
 
   // Redirect when logged in
   useEffect(() => {
-    if (status !== 'authenticated') return
-    if (!session?.user) return
-
-    const role = session.user.role
-
-    if (role === 'admin') router.push('/admin')
-    else if (role === 'coach') router.push('/coach')
-    else router.push('/learn')
+    if (status === 'authenticated' && session?.user) {
+      const role = session.user.role
+      if (role === 'admin') router.push('/admin')
+      else if (role === 'coach') router.push('/coach')
+      else router.push('/learn')
+    }
   }, [session, status, router])
 
-  if (status === 'loading') {
-    return <div className="text-center mt-20">Loading...</div>
+  // 🚀 **REQUIRED:** Avoid hydration mismatch
+  const isAuth = status === 'authenticated'
+  const isLoading = status === 'loading'
+
+  // Only show redirect / loading screen
+  if (isLoading || isAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>{isLoading ? 'Loading...' : 'Redirecting...'}</p>
+      </div>
+    )
   }
 
-  if (status === 'authenticated') {
-    return <div className="text-center mt-20">Redirecting...</div>
-  }
-
-  // Sign-in form only when NOT logged in
+  // ---- Normal sign in screen ----
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -46,14 +49,11 @@ export default function SignInPage() {
     const result = await signIn('credentials', {
       email,
       password,
-      redirect: false,
+      redirect: false
     })
 
-    if (result?.error) {
-      setError('Invalid email or password')
-    } else {
-      router.refresh()
-    }
+    if (result?.error) setError('Invalid email or password')
+    else router.refresh()
 
     setLoading(false)
   }
