@@ -12,24 +12,27 @@ export default function SignInPage() {
   const router = useRouter()
   const { data: session, status } = useSession()
 
-  // 🚀 AUTO-REDIRECT IF ALREADY LOGGED IN
+  // Redirect when logged in
   useEffect(() => {
-    if (status === 'authenticated') {
-      const role = session?.user?.role
+    if (status !== 'authenticated') return
+    if (!session?.user) return
 
-      if (role === 'admin') router.push('/admin')
-      else if (role === 'coach') router.push('/coach')
-      else router.push('/learn')
-    }
+    const role = session.user.role
+
+    if (role === 'admin') router.push('/admin')
+    else if (role === 'coach') router.push('/coach')
+    else router.push('/learn')
   }, [session, status, router])
 
-  // Show nothing while session loads
-  if (status === 'loading') return <div>Loading...</div>
+  if (status === 'loading') {
+    return <div className="text-center mt-20">Loading...</div>
+  }
 
-  // Show nothing if redirecting
-  if (status === 'authenticated') return null
+  if (status === 'authenticated') {
+    return <div className="text-center mt-20">Redirecting...</div>
+  }
 
-  // 👇 The sign-in form appears ONLY for unauthenticated users
+  // Sign-in form only when NOT logged in
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -40,21 +43,19 @@ export default function SignInPage() {
     setError('')
     setLoading(true)
 
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false
-      })
+    const result = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    })
 
-      if (result?.error) {
-        setError('Invalid email or password')
-      } else {
-        router.refresh()
-      }
-    } finally {
-      setLoading(false)
+    if (result?.error) {
+      setError('Invalid email or password')
+    } else {
+      router.refresh()
     }
+
+    setLoading(false)
   }
 
   return (
