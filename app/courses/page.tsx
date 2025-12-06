@@ -2,36 +2,36 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   BookOpen,
   Target,
   Trophy,
-  Crown,
-  Clock,
-  Users,
-  Star,
-  Filter,
   ArrowRight,
+  X,
 } from "lucide-react";
-import { format } from "date-fns";
 import Link from "next/link";
 
-// Brand Colors
 const primaryColor = "#5C1F1C";
 const accentColor = "#FFC727";
 
 function ThreeDCard({
   children,
   className = "",
+  onClick,
 }: {
   children: React.ReactNode;
   className?: string;
+  onClick?: () => void;
 }) {
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
@@ -43,24 +43,23 @@ function ThreeDCard({
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const rotateX = (y - centerY) / 15;
-    const rotateY = (centerX - x) / 15;
+    const rotateX = (y - centerY) / 12;
+    const rotateY = (centerX - x) / 12;
     setRotate({ x: rotateX, y: rotateY });
   };
-
-  const handleMouseLeave = () => setRotate({ x: 0, y: 0 });
 
   return (
     <motion.div
       ref={cardRef}
-      className={`transform-gpu transition-all duration-300 ease-out ${className}`}
+      className={`transform-gpu transition-all duration-300 ease-out cursor-pointer ${className}`}
       style={{
         transform: `perspective(1200px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
       }}
       onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      whileHover={{ scale: 1.02 }}
+      onMouseLeave={() => setRotate({ x: 0, y: 0 })}
+      whileHover={{ scale: 1.04 }}
       whileTap={{ scale: 0.98 }}
+      onClick={onClick}
     >
       {children}
     </motion.div>
@@ -68,450 +67,256 @@ function ThreeDCard({
 }
 
 export default function CoursesPage() {
-  const [selectedFilter, setSelectedFilter] = useState("all");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const courses = [
     {
       id: 1,
-      title: "Beginner Level 1",
+      title: "Beginner Course",
       level: "Beginner",
-      duration: "3 Months",
-      price: "₹15,000",
-      students: "120+",
-      rating: "4.9",
-      icon: BookOpen,
-      image: "/demo/course-1.jpg",
-      description: "Perfect for kids & adults starting from zero. Learn rules, piece movement, and basic checkmates.",
-      schedule: "2 classes/week (1.5 hrs each)",
-      ageGroup: "6+ years",
-      classSize: "8–10 students",
-      date: "2025-12-01",
+      image: "/chess-academy-instructor-teaching-students.jpg",
+      description: "From zero to playing full games. Perfect for kids & adults starting chess.",
+      topics: [
+        "Introduction to board & pieces",
+        "Piece Movements",
+        "Attacking & Capturing",
+        "Defending the pieces",
+        "The King",
+        "Checkmate",
+        "Castling",
+        "The correct way to exchange pieces",
+        "Twofold Attack",
+        "Stalemate",
+        "Mating with King + Queen",
+        "Special move: Pawn en passant",
+      ],
     },
     {
       id: 2,
-      title: "Beginner Level 2",
-      level: "Beginner",
-      duration: "3 Months",
-      price: "₹15,000",
-      students: "95+",
-      rating: "4.8",
-      icon: BookOpen,
-      image: "/demo/course-2.jpg",
-      description: "Master elementary checkmates and simple tactics. Play your first real games with confidence.",
-      schedule: "2 classes/week (1.5 hrs each)",
-      ageGroup: "6+ years",
-      classSize: "8–10 students",
-      date: "2025-12-05",
+      title: "Intermediate Course",
+      level: "Intermediate",
+      image: "/chess-tournament.png",
+      description: "Master tactics, strategy, and real game understanding. Stop blundering forever.",
+      topics: [
+        "Piece Mobility",
+        "Fork, Pin, Double attack, Discovered Attack",
+        "The Golden Rules",
+        "Mate in two",
+        "Eliminating The Defender",
+        "Targeting a square",
+        "Defending Against Mate",
+        "King + Rook Checkmate",
+        "Notations",
+      ],
     },
     {
       id: 3,
-      title: "Intermediate Level 1",
-      level: "Intermediate",
-      duration: "4 Months",
-      price: "₹20,000",
-      students: "80+",
-      rating: "4.8",
-      icon: Target,
-      image: "/demo/course-3.jpg",
-      description: "Build tactical vision. Solve 2–3 move combinations and avoid blunders.",
-      schedule: "3 classes/week (2 hrs each)",
-      ageGroup: "8+ years",
-      classSize: "6–8 students",
-      date: "2025-12-10",
-    },
-    {
-      id: 4,
-      title: "Intermediate Level 2",
-      level: "Intermediate",
-      duration: "4 Months",
-      price: "₹20,000",
-      students: "75+",
-      rating: "4.8",
-      icon: Target,
-      image: "/demo/course-4.jpg",
-      description: "Learn opening strategy, pawn play, and positional concepts.",
-      schedule: "3 classes/week (2 hrs each)",
-      ageGroup: "8+ years",
-      classSize: "6–8 students",
-      date: "2025-12-15",
-    },
-    {
-      id: 5,
-      title: "Intermediate Level 3",
-      level: "Intermediate",
-      duration: "4 Months",
-      price: "₹20,000",
-      students: "60+",
-      rating: "4.9",
-      icon: Target,
-      image: "/demo/course-5.jpg",
-      description: "Master complex tactics and start building your own opening repertoire.",
-      schedule: "3 classes/week (2 hrs each)",
-      ageGroup: "8+ years",
-      classSize: "6–8 students",
-      date: "2025-12-20",
-    },
-    {
-      id: 6,
-      title: "Advanced Level 1",
+      title: "Advanced Course",
       level: "Advanced",
-      duration: "6 Months",
-      price: "₹30,000",
-      students: "40+",
-      rating: "4.9",
-      icon: Trophy,
-      image: "/demo/course-6.jpg",
-      description: "Tournament-ready training. Deep opening prep, endgame mastery, and psychological edge.",
-      schedule: "4 classes/week (2.5 hrs each)",
-      ageGroup: "12+ years",
-      classSize: "4–6 students",
-      date: "2026-01-05",
-    },
-    {
-      id: 7,
-      title: "Advanced Level 2",
-      level: "Expert",
-      duration: "6 Months",
-      price: "₹35,000",
-      students: "25+",
-      rating: "5.0",
-      icon: Crown,
-      image: "/demo/course-7.jpg",
-      description: "Elite path to 2000+ ELO. GM-level concepts, blindfold training, and tournament simulation.",
-      schedule: "4 classes/week (2.5 hrs each)",
-      ageGroup: "14+ years",
-      classSize: "3–4 students",
-      date: "2026-01-10",
-    },
-    {
-      id: 8,
-      title: "Masterclass Series",
-      level: "Master",
-      duration: "3 Months",
-      price: "₹50,000",
-      students: "15+",
-      rating: "5.0",
-      icon: Crown,
-      image: "/demo/course-8.jpg",
-      description: "Exclusive 1-on-1 with IM/GM. For rated 1800+ players aiming for titles.",
-      schedule: "Flexible (2–3 hrs/week)",
-      ageGroup: "16+ years",
-      classSize: "1 student",
-      date: "2026-01-15",
+      image: "/chess-simultaneous.jpg",
+      description: "Tournament-ready chess. Deep strategy, endgames, openings & psychological mastery.",
+      topics: [
+        "Finishing the opening",
+        "Discovered and Double Check",
+        "Breaching the king’s Defences",
+        "Pawn endings: Square of the Pawn, Key squares",
+        "Defending against Tactics",
+        "Mini Plans",
+        "X-ray Attack",
+        "Positional mastery & prophylaxis",
+        "Endgame technique",
+        "& More tournament-level concepts...",
+      ],
     },
   ];
 
-  const filters = [
-    { id: "all", name: "All Courses", icon: BookOpen },
-    { id: "beginner", name: "Beginner", icon: BookOpen },
-    { id: "intermediate", name: "Intermediate", icon: Target },
-    { id: "advanced", name: "Advanced", icon: Trophy },
-    { id: "master", name: "Master", icon: Crown },
-  ];
-
-  const filteredCourses =
-    selectedFilter === "all"
-      ? courses
-      : courses.filter((c) => c.level.toLowerCase() === selectedFilter);
+  const openModal = (course: any) => {
+    setSelectedCourse(course);
+    setIsModalOpen(true);
+  };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section - Responsive */}
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+      {/* HERO */}
       <section
-        className="relative py-30 sm:py-28 md:py-36 lg:py-40 text-white overflow-hidden"
+        className="relative py-32 text-white overflow-hidden"
         style={{
           backgroundImage: 'url("/coursesbg.png")',
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        <div className="absolute inset-0 bg-black/80" />
-        <div className="max-w-7xl mx-auto text-center relative z-10 px-4 sm:px-6 lg:px-8">
-          <Badge
-            className="mb-3 text-xs sm:mb-4 sm:text-sm md:mb-6 md:text-lg"
-            style={{ backgroundColor: accentColor, color: primaryColor }}
-          >
-            Chess Courses
+        <div className="absolute inset-0 bg-black/75" />
+        <div className="relative z-10 max-w-7xl mx-auto text-center px-6">
+          <Badge className="mb-4 text-lg" style={{ backgroundColor: accentColor, color: primaryColor }}>
+            Structured Chess Training
           </Badge>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-3 sm:mb-4 md:mb-6 leading-tight">
-            Learn Chess at Every Level
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
+            Master Chess Step by Step
           </h1>
-          <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl max-w-4xl mx-auto leading-relaxed mb-6 sm:mb-8 md:mb-10 opacity-90">
-            From first move to grandmaster — structured, proven, and fun.
+          <p className="text-xl md:text-2xl max-w-4xl mx-auto mb-10 opacity-90">
+            Just 3 courses. From your first move to crushing opponents.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/contact">
-              <Button
-                size="lg"
-                className="bg-white text-[#5C1F1C] hover:bg-[#FFC727] hover:text-[#5C1F1C] px-6 sm:px-8 py-5 sm:py-6 rounded-full font-bold shadow-lg transition-all text-sm sm:text-base"
-              >
-                Book Free Trial
-              </Button>
-            </Link>
-            <Link href="#courses">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white text-white hover:bg-white/20 px-6 sm:px-8 py-5 sm:py-6 rounded-full backdrop-blur-sm text-sm sm:text-base"
-              >
-                View All Courses
+              <Button size="lg" className="bg-white text-[#5C1F1C] hover:bg-[#FFC727] px-10 py-7 text-xl font-bold rounded-full">
+                Book Free Trial Class
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Filter Buttons - Responsive */}
-      <section className="py-8 sm:py-10 lg:py-12 px-4 sm:px-6 lg:px-8">
+      {/* COURSES GRID */}
+      <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
-            <Filter className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: primaryColor }} />
-            <h2 className="text-xl sm:text-2xl font-extrabold" style={{ color: primaryColor }}>
-              Filter by Level
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-extrabold mb-4" style={{ color: primaryColor }}>
+              Our 3-Level Program
             </h2>
+            <p className="text-xl text-gray-600">Clear path. Proven results. No confusion.</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-            {filters.map((filter) => (
-              <Button
-                key={filter.id}
-                variant={selectedFilter === filter.id ? "default" : "outline"}
-                className={`h-14 sm:h-16 flex flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl transition-all backdrop-blur-md text-xs sm:text-sm ${
-                  selectedFilter === filter.id
-                    ? "bg-white/90 text-[#5C1F1C] border border-[#5C1F1C]/30 hover:bg-white"
-                    : "bg-white/70 text-[#5C1F1C] border border-[#5C1F1C]/20 hover:bg-white/80"
-                }`}
-                onClick={() => setSelectedFilter(filter.id)}
-              >
-                <filter.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="font-semibold">{filter.name}</span>
-              </Button>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Main Content - TABS */}
-      <section id="courses" className="py-10 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <Tabs defaultValue="grid" className="w-full">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8 gap-4">
-              <TabsList className="bg-white/80 backdrop-blur-md border border-[#5C1F1C]/20">
-                <TabsTrigger value="grid" className="data-[state=active]:bg-[#5C1F1C] data-[state=active]:text-white text-sm sm:text-base">
-                  Grid View
-                </TabsTrigger>
-                <TabsTrigger value="calendar" className="data-[state=active]:bg-[#5C1F1C] data-[state=active]:text-white text-sm sm:text-base">
-                  Calendar View
-                </TabsTrigger>
-              </TabsList>
-              <div className="flex items-center gap-2 text-gray-700">
-                <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="text-xs sm:text-sm font-medium">
-                  Showing {filteredCourses.length} of {courses.length} courses
-                </span>
-              </div>
-            </div>
-
-            {/* GRID VIEW - Responsive */}
-            <TabsContent value="grid">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
-                {filteredCourses.map((course, i) => (
-                  <motion.div
-                    key={course.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="h-full"
-                  >
-                    <ThreeDCard className="h-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl">
-                      <div
-                        className="bg-gradient-to-br from-[#5C1F1C] to-[#8B4513] p-1 sm:p-1.5 rounded-2xl sm:rounded-3xl h-full"
-                      >
-                        <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl h-full overflow-hidden flex flex-col">
-                          {/* Image */}
-                          <div className="relative h-48 sm:h-56">
-                            <Image
-                              src={course.image}
-                              alt={course.title}
-                              fill
-                              className="object-cover transition-transform duration-700 group-hover:scale-110"
-                              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                            />
-                            <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-                              <Badge className="bg-gradient-to-r from-[#FFC727] to-[#FFD700] text-[#5C1F1C] font-bold text-xs sm:text-sm">
-                                {course.level}
-                              </Badge>
-                            </div>
-                          </div>
-
-                          {/* Content */}
-                          <div className="p-4 sm:p-6 flex-1 flex flex-col">
-                            <h3 className="text-lg sm:text-xl lg:text-2xl font-extrabold mb-2 sm:mb-3 text-[#5C1F1C] line-clamp-1">
-                              {course.title}
-                            </h3>
-                            <p className="text-gray-600 mb-3 sm:mb-5 leading-relaxed text-sm line-clamp-2 sm:line-clamp-3">
-                              {course.description}
-                            </p>
-
-                            {/* Stats */}
-                            <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm mb-4 sm:mb-6">
-                              <div className="flex items-center gap-2 sm:gap-3">
-                                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFC727]" />
-                                <span className="font-medium">{course.duration}</span>
-                              </div>
-                              <div className="flex items-center gap-2 sm:gap-3">
-                                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFC727]" />
-                                <span>{course.students} enrolled</span>
-                              </div>
-                              <div className="flex items-center gap-2 sm:gap-3">
-                                <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-[#FFC727] text-[#FFC727]" />
-                                <span>{course.rating}</span>
-                              </div>
-                            </div>
-
-                            {/* Info Grid */}
-                            <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
-                              <div className="text-center bg-gradient-to-br from-[#5C1F1C]/10 to-[#8B4513]/10 rounded-lg sm:rounded-xl p-2 sm:p-4 border border-[#5C1F1C]/20">
-                                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 mx-auto mb-1 sm:mb-2 text-[#5C1F1C]" />
-                                <p className="text-xs font-medium text-gray-600">Schedule</p>
-                                <p className="font-bold text-[#5C1F1C] text-xs sm:text-sm line-clamp-1">{course.schedule}</p>
-                              </div>
-                              <div className="text-center bg-gradient-to-br from-[#8B4513]/10 to-[#A0522D]/10 rounded-lg sm:rounded-xl p-2 sm:p-4 border border-[#5C1F1C]/20">
-                                <Target className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 mx-auto mb-1 sm:mb-2 text-[#5C1F1C]" />
-                                <p className="text-xs font-medium text-gray-600">Class Size</p>
-                                <p className="font-bold text-[#5C1F1C] text-xs sm:text-sm">{course.classSize}</p>
-                              </div>
-                            </div>
-
-                            {/* CTA */}
-                            <Link href="/contact" className="block mt-auto">
-                              <Button
-                                className="w-full bg-gradient-to-r from-[#FFC727] to-[#FFD700] text-[#5C1F1C] font-bold text-sm sm:text-base py-5 sm:py-6 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl hover:shadow-yellow-500/40 transform hover:scale-105 transition-all duration-300"
-                              >
-                                Enroll Now <ArrowRight className="ml-1.5 w-4 h-4 sm:ml-2 sm:w-5 sm:h-5" />
-                              </Button>
-                            </Link>
-                          </div>
+          <div className="grid md:grid-cols-3 gap-10">
+            <AnimatePresence>
+              {courses.map((course, i) => (
+                <motion.div
+                  key={course.id}
+                  layout
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.2 }}
+                >
+                  <ThreeDCard onClick={() => openModal(course)}>
+                    <div className="bg-gradient-to-br from-[#5C1F1C] to-[#8B4513] p-2 rounded-3xl h-full">
+                      <div className="bg-white rounded-3xl h-full flex flex-col overflow-hidden shadow-2xl">
+                        <div className="relative h-64">
+                          <Image
+                            src={course.image}
+                            alt={course.title}
+                            fill
+                            className="object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <Badge className="absolute bottom-4 left-4 text-lg font-bold bg-gradient-to-r from-[#FFC727] to-[#FFD700] text-[#5C1F1C]">
+                            {course.level}
+                          </Badge>
                         </div>
-                      </div>
-                    </ThreeDCard>
-                  </motion.div>
-                ))}
-              </div>
-            </TabsContent>
 
-            {/* CALENDAR VIEW - Responsive */}
-            <TabsContent value="calendar">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-                {/* Calendar */}
-                <div className="lg:col-span-1">
-                  <Card className="shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden border-0">
-                    <div className="bg-gradient-to-br from-[#5C1F1C] to-[#8B4513] p-1 sm:p-1.5 rounded-2xl sm:rounded-3xl">
-                      <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-extrabold mb-3 sm:mb-4" style={{ color: primaryColor }}>
-                          Pick a Start Date
-                        </h3>
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          disabled={(date) => date < new Date()}
-                          className="rounded-lg sm:rounded-xl border border-[#5C1F1C]/20"
-                        />
-                      </div>
-                    </div>
-                  </Card>
-                </div>
+                        <div className="p-8 flex-1 flex flex-col">
+                          <h3 className="text-3xl font-extrabold mb-3 text-[#5C1F1C]">
+                            {course.title}
+                          </h3>
+                          <p className="text-gray-600 mb-6 flex-1">{course.description}</p>
 
-                {/* Course List */}
-                <div className="lg:col-span-2">
-                  <Card className="shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl border-0 h-full">
-                    <div className="bg-gradient-to-br from-[#5C1F1C] to-[#8B4513] p-1 sm:p-1.5 rounded-2xl sm:rounded-3xl h-full">
-                      <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 h-full flex flex-col">
-                        <h3 className="text-lg sm:text-xl font-extrabold mb-4 sm:mb-6" style={{ color: primaryColor }}>
-                          Courses Starting on{" "}
-                          {selectedDate
-                            ? format(selectedDate, "MMMM dd, yyyy")
-                            : "Selected Date"}
-                        </h3>
-                        <div className="space-y-3 sm:space-y-4 flex-1">
-                          {filteredCourses
-                            .filter((c) =>
-                              selectedDate
-                                ? c.date === format(selectedDate, "yyyy-MM-dd")
-                                : true
-                            )
-                            .map((course) => (
-                              <div
-                                key={course.id}
-                                className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 sm:p-5 border border-[#5C1F1C]/20 rounded-xl sm:rounded-2xl hover:border-[#5C1F1C]/40 transition-all bg-white/70 backdrop-blur-md"
-                              >
-                                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-r from-[#FFC727] to-[#FFD700] flex-shrink-0" />
-                                <div className="flex-1">
-                                  <h4 className="font-bold text-base sm:text-lg" style={{ color: primaryColor }}>
-                                    {course.title}
-                                  </h4>
-                                  <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-gray-700 mt-1">
-                                    <div className="flex items-center gap-1">
-                                      <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                      {course.duration}
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                      {course.level}
-                                    </div>
-                                  </div>
-                                </div>
-                                <Button
-                                  variant="outline"
-                                  className="border-[#5C1F1C] text-[#5C1F1C] hover:bg-[#5C1F1C] hover:text-white font-medium text-xs sm:text-sm mt-2 sm:mt-0"
-                                >
-                                  View
-                                </Button>
-                              </div>
-                            ))}
-                          {filteredCourses.filter((c) =>
-                            selectedDate
-                              ? c.date === format(selectedDate, "yyyy-MM-dd")
-                              : true
-                          ).length === 0 && (
-                            <p className="text-center text-gray-600 py-8 sm:py-12 text-sm sm:text-lg">
-                              No courses starting on this date.
-                            </p>
-                          )}
+                          <Button className="w-full bg-gradient-to-r from-[#FFC727] to-[#FFD700] text-[#5C1F1C] font-bold text-lg py-7 rounded-2xl hover:shadow-2xl hover:shadow-yellow-500/40 transition-all">
+                            View Full Curriculum <ArrowRight className="ml-3 w-6 h-6" />
+                          </Button>
                         </div>
                       </div>
                     </div>
-                  </Card>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+                  </ThreeDCard>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
         </div>
       </section>
 
-      {/* CTA - Responsive */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
-        <div
-          className="max-w-4xl mx-auto text-center p-8 sm:p-10 lg:p-12 rounded-2xl sm:rounded-3xl"
-          style={{
-            background: `linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.75) 100%)`,
-            backdropFilter: "blur(12px)",
-            boxShadow: "0 20px 40px rgba(92, 31, 28, 0.15)",
-          }}
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 sm:mb-6" style={{ color: primaryColor }}>
-            Start Your Chess Journey Today
+      {/* DETAILED MODAL */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-white/98 backdrop-blur-2xl rounded-3xl p-0">
+          {selectedCourse && (
+            <>
+              <div className="relative h-80">
+                <Image
+                  src={selectedCourse.image}
+                  alt={selectedCourse.title}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-6 right-6 text-white hover:bg-white/20"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  <X className="w-8 h-8" />
+                </Button>
+                <div className="absolute bottom-10 left-10 text-white">
+                  <h1 className="text-5xl font-extrabold mb-3">{selectedCourse.title}</h1>
+                  <p className="text-2xl opacity-90">{selectedCourse.description}</p>
+                </div>
+              </div>
+
+              <div className="p-10">
+                <div className="grid md:grid-cols-2 gap-12">
+                  <div>
+                    <h3 className="text-3xl font-bold mb-8 text-[#5C1F1C]">What You'll Learn</h3>
+                    <ul className="space-y-4">
+                      {selectedCourse.topics.map((topic: string, i: number) => (
+                        <li key={i} className="flex items-start gap-4">
+                          <div className="w-3 h-3 rounded-full bg-[#FFC727] mt-2 flex-shrink-0" />
+                          <span className="text-lg text-gray-700 leading-relaxed">{topic}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="text-3xl font-bold mb-8 text-[#5C1F1C]">Course Details</h3>
+                    <div className="space-y-6 text-lg">
+                      <div className="flex items-center gap-4">
+                        <BookOpen className="w-7 h-7 text-[#FFC727]" />
+                        <div>
+                          <p className="font-semibold">Schedule</p>
+                          <p className="text-gray-600">{selectedCourse.schedule}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Target className="w-7 h-7 text-[#FFC727]" />
+                        <div>
+                          <p className="font-semibold">Age Group</p>
+                          <p className="text-gray-600">{selectedCourse.ageGroup}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-6 mt-12">
+                  <Link href="/contact" className="flex-1">
+                    <Button className="w-full bg-gradient-to-r from-[#FFC727] to-[#FFD700] text-[#5C1F1C] font-bold text-2xl py-9 rounded-3xl">
+                      Enroll Now
+                    </Button>
+                  </Link>
+                  <Link href="/contact" className="flex-1">
+                    <Button variant="outline" className="w-full border-4 border-[#5C1F1C] text-[#5C1F1C] font-bold text-2xl py-9 rounded-3xl">
+                      Free Trial Class
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* FINAL CTA */}
+      <section className="py-24 px-6 bg-gradient-to-r from-[#5C1F1C] to-[#8B4513] text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-5xl md:text-6xl font-extrabold mb-6">
+            Ready to Transform Your Chess?
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-700 mb-6 sm:mb-8 lg:mb-10">
-            Join 1,000+ students. First class is <strong className="text-[#5C1F1C]">free</strong>.
+          <p className="text-2xl mb-10 opacity-90">
+            Join 500+ students who went from beginner to advanced.
           </p>
           <Link href="/contact">
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-[#FFC727] to-[#FFD700] text-[#5C1F1C] px-8 sm:px-10 lg:px-14 py-6 sm:py-7 lg:py-8 text-base sm:text-lg lg:text-xl font-bold rounded-full shadow-2xl hover:shadow-yellow-500/40 transform hover:scale-105 transition-all duration-300 w-full sm:w-auto"
-            >
-              Claim Free Trial Class
+            <Button size="lg" className="bg-white text-[#5C1F1C] hover:bg-[#FFC727] px-16 py-10 text-3xl font-bold rounded-full shadow-2xl">
+              Claim Your Free Trial Class
             </Button>
           </Link>
         </div>

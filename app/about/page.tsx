@@ -19,6 +19,8 @@ import {
   Scale,
   Gem,
   Zap,
+  CheckCircle2,
+  Heart,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -55,20 +57,21 @@ export default function AboutPage() {
           backgroundPosition: "center",
         }}
       >
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/70" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <Badge
             className="mb-4 sm:mb-6 text-sm sm:text-base md:text-lg"
             style={{ backgroundColor: "#FFC727", color: "#5C1F1C" }}
           >
-            Discover Our Journey
+            One Pure Move at a Time
           </Badge>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 sm:mb-6 leading-tight">
-            Welcome to <span style={{ color: "#FFC727" }}>Chesspure Academy</span>
+            Welcome to <span style={{ color: "#FFC727" }}>ChessPure</span>
           </h1>
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-10 opacity-90">
-            Empowering minds through the ancient game of chess, we cultivate
-            strategic thinkers, problem solvers, and future champions.
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-10 opacity-95">
+            We focus on helping beginner and intermediate players build strong,
+            lasting chess skills through clear coaching, structured training,
+            and a supportive learning environment.
           </p>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -76,7 +79,7 @@ export default function AboutPage() {
                 size="lg"
                 className="bg-white text-[#5C1F1C] hover:bg-[#FFC727] hover:text-[#5C1F1C] border-2 border-white text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-full shadow-lg transition-all duration-300"
               >
-                Explore More <ChevronDown className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                Start Your Journey <ChevronDown className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 sm:w-60 bg-white border border-gray-200 shadow-xl rounded-lg mt-2">
@@ -116,20 +119,20 @@ export default function AboutPage() {
             <Card className="bg-[#5C1F1C] text-white border-0 shadow-xl rounded-2xl p-6 sm:p-8 transform hover:scale-105 transition-transform duration-300 group">
               <CardContent className="p-0 flex flex-col items-start">
                 <Target className="w-12 h-12 sm:w-14 sm:h-14 mb-4 sm:mb-6 text-[#FFC727] group-hover:rotate-12 transition-transform duration-300" />
-                <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Our Mission</h3>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Our Focus</h3>
                 <p className="text-base sm:text-lg leading-relaxed opacity-90">
-                  To deliver world-class chess education that builds strategic thinking, resilience,
-                  and a lifelong love for the game — preparing students for success in life.
+                  To provide structured curriculum and patient instruction that helps 
+                  every student move from beginner to intermediate — and beyond.
                 </p>
               </CardContent>
             </Card>
             <Card className="bg-[#8B4513] text-white border-0 shadow-xl rounded-2xl p-6 sm:p-8 transform hover:scale-105 transition-transform duration-300 group">
               <CardContent className="p-0 flex flex-col items-start">
-                <Star className="w-12 h-12 sm:w-14 sm:h-14 mb-4 sm:mb-6 text-[#FFC727] group-hover:scale-125 transition-transform duration-300" />
-                <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Our Vision</h3>
+                <Heart className="w-12 h-12 sm:w-14 sm:h-14 mb-4 sm:mb-6 text-[#FFC727] group-hover:scale-125 transition-transform duration-300" />
+                <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Our Belief</h3>
                 <p className="text-base sm:text-lg leading-relaxed opacity-90">
-                  To be India’s leading chess academy, producing grandmasters and innovative thinkers
-                  who shape the future of the game and society.
+                  That every student can grow with the right training. We aim to be the 
+                  perfect place to learn, progress, and enjoy the game.
                 </p>
               </CardContent>
             </Card>
@@ -137,18 +140,18 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Achievements */}
+      {/* Achievements / Stats */}
       <section className="py-12 sm:py-16 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-10 sm:mb-16 leading-tight" style={{ color: "#5C1F1C" }}>
-            Milestones of <span style={{ color: "#8B4513" }}>Excellence</span>
+            Growing <span style={{ color: "#8B4513" }}>Together</span>
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             {[
-              { icon: Users, number: "1000+", label: "Students Empowered" },
-              { icon: Trophy, number: "100+", label: "Championship Titles" },
-              { icon: Award, number: "25+", label: "International Mentions" },
-              { icon: BookOpen, number: "14+", label: "Years of Dedication" },
+              { icon: Users, number: "1000+", label: "Students Guided" },
+              { icon: Trophy, number: "100+", label: "Levels Mastered" },
+              { icon: Award, number: "25+", label: "Rated Players" },
+              { icon: BookOpen, number: "14+", label: "Years of Teaching" },
             ].map((stat, index) => (
               <Card
                 key={index}
@@ -173,7 +176,7 @@ export default function AboutPage() {
       <section className="py-16 sm:py-20 px-4 bg-[#5C1F1C] text-white">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-10 sm:mb-16">
-            The Pillars of Our <span style={{ color: "#FFC727" }}>Academy</span>
+            The Pillars of <span style={{ color: "#FFC727" }}>ChessPure</span>
           </h2>
           <div className="relative w-full h-80 sm:h-96 md:h-[600px] flex items-center justify-center">
             {/* Central Chess King Image */}
@@ -189,12 +192,12 @@ export default function AboutPage() {
             {/* Orbiting Cards */}
             <div className="absolute inset-0">
               {[
-                { icon: Brain, title: "Strategic Thinking", color: "bg-purple-600" },
-                { icon: Lightbulb, title: "Problem Solving", color: "bg-green-600" },
-                { icon: Scale, title: "Fair Play", color: "bg-red-600" },
-                { icon: Gem, title: "Excellence", color: "bg-yellow-600" },
-                { icon: Zap, title: "Competitive Spirit", color: "bg-teal-600" },
-                { icon: BookOpen, title: "Continuous Learning", color: "bg-orange-600" },
+                { icon: Brain, title: "Clear Concepts", color: "bg-purple-600" },
+                { icon: Lightbulb, title: "Core Understanding", color: "bg-green-600" },
+                { icon: Scale, title: "Step by Step", color: "bg-red-600" },
+                { icon: Gem, title: "Confidence", color: "bg-yellow-600" },
+                { icon: Zap, title: "Real Improvement", color: "bg-teal-600" },
+                { icon: BookOpen, title: "Supportive", color: "bg-orange-600" },
               ].map((item, index) => {
                 const angle = (index * 60) - 90;
                 const x = radius * Math.cos((angle * Math.PI) / 180);
@@ -239,45 +242,45 @@ export default function AboutPage() {
               {[
                 {
                   year: "2010",
-                  title: "Foundation in Visakhapatnam",
+                  title: "The Beginning",
                   description:
-                    "Chesspure Academy was founded by Grandmaster Rajesh Kumar with just 10 students in a small room. The vision was simple: make chess accessible to every child in India. Early classes were held in community centers, and word spread fast through local tournaments.",
+                    "ChessPure was founded with a simple vision: make chess accessible to every child. We started with just 10 students in a small room, focusing on making the game fun and understandable.",
                   image: "/found.png",
                   position: "left",
                   icon: <Star className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
                 },
                 {
                   year: "2014",
-                  title: "First National Champion",
+                  title: "Growing the Community",
                   description:
-                    "Our student, 12-year-old Arjun Mehta, won the Under-13 National Championship. This victory put Chesspure on the map. Parents from across Andhra Pradesh started enrolling their children. We expanded to a dedicated 2,000 sq ft training center with 5 boards.",
+                    "Parents saw the value in our structured approach. We expanded to a dedicated training center, helping students win their first local tournaments and gain confidence.",
                   image: "national.png",
                   position: "right",
                   icon: <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
                 },
                 {
                   year: "2018",
-                  title: "Launch of Online Platform",
+                  title: "Online Expansion",
                   description:
-                    "With growing demand, we launched our online coaching portal. Students from Kerala, Assam, and even Dubai joined live classes. We trained 300+ students remotely in the first year. Interactive puzzles and AI analysis tools were introduced.",
+                    "To reach more students, we launched our online coaching. This allowed us to bring our 'step-by-step' teaching method to students across different states.",
                   image: "online.png",
                   position: "left",
                   icon: <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
                 },
                 {
                   year: "2020",
-                  title: "International Breakthrough",
+                  title: "Building Champions",
                   description:
-                    "Our team won 3 medals at the Asian Youth Chess Championship. Collaboration with FIDE began. We hosted the first 'Chesspure International Open' with 200 participants from 12 countries. Live streaming reached 50,000 viewers.",
+                    "Our students began consistently performing well in rated tournaments. We introduced advanced intermediate modules to bridge the gap between casual play and competitive chess.",
                   image: "champion.png",
                   position: "right",
                   icon: <Award className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
                 },
                 {
                   year: "2023",
-                  title: "AI & Analytics Revolution",
+                  title: "Personalized Learning Era",
                   description:
-                    "Introduced personalized AI training: Stockfish 16 analysis, Lichess study integration, and custom opening prep. Students improved 200+ ELO on average. We launched the 'Grandmaster Path' program for rated 1800+ players.",
+                    "We refined our curriculum to offer 1-on-1 coaching and interactive group classes that adapt to the student's level, ensuring no one feels left behind.",
                   image: "ai.png",
                   position: "left",
                   icon: <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
@@ -308,7 +311,7 @@ export default function AboutPage() {
                     )}
                   </div>
 
-                  {/* Timeline dot + year (mobile) */}
+                  {/* Timeline dot */}
                   <div className="absolute left-1/2 transform -translate-x-1/2 md:relative w-10 h-10 sm:w-12 sm:h-12 bg-[#5C1F1C] rounded-full flex items-center justify-center z-10 shadow-xl border-4 border-white">
                     {event.icon}
                   </div>
@@ -356,93 +359,108 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Educational Philosophy */}
+      {/* Educational Philosophy - UPDATED CONTENT */}
       <section className="py-16 sm:py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-10 sm:mb-16" style={{ color: "#5C1F1C" }}>
-            Our <span style={{ color: "#8B4513" }}>Educational Philosophy</span>
+            Our Teaching <span style={{ color: "#8B4513" }}>Approach</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start">
-            <div className="space-y-6 sm:space-y-8">
-              <Card className="bg-gradient-to-r from-[#5C1F1C]/5 to-[#8B4513]/5 border border-[#5C1F1C]/20 p-6 sm:p-8 rounded-xl shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all">
-                <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4" style={{ color: "#5C1F1C" }}>
-                  Holistic Development
-                </h3>
-                <p className="text-base sm:text-lg text-gray-700">
-                  Chess builds patience, resilience, and ethical thinking — skills for life.
-                </p>
-              </Card>
-              <Card className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 p-6 sm:p-8 rounded-xl shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all">
-                <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-green-800">Personalized Learning</h3>
-                <p className="text-base sm:text-lg text-gray-700">
-                  Every student gets a custom training plan based on their style and goals.
-                </p>
-              </Card>
-              <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 p-6 sm:p-8 rounded-xl shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all">
-                <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-yellow-800">Engaging Curriculum</h3>
-                <p className="text-base sm:text-lg text-gray-700">
-                  From beginner to grandmaster — fun, challenging, and rewarding.
-                </p>
-              </Card>
-            </div>
-            <div className="bg-[#5C1F1C] text-white rounded-2xl p-6 sm:p-8 md:p-10 shadow-xl">
-              <h3 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8" style={{ color: "#FFC727" }}>
-                Core Teaching Principles
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Left Side: Text Description */}
+            <div className="space-y-6">
+              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Designed for Your Level
               </h3>
-              <ul className="space-y-4 sm:space-y-5 text-base sm:text-lg">
+              <p className="text-lg text-gray-700 leading-relaxed">
+                Whether you&apos;re just starting out or aiming to move beyond the basics, our lessons are designed to fit your level. We offer <strong>1-on-1 coaching</strong> and <strong>interactive group classes</strong> that cover everything from piece fundamentals and opening principles to tactical patterns, middlegame planning, and endgames.
+              </p>
+              
+              <div className="bg-yellow-50 border-l-4 border-[#FFC727] p-5 my-6">
+                <p className="text-gray-800 font-medium italic">
+                  &quot;At ChessPure, we believe every student can grow with the right training. That’s why we focus on patient instruction and personalized feedback.&quot;
+                </p>
+              </div>
+
+              <div className="pt-4">
+                <Button className="bg-[#5C1F1C] hover:bg-[#8B4513] text-white px-8 py-6 rounded-full text-lg shadow-xl">
+                  Start Your Journey
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Side: The Checklist */}
+            <div className="bg-[#5C1F1C] text-white rounded-2xl p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+               {/* Decorative background element */}
+               <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-[#FFC727] rounded-full opacity-10 blur-3xl"></div>
+
+              <h3 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: "#FFC727" }}>
+                The ChessPure Method
+              </h3>
+              <ul className="space-y-6 text-lg">
                 {[
-                  "Master the fundamentals deeply",
-                  "Think independently, not memorize",
-                  "Learn in a supportive environment",
-                  "Use AI and modern tools",
-                  "Play fair, win with honor",
-                  "Love chess for life",
+                  "Explain concepts clearly",
+                  "Guide students step by step",
+                  "Strengthen core understanding",
+                  "Build confidence through practice",
+                  "Help players see real improvement"
                 ].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3 sm:gap-4">
-                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-[#FFC727] rounded-full mt-2 flex-shrink-0"></div>
-                    <span>{item}</span>
+                  <li key={idx} className="flex items-start gap-4 transform transition-all hover:translate-x-2">
+                    <div className="bg-white/10 p-2 rounded-full">
+                      <CheckCircle2 className="w-5 h-5 text-[#FFC727]" />
+                    </div>
+                    <span className="pt-1 font-medium tracking-wide">{item}</span>
                   </li>
                 ))}
               </ul>
+              
+              <div className="mt-10 pt-8 border-t border-white/20 text-center">
+                 <p className="text-xl font-serif italic text-white/90">
+                   "One pure move at a time."
+                 </p>
+              </div>
             </div>
+
           </div>
         </div>
       </section>
 
       {/* Core Values */}
-      <section className="py-16 sm:py-20 px-4 bg-[#5C1F1C]">
+      <section className="py-16 sm:py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-10 sm:mb-16 text-white">
-            The Values That <span style={{ color: "#FFC727" }}>Guide Us</span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-10 sm:mb-16" style={{color: "#5C1F1C"}}>
+            Why Choose <span style={{ color: "#8B4513" }}>ChessPure?</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
             {[
               {
-                title: "Excellence",
-                description: "We aim for mastery in every move, every lesson, every student.",
-                icon: <Gem className="w-10 h-10 sm:w-12 sm:h-12 text-[#FFC727]" />,
+                title: "Structured Training",
+                description: "Curriculum that helps players move from beginner to intermediate logic effectively.",
+                icon: <Brain className="w-10 h-10 sm:w-12 sm:h-12 text-[#5C1F1C]" />,
               },
               {
-                title: "Integrity",
-                description: "Fair play, honesty, and respect — on and off the board.",
-                icon: <Scale className="w-10 h-10 sm:w-12 sm:h-12 text-[#FFC727]" />,
+                title: "Supportive Environment",
+                description: "A perfect place to learn where mistakes are seen as stepping stones to mastery.",
+                icon: <Heart className="w-10 h-10 sm:w-12 sm:h-12 text-[#5C1F1C]" />,
               },
               {
-                title: "Innovation",
-                description: "Using AI, analytics, and new methods to stay ahead.",
-                icon: <Lightbulb className="w-10 h-10 sm:w-12 sm:h-12 text-[#FFC727]" />,
+                title: "Personalized Feedback",
+                description: "We don't just teach moves; we help you understand the 'Why' behind them.",
+                icon: <Lightbulb className="w-10 h-10 sm:w-12 sm:h-12 text-[#5C1F1C]" />,
               },
             ].map((value, index) => (
               <Card
                 key={index}
-                className="bg-white text-gray-800 p-6 sm:p-8 md:p-10 rounded-2xl shadow-lg hover:bg-[#FFC727]/10 transform hover:-translate-y-2 transition-all duration-300 group"
+                className="bg-white text-gray-800 p-6 sm:p-8 md:p-10 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 transform hover:-translate-y-2 transition-all duration-300 group"
               >
                 <CardContent className="p-0 flex flex-col items-center">
-                  <div className="mb-4 sm:mb-6 group-hover:scale-110 transition-transform">{value.icon}</div>
+                  <div className="mb-4 sm:mb-6 p-4 bg-orange-50 rounded-full group-hover:bg-[#FFC727] transition-colors duration-300">
+                    {value.icon}
+                  </div>
                   <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4" style={{ color: "#5C1F1C" }}>
                     {value.title}
                   </h3>
-                  <p className="text-base sm:text-lg text-gray-700">{value.description}</p>
+                  <p className="text-base sm:text-lg text-gray-600">{value.description}</p>
                 </CardContent>
               </Card>
             ))}
