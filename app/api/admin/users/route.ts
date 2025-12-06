@@ -8,9 +8,14 @@ import bcrypt from "bcryptjs";
 export async function GET() {
   try {
     const users = await prisma.user.findMany({
+      orderBy: { name: 'asc' },
       include: {
-        coach: true,
-        _count: { select: { students: true } }
+        coach: {
+          select: { id: true, name: true }
+        },
+        _count: { 
+          select: { students: true } 
+        }
       }
     });
 
@@ -48,15 +53,17 @@ export async function POST(req: Request) {
       role,
     };
 
+    // 4. Role specific logic
     if (role === "STUDENT") {
       data.stage = stage || "BEGINNER";
-      data.coachId = coachId?.trim() ? coachId : null;
+      // Ensure empty strings are converted to null for optional relations
+      data.coachId = coachId && coachId.trim() !== "" ? coachId : null;
     } else {
-      data.stage = "BEGINNER"; // Default
+      data.stage = "BEGINNER"; // Default fallback
       data.coachId = null;
     }
 
-    // 4. Create user
+    // 5. Create user
     const user = await prisma.user.create({ data });
     return NextResponse.json(user);
 
@@ -83,7 +90,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, password, role, ...rest } = body;
+    const { id, password, role, coachId, ...rest } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Missing user id" }, { status: 400 });
@@ -92,16 +99,17 @@ export async function PUT(req: Request) {
     const data: any = { ...rest };
 
     // Hash new password if provided
-    if (password) {
+    if (password && password.trim() !== "") {
       data.password = await bcrypt.hash(password, 10);
     }
 
-    // Prevent role from being updated accidentally
+    // Handle Role & Coach logic
     if (role) {
       data.role = role;
-      if (role !== "STUDENT") {
-        // Coaches/Admins should not have student properties
-        data.stage = "BEGINNER";
+      if (role === "STUDENT") {
+         data.coachId = coachId && coachId.trim() !== "" ? coachId : null;
+      } else {
+        // If changing to Coach/Admin, remove student-specific links
         data.coachId = null;
       }
     }

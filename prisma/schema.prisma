@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" // use postgresql for Vercel Postgres / Neon
+  provider = "postgresql" 
   url      = env("DATABASE_URL")
 }
 
@@ -28,15 +28,23 @@ model User {
   name      String
   role      UserRole @default(STUDENT)
 
-  // Student-specific
+  // Student-specific fields
   stage     Stage    @default(BEGINNER)
   coachId   String?
   coach     User?    @relation("CoachStudents", fields: [coachId], references: [id], onDelete: SetNull)
-  students  User[]   @relation("CoachStudents") // for Coaches
+  students  User[]   @relation("CoachStudents") // Reverse relation for Coaches
 
-  assignments Assignment[]
-  progress    Progress[]
+  // Puzzle Relations
+  assignments    Assignment[]
+  puzzleProgress Progress[]
+
+  // Course Relations
+  courseProgress CourseProgress[]
 }
+
+// ==========================================
+// 1. PUZZLE SYSTEM (Existing)
+// ==========================================
 
 model Folder {
   id        String   @id @default(uuid())
@@ -56,8 +64,8 @@ model Puzzle {
   fen       String   @db.Text
   solution  String   @db.Text // space separated moves
 
-  folderId  String
-  folder    Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  folderId  String?  // Made optional in case a puzzle doesn't belong to a folder immediately
+  folder    Folder?  @relation(fields: [folderId], references: [id], onDelete: Cascade)
 
   assignments Assignment[]
   progress    Progress[]
@@ -77,6 +85,7 @@ model Assignment {
   assignedAt  DateTime @default(now())
 }
 
+// Tracks Puzzle history
 model Progress {
   id          String   @id @default(uuid())
 
@@ -89,10 +98,60 @@ model Progress {
   isSolved    Boolean  @default(false)
   attempts    Int      @default(0)
   timeSpent   Int      @default(0)
-
-  mistakes    Json     @default("[]") // postgres supports JSON defaults
+  mistakes    Json     @default("[]") 
 
   lastPlayed  DateTime @updatedAt
 
   @@unique([studentId, puzzleId])
+}
+
+// ==========================================
+// 2. COURSE / CURRICULUM SYSTEM (New)
+// ==========================================
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  description String?  @db.Text
+  level       Stage    @default(BEGINNER)
+  
+  // A course has many chapters
+  chapters    Chapter[]
+  
+  // Track who is taking this course
+  studentProgress CourseProgress[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Chapter {
+  id        String   @id @default(uuid())
+  title     String
+  content   String?  @db.Text // The script/notes for the coach or student
+  fen       String   @db.Text // The board setup for this lesson
+  
+  order     Int      @default(0) // To keep chapters 1, 2, 3...
+
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+// Tracks Course completion
+model CourseProgress {
+  id        String   @id @default(uuid())
+
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // Array of Chapter IDs that the student has completed
+  completedChapters String[] 
+  
+  isCompleted       Boolean  @default(false)
+  lastAccessed      DateTime @default(now())
+
+  @@unique([studentId, courseId])
 }
