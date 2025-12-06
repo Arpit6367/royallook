@@ -5,12 +5,11 @@ import { Chessboard } from 'react-chessboard'
 import { 
   Users, Folder, FileText, ChevronRight, Save, RotateCcw, 
   MousePointer2, Trash2, Plus, Edit, ArrowLeft, Check, 
-  Play, Copy, Settings, ArrowUpDown, BookOpen, Video, List
+  Play, Copy, Settings, ArrowUpDown, BookOpen, Video, List, Loader2
 } from 'lucide-react'
 
 // --- TYPES & HELPERS ---
 type Tool = { type: string, color: 'w' | 'b' } | 'TRASH' | null
-const PIECES = ['p', 'n', 'b', 'r', 'q', 'k'] as const
 
 // --- MODAL COMPONENT ---
 const Modal = ({ isOpen, onClose, title, children }: any) => {
@@ -64,29 +63,66 @@ export default function AdminDashboard() {
 }
 
 // ==========================================
-// 1. USER MANAGEMENT TAB
+// 1. USER MANAGEMENT TAB (Connected to API)
 // ==========================================
 function UserManager() {
   const [users, setUsers] = useState<any[]>([])
   const [coaches, setCoaches] = useState<any[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState<any>({ name: '', email: '', password: '', role: 'STUDENT', stage: 'BEGINNER', coachId: '' })
   const [editingId, setEditingId] = useState<string | null>(null)
 
-  // Mock Data Loading (Replace with your useEffect fetch)
-  useEffect(() => { 
-    // fetchUsers() 
-    setUsers([
-        { id: '1', name: 'John Doe', email: 'john@example.com', role: 'STUDENT', stage: 'BEGINNER', coach: { name: 'Coach Mike' }},
-        { id: '2', name: 'Coach Mike', email: 'mike@chess.com', role: 'COACH' }
-    ])
-    setCoaches([{ id: '2', name: 'Coach Mike' }])
-  }, [])
+  // 1. Fetch Data from API
+  const fetchUsers = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/users')
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        setUsers(data)
+        setCoaches(data.filter((u: any) => u.role === 'COACH' || u.role === 'ADMIN'))
+      }
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
+  useEffect(() => { fetchUsers() }, [])
+
+  // 2. Handle Submit (Create/Update)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    alert("User Saved (API Logic here)")
-    setIsModalOpen(false)
+    const method = editingId ? 'PUT' : 'POST'
+    const payload = editingId ? { ...formData, id: editingId } : formData
+
+    try {
+        const res = await fetch('/api/admin/users', {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        if (res.ok) {
+            alert(editingId ? "User Updated" : "User Created")
+            setIsModalOpen(false)
+            fetchUsers() // Refresh list
+            setFormData({ name: '', email: '', password: '', role: 'STUDENT', stage: 'BEGINNER', coachId: '' })
+        } else {
+            const err = await res.json()
+            alert(err.error || "Failed")
+        }
+    } catch (e) {
+        console.error(e)
+    }
+  }
+
+  // 3. Handle Delete
+  const handleDelete = async (id: string) => {
+      if(!confirm("Are you sure?")) return
+      await fetch('/api/admin/users', { method: 'DELETE', body: JSON.stringify({ id })})
+      fetchUsers()
   }
 
   const openEdit = (user: any) => {
@@ -102,38 +138,41 @@ function UserManager() {
     <div className="bg-white rounded-xl shadow-sm border p-6">
       <div className="flex justify-between mb-6">
         <h2 className="text-xl font-bold flex items-center gap-2"><Users className="text-orange-600"/> Manage Users</h2>
-        <button onClick={() => { setEditingId(null); setIsModalOpen(true) }} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors"><Plus size={16}/> Add User</button>
+        <button onClick={() => { setEditingId(null); setIsModalOpen(true); setFormData({ name: '', email: '', password: '', role: 'STUDENT', stage: 'BEGINNER', coachId: '' }) }} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors"><Plus size={16}/> Add User</button>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50 border-b">
-            <tr>
-                <th className="p-3 text-sm font-semibold text-gray-600">Name</th>
-                <th className="p-3 text-sm font-semibold text-gray-600">Role</th>
-                <th className="p-3 text-sm font-semibold text-gray-600">Stage</th>
-                <th className="p-3 text-sm font-semibold text-gray-600">Coach</th>
-                <th className="p-3 text-sm font-semibold text-gray-600 text-right">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            {users.map(u => (
-                <tr key={u.id} className="border-b hover:bg-gray-50 transition-colors">
-                <td className="p-3">
-                    <div className="font-bold text-gray-800">{u.name}</div>
-                    <div className="text-xs text-gray-500">{u.email}</div>
-                </td>
-                <td className="p-3"><span className={`px-2 py-1 rounded text-xs font-bold ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : u.role === 'COACH' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>{u.role}</span></td>
-                <td className="p-3 text-sm">{u.role === 'STUDENT' ? u.stage : '-'}</td>
-                <td className="p-3 text-sm text-blue-600">{u.coach?.name || '-'}</td>
-                <td className="p-3 text-right space-x-2">
-                    <button onClick={() => openEdit(u)} className="text-blue-500 hover:text-blue-700"><Edit size={16}/></button>
-                    <button className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
-                </td>
+      
+      {loading ? <div className="text-center py-10"><Loader2 className="animate-spin inline"/></div> : (
+        <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+                <thead className="bg-gray-50 border-b">
+                <tr>
+                    <th className="p-3 text-sm font-semibold text-gray-600">Name</th>
+                    <th className="p-3 text-sm font-semibold text-gray-600">Role</th>
+                    <th className="p-3 text-sm font-semibold text-gray-600">Stage</th>
+                    <th className="p-3 text-sm font-semibold text-gray-600">Coach</th>
+                    <th className="p-3 text-sm font-semibold text-gray-600 text-right">Actions</th>
                 </tr>
-            ))}
-            </tbody>
-        </table>
-      </div>
+                </thead>
+                <tbody>
+                {users.map(u => (
+                    <tr key={u.id} className="border-b hover:bg-gray-50 transition-colors">
+                    <td className="p-3">
+                        <div className="font-bold text-gray-800">{u.name}</div>
+                        <div className="text-xs text-gray-500">{u.email}</div>
+                    </td>
+                    <td className="p-3"><span className={`px-2 py-1 rounded text-xs font-bold ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : u.role === 'COACH' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>{u.role}</span></td>
+                    <td className="p-3 text-sm">{u.role === 'STUDENT' ? u.stage : '-'}</td>
+                    <td className="p-3 text-sm text-blue-600">{u.coach?.name || '-'}</td>
+                    <td className="p-3 text-right space-x-2">
+                        <button onClick={() => openEdit(u)} className="text-blue-500 hover:text-blue-700"><Edit size={16}/></button>
+                        <button onClick={() => handleDelete(u.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
+                    </td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+        </div>
+      )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? "Edit User" : "Add User"}>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -141,6 +180,7 @@ function UserManager() {
              <input className="w-full border p-2 rounded" placeholder="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
              <input className="w-full border p-2 rounded" placeholder="Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
           </div>
+          <input className="w-full border p-2 rounded" type="password" placeholder={editingId ? "New Password (Optional)" : "Password"} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
           <select className="w-full border p-2 rounded" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
             <option value="STUDENT">Student</option>
             <option value="COACH">Coach</option>
@@ -167,7 +207,7 @@ function UserManager() {
 }
 
 // ==========================================
-// 2. COURSE MANAGER (NEW FEATURE)
+// 2. COURSE MANAGER (Connected to API)
 // ==========================================
 function CourseManager() {
   const [view, setView] = useState<'LIST' | 'EDIT_COURSE'>('LIST')
@@ -179,16 +219,18 @@ function CourseManager() {
   const game = useRef(new Chess())
   const [chapterFen, setChapterFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
 
-  useEffect(() => {
-    // Mock Fetch
-    setCourses([
-      { id: 1, title: 'Opening Principles', level: 'BEGINNER', chapters: [{ title: 'Control the Center', content: 'Use e4/d4', fen: 'rnbqkbnr/pppppppp/8/4P3/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1' }] },
-      { id: 2, title: 'Rook Endgames', level: 'INTERMEDIATE', chapters: [] },
-    ])
-  }, [])
+  // 1. Fetch Courses
+  const fetchCourses = async () => {
+      const res = await fetch('/api/courses')
+      const data = await res.json()
+      if(Array.isArray(data)) setCourses(data)
+  }
+
+  useEffect(() => { fetchCourses() }, [])
 
   const handleCreateCourse = () => {
-    setEditingCourse({ id: Date.now(), title: '', description: '', level: 'BEGINNER', chapters: [] })
+    // New course (no ID yet)
+    setEditingCourse({ title: '', description: '', level: 'BEGINNER', chapters: [] })
     setView('EDIT_COURSE')
     setActiveChapterIndex(-1)
   }
@@ -199,16 +241,34 @@ function CourseManager() {
     setActiveChapterIndex(-1)
   }
 
-  const saveCourse = () => {
-    // API Call to save 'editingCourse'
-    alert("Course Saved! (Mock)")
-    setView('LIST')
+  // 2. Save Course to API
+  const saveCourse = async () => {
+    try {
+        const res = await fetch('/api/courses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(editingCourse)
+        })
+        if (res.ok) {
+            alert("Course Saved!")
+            setView('LIST')
+            fetchCourses()
+        } else {
+            alert("Failed to save")
+        }
+    } catch(e) { console.error(e) }
+  }
+
+  const handleDelete = async (id: string) => {
+      if(!confirm("Delete course?")) return
+      await fetch('/api/courses', { method: 'DELETE', body: JSON.stringify({ id }) })
+      fetchCourses()
   }
 
   const addChapter = () => {
     const newChapter = { title: 'New Lesson', content: '', fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1' }
-    setEditingCourse({ ...editingCourse, chapters: [...editingCourse.chapters, newChapter] })
-    setActiveChapterIndex(editingCourse.chapters.length) // Open the new chapter
+    setEditingCourse({ ...editingCourse, chapters: [...(editingCourse.chapters || []), newChapter] })
+    setActiveChapterIndex((editingCourse.chapters || []).length) 
     setChapterFen(newChapter.fen)
   }
 
@@ -223,10 +283,9 @@ function CourseManager() {
     try {
       const move = game.current.move({ from: source, to: target, promotion: 'q' })
       if (!move) {
-        // Allow free movement for setup if not a valid move (Setup Mode logic simplified)
+        // Allow free setup movement
         game.current.remove(source as any)
-        game.current.put({ type: 'p', color: 'w' } as any, target as any) // Simplified for demo
-        // In real app use full setup logic from AnalysisBoard
+        game.current.put({ type: 'p', color: 'w' } as any, target as any) 
         return false 
       }
       const newFen = game.current.fen()
@@ -254,13 +313,13 @@ function CourseManager() {
                    <span className={`text-xs font-bold px-2 py-1 rounded ${c.level === 'BEGINNER' ? 'bg-green-200 text-green-800' : 'bg-blue-200 text-blue-800'}`}>{c.level}</span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-1">{c.title}</h3>
-                <p className="text-sm text-gray-500">{c.chapters.length} Lessons • By ChessPure</p>
+                <p className="text-sm text-gray-500">{c.chapters?.length || 0} Lessons</p>
               </div>
               <div className="flex gap-2 border-t pt-4 mt-2">
                  <button onClick={() => handleEditCourse(c)} className="flex-1 bg-white border border-gray-300 hover:bg-gray-100 text-slate-700 py-2 rounded font-medium text-sm flex items-center justify-center gap-2">
-                   <Edit size={14}/> Edit Content
+                   <Edit size={14}/> Edit
                  </button>
-                 <button className="text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16}/></button>
+                 <button onClick={() => handleDelete(c.id)} className="text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={16}/></button>
               </div>
             </div>
           ))}
@@ -345,7 +404,6 @@ function CourseManager() {
               </div>
 
               <div className="grid grid-cols-2 gap-8 h-full">
-                 {/* Text Content */}
                  <div className="flex flex-col gap-2">
                     <label className="text-sm font-bold text-gray-500 flex items-center gap-2"><FileText size={16}/> Lesson Notes / Script</label>
                     <textarea 
@@ -355,8 +413,6 @@ function CourseManager() {
                       onChange={(e) => updateChapter('content', e.target.value)}
                     />
                  </div>
-
-                 {/* Board Setup */}
                  <div className="flex flex-col gap-2">
                     <label className="text-sm font-bold text-gray-500 flex items-center gap-2"><Settings size={16}/> Board Setup (FEN)</label>
                     <div className="border-4 border-slate-300 rounded-lg overflow-hidden shadow-sm aspect-square">
@@ -365,9 +421,6 @@ function CourseManager() {
                           onPieceDrop={onDrop}
                           arePiecesDraggable={true}
                         />
-                    </div>
-                    <div className="bg-blue-50 text-blue-800 text-xs p-2 rounded mt-2">
-                       Drag pieces to set the starting position for this lesson.
                     </div>
                  </div>
               </div>
@@ -385,7 +438,7 @@ function CourseManager() {
 }
 
 // ==========================================
-// 3. CURRICULUM TAB (PUZZLES) - Renamed from previous CurriculumManager
+// 3. CURRICULUM TAB (Connected to API)
 // ==========================================
 function CurriculumManager() {
   const [currentStage, setCurrentStage] = useState<string | null>(null)
@@ -394,19 +447,37 @@ function CurriculumManager() {
   const [view, setView] = useState<'BROWSE' | 'CREATE_PUZZLE'>('BROWSE')
   const [newFolderName, setNewFolderName] = useState('')
 
+  // 1. Fetch Content
   useEffect(() => {
-    // Mock Fetch for demo
-    if (currentStage) {
-        setContent({ 
-            folders: [{id: 'f1', name: 'Mating Patterns'}], 
-            puzzles: [{id: 'p1', title: 'Mate in 1'}] 
-        })
-    }
+    if (!currentStage) return
+    const parent = breadcrumbs[breadcrumbs.length - 1]
+    const url = parent 
+      ? `/api/content?parentId=${parent.id}` 
+      : `/api/content?stage=${currentStage}`
+    
+    fetch(url)
+      .then(r => r.json())
+      .then(setContent)
+      .catch(console.error)
   }, [currentStage, breadcrumbs, view]) 
 
   const createFolder = async () => {
-    alert(`Folder "${newFolderName}" Created`)
-    setNewFolderName('')
+    const parent = breadcrumbs[breadcrumbs.length - 1]
+    const res = await fetch('/api/content', {
+        method: 'POST',
+        body: JSON.stringify({
+            type: 'FOLDER',
+            name: newFolderName,
+            stage: breadcrumbs.length === 0 ? currentStage : null,
+            parentId: parent?.id
+        })
+    })
+    if(res.ok) {
+        setNewFolderName('')
+        // Trigger refetch
+        const url = parent ? `/api/content?parentId=${parent.id}` : `/api/content?stage=${currentStage}`
+        fetch(url).then(r => r.json()).then(setContent)
+    }
   }
 
   if (view === 'CREATE_PUZZLE') {
@@ -474,7 +545,7 @@ function CurriculumManager() {
 }
 
 // ==========================================
-// 4. PUZZLE CREATOR
+// 4. PUZZLE CREATOR (Connected to API)
 // ==========================================
 function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => void }) {
   const game = useRef(new Chess())
@@ -532,10 +603,28 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
     return false
   }
 
+  // SAVE PUZZLE API CALL
   const savePuzzle = async () => {
     if(!title || !startFen || moves.length === 0) return alert("Complete the puzzle first")
-    alert("Puzzle Saved!")
-    onBack()
+    
+    try {
+        const res = await fetch('/api/content', {
+            method: 'POST',
+            body: JSON.stringify({
+                type: 'PUZZLE',
+                title,
+                fen: startFen,
+                solution: moves.join(' '),
+                folderId
+            })
+        })
+        if(res.ok) {
+            alert("Puzzle Saved!")
+            onBack()
+        } else {
+            alert("Failed to save puzzle")
+        }
+    } catch(e) { console.error(e) }
   }
 
   return (
