@@ -5,7 +5,7 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
-import { ArrowLeft, CheckCircle, XCircle, Lightbulb, RotateCcw, Play, Loader2, SkipForward, ArrowRight } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Lightbulb, RotateCcw, Play, Loader2, SkipForward, ArrowRight, AlertTriangle } from "lucide-react";
 import { toast } from "sonner"; 
 
 interface Puzzle {
@@ -23,12 +23,14 @@ export default function PuzzlePage() {
   const params = useParams();
   const searchParams = useSearchParams();
   
-  const puzzleId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const context = searchParams.get('context'); // 'todo' or 'library'
+  // Safe ID extraction
+  const puzzleId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const context = searchParams.get('context'); 
   const folderId = searchParams.get('folderId');
 
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [nextPuzzleId, setNextPuzzleId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // Added Error State
   
   const [game, setGame] = useState(new Chess());
   const [solutionMoves, setSolutionMoves] = useState<string[]>([]);
@@ -48,47 +50,71 @@ export default function PuzzlePage() {
     return () => resizeObserver.disconnect();
   }, []);
 
-  // --- 2. FETCH DATA & NEXT PUZZLE LOGIC ---
+  // --- 2. DATA FETCHING ---
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/api/auth/signin");
+    if (status === "unauthenticated") {
+        router.push("/api/auth/signin");
+        return;
+    }
+    
     if (status === "authenticated" && puzzleId) {
+      setError(null); // Reset error
       
-      // A. Load Current Puzzle
-      fetch(`/api/puzzles/${puzzleId}`) // Assuming standard ID endpoint, or use /details if specific
-        .then((res) => {
-          if(!res.ok) throw new Error("Failed");
-          return res.json();
-        })
-        .then((data) => {
-          setPuzzle(data);
-          const newGame = new Chess(data.fen);
-          setGame(newGame);
-          setSolutionMoves(data.solution.trim().split(" "));
-          setMoveIndex(0);
-          setStatusState("IDLE");
-        })
-        .catch(() => router.push("/learn"));
-
-      // B. Determine Next Puzzle ID based on Context
-      const fetchNext = async () => {
+      const loadData = async () => {
         try {
-            let url = '';
-            if (context === 'todo') {
-                url = `/api/assignments/next?currentId=${puzzleId}`;
-            } else if (folderId) {
-                url = `/api/content/next?folderId=${folderId}&currentId=${puzzleId}`;
+            // A. Load Puzzle
+            const res = await fetch(`/api/puzzles/${puzzleId}`);
+            if (!res.ok) {
+                if (res.status === 404) throw new Error("Puzzle not found in database.");
+                throw new Error("Failed to load puzzle data.");
+            }
+            
+            const data = await res.json();
+            
+            if (!data.fen || !data.solution) {
+                throw new Error("Puzzle data is incomplete (missing FEN or Solution).");
             }
 
-            if (url) {
-                const res = await fetch(url);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.id) setNextPuzzleId(data.id);
-                }
+            // Safe Game Initialization
+            try {
+                const newGame = new Chess(data.fen);
+                setGame(newGame);
+            } catch (chessError) {
+                throw new Error("Invalid Board Setup (FEN Code is broken).");
             }
-        } catch (e) { console.error("Error fetching next puzzle", e); }
+
+            setPuzzle(data);
+            setSolutionMoves(data.solution.trim().split(" "));
+            setMoveIndex(0);
+            setStatusState("IDLE");
+
+            // B. Load Next Puzzle (Fail silently if this part breaks, don't block the page)
+            try {
+                let url = '';
+                if (context === 'todo') {
+                    url = `/api/assignments/next?currentId=${puzzleId}`;
+                } else if (folderId) {
+                    url = `/api/content/next?folderId=${folderId}&currentId=${puzzleId}`;
+                }
+
+                if (url) {
+                    const nextRes = await fetch(url);
+                    if (nextRes.ok) {
+                        const nextData = await nextRes.json();
+                        if (nextData.id) setNextPuzzleId(nextData.id);
+                    }
+                }
+            } catch (nextErr) {
+                console.warn("Could not fetch next puzzle:", nextErr);
+            }
+
+        } catch (err: any) {
+            console.error("Puzzle Load Error:", err);
+            setError(err.message || "An unexpected error occurred.");
+        }
       };
-      fetchNext();
+
+      loadData();
     }
   }, [status, puzzleId, router, context, folderId]);
 
@@ -100,12 +126,12 @@ export default function PuzzlePage() {
        if(folderId) query.set('folderId', folderId);
        router.push(`/puzzle/${nextPuzzleId}?${query.toString()}`);
     } else {
-       router.push('/learn'); // Back to dashboard
+       router.push('/student'); 
     }
   };
 
   const handleSkip = () => {
-    handleNext(); // Skip behaves like Next, just without saving progress as "Solved"
+    handleNext(); 
   };
 
   // --- 4. MOVE LOGIC ---
@@ -165,7 +191,8 @@ export default function PuzzlePage() {
     const studentId = (session?.user as any)?.id;
     if (!studentId) return;
 
-    await fetch("/api/progress", {
+    // Fire and forget - don't block UI
+    fetch("/api/progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
@@ -174,7 +201,7 @@ export default function PuzzlePage() {
         isCorrect: isSolved,
         wrongMove
       }),
-    });
+    }).catch(e => console.error("Failed to save progress", e));
   };
 
   const resetPuzzle = () => {
@@ -184,8 +211,30 @@ export default function PuzzlePage() {
     setStatusState("IDLE");
   };
 
-  if (!puzzle) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin mr-2"/> Loading...</div>;
+  // --- RENDER STATES ---
 
+  // 1. Error State (Shows why it's not opening)
+  if (error) {
+    return (
+        <div className="h-screen flex flex-col items-center justify-center bg-stone-100 p-4">
+            <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center border-2 border-red-100">
+                <div className="bg-red-50 text-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertTriangle size={32}/>
+                </div>
+                <h2 className="text-xl font-bold text-stone-800 mb-2">Unable to Load Puzzle</h2>
+                <p className="text-stone-500 mb-6 font-mono text-sm bg-stone-50 p-2 rounded">{error}</p>
+                <button onClick={() => router.back()} className="w-full py-3 bg-stone-800 text-white rounded-lg font-bold hover:bg-black transition">
+                    Go Back
+                </button>
+            </div>
+        </div>
+    );
+  }
+
+  // 2. Loading State
+  if (!puzzle) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin mr-2 text-orange-600"/> Loading Puzzle...</div>;
+
+  // 3. Success State (Game)
   return (
     <div className="min-h-screen bg-stone-100 py-8 px-4 flex flex-col items-center">
       <div className="w-full max-w-5xl">
@@ -198,7 +247,6 @@ export default function PuzzlePage() {
              <h1 className="text-2xl font-bold text-stone-800">{puzzle.title}</h1>
              <span className="text-xs font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase tracking-wider">{puzzle.stage}</span>
           </div>
-          {/* Skip Button in Header */}
           <button onClick={handleSkip} className="flex items-center text-stone-400 hover:text-stone-600 font-medium transition text-sm">
              Skip <SkipForward className="ml-1 h-4 w-4" />
           </button>
@@ -223,7 +271,6 @@ export default function PuzzlePage() {
           {/* Controls */}
           <div className="flex flex-col justify-center space-y-6 max-w-md">
             
-            {/* Status Card */}
             <div className={`p-6 rounded-xl border-2 flex items-center gap-4 transition-all duration-300 ${statusState === 'COMPLETED' ? 'bg-green-50 border-green-200 text-green-800' : statusState === 'WRONG' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-white border-stone-200 text-stone-600'}`}>
                {statusState === 'COMPLETED' ? <CheckCircle className="h-10 w-10 text-green-600" /> : statusState === 'WRONG' ? <XCircle className="h-10 w-10 text-red-600" /> : <Play className="h-10 w-10 text-stone-400" />}
                <div>
@@ -236,7 +283,6 @@ export default function PuzzlePage() {
                </div>
             </div>
 
-            {/* Action Buttons */}
             {statusState !== 'COMPLETED' && (
                 <div className="grid grid-cols-2 gap-4">
                     <button onClick={resetPuzzle} className="flex items-center justify-center gap-2 py-4 bg-white border-2 border-stone-200 rounded-xl font-bold text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition">
@@ -248,7 +294,6 @@ export default function PuzzlePage() {
                 </div>
             )}
 
-            {/* Next / Continue Button */}
             {statusState === 'COMPLETED' && (
               <button onClick={handleNext} className="w-full py-4 bg-green-600 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-green-700 transition transform active:scale-95 flex items-center justify-center gap-2">
                 {nextPuzzleId ? 'Next Puzzle' : 'Finish & Exit'} <ArrowRight className="h-5 w-5"/>
