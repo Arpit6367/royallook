@@ -126,7 +126,7 @@ export default function PuzzlePage() {
        if(folderId) query.set('folderId', folderId);
        router.push(`/puzzle/${nextPuzzleId}?${query.toString()}`);
     } else {
-       router.push('/student'); 
+       router.push('/learn'); 
     }
   };
 
@@ -235,73 +235,149 @@ export default function PuzzlePage() {
   if (!puzzle) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin mr-2 text-orange-600"/> Loading Puzzle...</div>;
 
   // 3. Success State (Game)
-  return (
-    <div className="min-h-screen bg-stone-100 py-8 px-4 flex flex-col items-center">
-      <div className="w-full max-w-5xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <button onClick={() => router.back()} className="flex items-center text-stone-500 hover:text-black font-bold transition">
-            <ArrowLeft className="mr-2 h-5 w-5" /> Back
-          </button>
-          <div className="text-center">
-             <h1 className="text-2xl font-bold text-stone-800">{puzzle.title}</h1>
-             <span className="text-xs font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase tracking-wider">{puzzle.stage}</span>
-          </div>
-          <button onClick={handleSkip} className="flex items-center text-stone-400 hover:text-stone-600 font-medium transition text-sm">
-             Skip <SkipForward className="ml-1 h-4 w-4" />
-          </button>
+// --- SUCCESS STATE (GAME) ---
+return (
+  <div className="min-h-screen bg-gradient-to-br from-stone-100 to-stone-200 py-10 px-4 flex flex-col items-center">
+
+    <div className="w-full max-w-6xl space-y-8">
+
+      {/* HEADER */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-stone-600 hover:text-black transition font-semibold"
+        >
+          <ArrowLeft className="h-5 w-5" /> Back
+        </button>
+
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-stone-900">{puzzle.title}</h1>
+          <span className="inline-block mt-2 px-3 py-1 text-xs font-bold rounded-full bg-orange-200 text-orange-700 tracking-wide uppercase shadow-sm">
+            {puzzle.stage}
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          
-          {/* Board */}
-          <div className="flex justify-center md:justify-end">
-            <div ref={boardContainerRef} className="w-full max-w-[550px] aspect-square shadow-2xl rounded-lg overflow-hidden border-[6px] border-stone-300 bg-white">
-              <Chessboard
-                position={game.fen()}
-                onPieceDrop={onDrop}
-                boardWidth={containerWidth}
-                animationDuration={200}
-                customDarkSquareStyle={{ backgroundColor: "#779556" }}
-                customLightSquareStyle={{ backgroundColor: "#ebecd0" }}
-              />
+        <button
+          onClick={handleSkip}
+          className="flex items-center text-stone-500 hover:text-stone-700 transition font-medium text-sm"
+        >
+          Skip <SkipForward className="ml-2 h-4 w-4" />
+        </button>
+      </div>
+
+      {/* LAYOUT */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+        {/* BOARD */}
+        <div className="flex justify-center md:justify-end">
+          <div
+            ref={boardContainerRef}
+            className="
+              w-full max-w-[560px] aspect-square 
+              rounded-2xl overflow-hidden border-[8px] border-stone-300
+              shadow-[0_10px_35px_rgba(0,0,0,0.12)]
+              bg-white
+            "
+          >
+            <Chessboard
+              position={game.fen()}
+              onPieceDrop={onDrop}
+              boardWidth={containerWidth}
+              animationDuration={200}
+              customDarkSquareStyle={{ backgroundColor: "#769656" }}
+              customLightSquareStyle={{ backgroundColor: "#EEEED2" }}
+            />
+          </div>
+        </div>
+
+        {/* RIGHT PANEL */}
+        <div className="flex flex-col justify-center space-y-8">
+
+          {/* STATUS CARD */}
+          <div
+            className={`
+              p-6 rounded-2xl shadow-md border transition-all duration-300
+              ${
+                statusState === "COMPLETED"
+                  ? "bg-green-100/70 border-green-300 text-green-800"
+                  : statusState === "WRONG"
+                  ? "bg-red-100/70 border-red-300 text-red-800"
+                  : "bg-white border-stone-300 text-stone-700"
+              }
+            `}
+          >
+            <div className="flex items-center gap-5">
+              {statusState === "COMPLETED" ? (
+                <CheckCircle className="h-12 w-12 text-green-600" />
+              ) : statusState === "WRONG" ? (
+                <XCircle className="h-12 w-12 text-red-600" />
+              ) : (
+                <Play className="h-12 w-12 text-stone-400" />
+              )}
+
+              <div>
+                <h2 className="text-xl font-bold">
+                  {statusState === "COMPLETED"
+                    ? "Puzzle Solved!"
+                    : statusState === "WRONG"
+                    ? "Incorrect Move"
+                    : `${game.turn() === "w" ? "White" : "Black"} to Move`}
+                </h2>
+                <p className="text-sm opacity-75 mt-1">
+                  {statusState === "COMPLETED"
+                    ? "You're improving fast — keep going!"
+                    : "Find the best continuation."}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex flex-col justify-center space-y-6 max-w-md">
-            
-            <div className={`p-6 rounded-xl border-2 flex items-center gap-4 transition-all duration-300 ${statusState === 'COMPLETED' ? 'bg-green-50 border-green-200 text-green-800' : statusState === 'WRONG' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-white border-stone-200 text-stone-600'}`}>
-               {statusState === 'COMPLETED' ? <CheckCircle className="h-10 w-10 text-green-600" /> : statusState === 'WRONG' ? <XCircle className="h-10 w-10 text-red-600" /> : <Play className="h-10 w-10 text-stone-400" />}
-               <div>
-                 <h2 className="font-bold text-lg">
-                    {statusState === 'COMPLETED' ? "Puzzle Solved!" : statusState === 'WRONG' ? "Incorrect Move" : `${game.turn() === 'w' ? "White" : "Black"} to Move`}
-                 </h2>
-                 <p className="text-sm opacity-80">
-                    {statusState === 'COMPLETED' ? "Great job! Ready for the next one?" : "Find the best continuation."}
-                 </p>
-               </div>
-            </div>
-
-            {statusState !== 'COMPLETED' && (
-                <div className="grid grid-cols-2 gap-4">
-                    <button onClick={resetPuzzle} className="flex items-center justify-center gap-2 py-4 bg-white border-2 border-stone-200 rounded-xl font-bold text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition">
-                        <RotateCcw className="h-5 w-5"/> Reset
-                    </button>
-                    <button onClick={() => toast.info("Look for checks, captures, and threats!")} className="flex items-center justify-center gap-2 py-4 bg-white border-2 border-stone-200 rounded-xl font-bold text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition">
-                        <Lightbulb className="h-5 w-5"/> Hint
-                    </button>
-                </div>
-            )}
-
-            {statusState === 'COMPLETED' && (
-              <button onClick={handleNext} className="w-full py-4 bg-green-600 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-green-700 transition transform active:scale-95 flex items-center justify-center gap-2">
-                {nextPuzzleId ? 'Next Puzzle' : 'Finish & Exit'} <ArrowRight className="h-5 w-5"/>
+          {/* CONTROLS */}
+          {statusState !== "COMPLETED" && (
+            <div className="grid grid-cols-2 gap-5">
+              <button
+                onClick={resetPuzzle}
+                className="
+                  flex items-center justify-center gap-2 py-4 rounded-xl font-semibold 
+                  bg-white border border-stone-300 text-stone-700 
+                  shadow-sm hover:bg-stone-50 hover:shadow transition
+                "
+              >
+                <RotateCcw className="h-5 w-5" /> Reset
               </button>
-            )}
-          </div>
+
+              <button
+                onClick={() =>
+                  toast.info("Hint: Look for forcing moves (checks, captures, threats)")
+                }
+                className="
+                  flex items-center justify-center gap-2 py-4 rounded-xl font-semibold
+                  bg-white border border-stone-300 text-stone-700 
+                  shadow-sm hover:bg-stone-50 hover:shadow transition
+                "
+              >
+                <Lightbulb className="h-5 w-5" /> Hint
+              </button>
+            </div>
+          )}
+
+          {/* NEXT PUZZLE BUTTON */}
+          {statusState === "COMPLETED" && (
+            <button
+              onClick={handleNext}
+              className="
+                w-full py-4 rounded-xl font-bold text-lg shadow-lg
+                bg-green-600 hover:bg-green-700 text-white 
+                transition transform hover:scale-[1.02] active:scale-95
+                flex items-center justify-center gap-2
+              "
+            >
+              {nextPuzzleId ? "Next Puzzle" : "Finish"} <ArrowRight />
+            </button>
+          )}
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
