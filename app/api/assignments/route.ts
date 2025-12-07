@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 
 // ---------------------------------------------
-// POST – Assign puzzle to a student
+// POST – Assign puzzle(s) to a student
 // ---------------------------------------------
 export async function POST(req: Request) {
   try {
@@ -13,19 +13,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { studentId, puzzleId } = await req.json();
+    // Input: studentId, itemId (puzzleId or folderId), and type
+    const { studentId, itemId, type, puzzleId } = await req.json();
 
-    // Validate input
-    if (!studentId || !puzzleId) {
+    // 1. Validate Input
+    // Support legacy 'puzzleId' if 'itemId' is missing
+    const targetId = itemId || puzzleId; 
+    const targetType = type || 'PUZZLE'; // Default to single puzzle if type missing
+
+    if (!studentId || !targetId) {
       return NextResponse.json(
-        { error: "studentId and puzzleId are required" },
+        { error: "studentId and ID are required" },
         { status: 400 }
       );
     }
 
-    const userRole = session.user?.role;
-
-    // Only ADMIN or COACH can assign puzzles
+    // 2. Authorization Check
+    const userRole = (session.user as any)?.role;
     if (userRole !== "ADMIN" && userRole !== "COACH") {
       return NextResponse.json(
         { error: "Only coaches or admins can assign puzzles" },
@@ -33,50 +37,84 @@ export async function POST(req: Request) {
       );
     }
 
-    // Prevent assigning if student/puzzle does not exist
+    // 3. Verify Student Exists
     const student = await prisma.user.findUnique({ where: { id: studentId } });
-    const puzzle = await prisma.puzzle.findUnique({ where: { id: puzzleId } });
-
     if (!student || student.role !== "STUDENT") {
-      return NextResponse.json(
-        { error: "Invalid student" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Invalid student" }, { status: 404 });
     }
 
-    if (!puzzle) {
-      return NextResponse.json(
-        { error: "Puzzle not found" },
-        { status: 404 }
-      );
-    }
+    // ---------------------------------------------------------
+    // SCENARIO A: BULK ASSIGN FOLDER
+    // ---------------------------------------------------------
+    if (targetType === 'FOLDER') {
+      // 1. Find all puzzles in this folder
+      const puzzlesInFolder = await prisma.puzzle.findMany({
+        where: { folderId: targetId },
+        select: { id: true }
+      });
 
-    // Prevent duplicate assignment of same puzzle
-    const alreadyAssigned = await prisma.assignment.findFirst({
-      where: { studentId, puzzleId }
-    });
-
-    if (alreadyAssigned) {
-      return NextResponse.json(
-        { error: "This puzzle is already assigned to this student" },
-        { status: 409 }
-      );
-    }
-
-    const assignment = await prisma.assignment.create({
-      data: {
-        studentId,
-        puzzleId,
-        assignedBy: session.user?.email || "Unknown",
+      if (puzzlesInFolder.length === 0) {
+        return NextResponse.json({ message: "Folder is empty", count: 0 });
       }
-    });
 
-    return NextResponse.json(assignment);
+      // 2. Prepare data for bulk insert
+      const assignmentsData = puzzlesInFolder.map(p => ({
+        studentId,
+        puzzleId: p.id,
+        assignedBy: session.user?.email || "Unknown",
+        // status: 'PENDING', // Uncomment if your schema has a default status you need to override
+      }));
+
+      // 3. Execute Bulk Insert (skipDuplicates ignores already assigned puzzles)
+      const result = await prisma.assignment.createMany({
+        data: assignmentsData,
+        skipDuplicates: true 
+      });
+
+      return NextResponse.json({ 
+        message: "Folder assigned successfully", 
+        count: result.count 
+      });
+    }
+
+    // ---------------------------------------------------------
+    // SCENARIO B: SINGLE PUZZLE ASSIGNMENT
+    // ---------------------------------------------------------
+    else {
+      // 1. Check if puzzle exists
+      const puzzle = await prisma.puzzle.findUnique({ where: { id: targetId } });
+      if (!puzzle) {
+        return NextResponse.json({ error: "Puzzle not found" }, { status: 404 });
+      }
+
+      // 2. Prevent duplicate assignment
+      const alreadyAssigned = await prisma.assignment.findFirst({
+        where: { studentId, puzzleId: targetId }
+      });
+
+      if (alreadyAssigned) {
+        return NextResponse.json(
+          { error: "This puzzle is already assigned to this student" },
+          { status: 409 }
+        );
+      }
+
+      // 3. Create Assignment
+      const assignment = await prisma.assignment.create({
+        data: {
+          studentId,
+          puzzleId: targetId,
+          assignedBy: session.user?.email || "Unknown",
+        }
+      });
+
+      return NextResponse.json(assignment);
+    }
 
   } catch (e) {
     console.error("Assignment POST error:", e);
     return NextResponse.json(
-      { error: "Failed to assign puzzle" },
+      { error: "Failed to assign homework" },
       { status: 500 }
     );
   }

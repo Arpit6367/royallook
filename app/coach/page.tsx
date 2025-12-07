@@ -9,14 +9,14 @@ import {
   Users, Folder, FileText, ChevronRight, ChevronLeft,
   CheckCircle, XCircle, Clock, RotateCcw, Plus, MousePointer2, 
   Loader2, AlertCircle, ArrowUpDown, Settings, Trash2, 
-  Trophy, Target, Activity, BookOpen
+  Trophy, Target, Activity, BookOpen, Layers
 } from 'lucide-react'
 
 // --- HELPER: MODAL ---
 const Modal = ({ isOpen, onClose, title, children }: any) => {
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
         <div className="flex justify-between items-center mb-6 border-b pb-4">
           <h3 className="text-xl font-bold text-slate-800">{title}</h3>
@@ -133,6 +133,39 @@ function MyStudentsView({ coachId }: { coachId: string }) {
   const totalSolved = stats.filter(s => s.isSolved).length
   const successRate = stats.length > 0 ? Math.round((totalSolved / stats.length) * 100) : 0
 
+  // Handle Assignment Logic
+  const handleAssign = async (id: string, type: 'PUZZLE' | 'FOLDER') => {
+      try {
+          // If it's a folder, we need to assign all puzzles inside it (and potentially subfolders if you want deep recursion)
+          // For simplicity, let's assume the API handles "bulk assignment" or we fetch the puzzles here.
+          // Option A: Enhanced API endpoint that accepts folderId
+          // Option B: Frontend fetches folder content then loops assign.
+          
+          // Let's go with Option A: Send { type, id } to the API
+          const res = await fetch('/api/assignments', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                  studentId: selectedStudent.id, 
+                  itemId: id, 
+                  type: type // 'PUZZLE' or 'FOLDER' 
+              })
+          })
+          
+          if (res.ok) {
+              const data = await res.json()
+              alert(`Successfully assigned ${data.count || 1} puzzle(s)!`)
+              setIsAssignModalOpen(false)
+          } else {
+              const err = await res.json()
+              alert(err.message || "Failed to assign") 
+          }
+      } catch (e) { 
+          console.error(e)
+          alert("Network Error") 
+      }
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-4">
       {/* Student List */}
@@ -240,23 +273,7 @@ function MyStudentsView({ coachId }: { coachId: string }) {
       </div>
 
       <Modal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} title={`Assign Homework to ${selectedStudent?.name}`}>
-        <HomeworkBrowser 
-          onAssign={async (puzzleId) => {
-             try {
-                const res = await fetch('/api/assignments', {
-                    method: 'POST',
-                    body: JSON.stringify({ studentId: selectedStudent.id, puzzleId })
-                })
-                if (res.ok) {
-                    alert("Homework Assigned Successfully!")
-                    setIsAssignModalOpen(false)
-                } else {
-                    const err = await res.json()
-                    alert(err.message || "Failed to assign") 
-                }
-             } catch (e) { alert("Network Error") }
-          }}
-        />
+        <HomeworkBrowser onAssign={handleAssign} />
       </Modal>
     </div>
   )
@@ -421,9 +438,9 @@ function CoursesView() {
 }
 
 // ==========================================
-// 3. HOMEWORK BROWSER
+// 3. HOMEWORK BROWSER (Assign All Added)
 // ==========================================
-function HomeworkBrowser({ onAssign }: { onAssign: (id: string) => void }) {
+function HomeworkBrowser({ onAssign }: { onAssign: (id: string, type: 'PUZZLE' | 'FOLDER') => void }) {
   const [currentStage, setCurrentStage] = useState<string | null>(null)
   const [breadcrumbs, setBreadcrumbs] = useState<any[]>([])
   const [content, setContent] = useState<{folders: any[], puzzles: any[]}>({ folders: [], puzzles: [] })
@@ -448,7 +465,8 @@ function HomeworkBrowser({ onAssign }: { onAssign: (id: string) => void }) {
     return (
       <div className="grid grid-cols-3 gap-4">
         {['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].map(stage => (
-          <button key={stage} onClick={() => setCurrentStage(stage)} className="h-24 border rounded-lg bg-slate-50 hover:bg-orange-50 hover:border-orange-500 font-bold text-slate-600 shadow-sm transition-all">
+          <button key={stage} onClick={() => setCurrentStage(stage)} className="h-24 border rounded-lg bg-slate-50 hover:bg-orange-50 hover:border-orange-500 font-bold text-slate-600 shadow-sm transition-all flex flex-col items-center justify-center gap-2">
+            <Layers size={24} className="text-orange-400"/>
             {stage}
           </button>
         ))}
@@ -456,40 +474,69 @@ function HomeworkBrowser({ onAssign }: { onAssign: (id: string) => void }) {
     )
   }
 
+  // Current folder ID for bulk assign
+  const currentFolderId = breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].id : null
+
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4 text-sm border-b pb-2 overflow-x-auto">
-        <button onClick={() => { setCurrentStage(null); setBreadcrumbs([]) }} className="font-bold text-gray-500 hover:text-black transition">Levels</button>
-        <ChevronRight size={14} className="text-gray-400"/>
-        <span className="font-bold text-orange-600">{currentStage}</span>
-        {breadcrumbs.map((b, i) => (
-          <div key={b.id} className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 mb-4 border-b pb-2">
+          {/* Breadcrumbs */}
+          <div className="flex items-center gap-2 text-sm overflow-x-auto">
+            <button onClick={() => { setCurrentStage(null); setBreadcrumbs([]) }} className="font-bold text-gray-500 hover:text-black transition">Levels</button>
             <ChevronRight size={14} className="text-gray-400"/>
-            <button onClick={() => setBreadcrumbs(breadcrumbs.slice(0, i+1))} className="hover:underline whitespace-nowrap">{b.name}</button>
+            <span className="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">{currentStage}</span>
+            {breadcrumbs.map((b, i) => (
+              <div key={b.id} className="flex items-center gap-2">
+                <ChevronRight size={14} className="text-gray-400"/>
+                <button onClick={() => setBreadcrumbs(breadcrumbs.slice(0, i+1))} className="hover:underline whitespace-nowrap font-medium text-slate-700">{b.name}</button>
+              </div>
+            ))}
           </div>
-        ))}
+
+          {/* Bulk Assign Button (Only if we are inside a folder) */}
+          {currentFolderId && !loading && (content.puzzles.length > 0 || content.folders.length > 0) && (
+              <button 
+                onClick={() => onAssign(currentFolderId, 'FOLDER')}
+                className="w-full bg-slate-800 text-white text-sm font-bold py-2 rounded flex items-center justify-center gap-2 hover:bg-slate-900 transition-colors"
+              >
+                  <Folder size={16}/> Assign Entire Current Folder
+              </button>
+          )}
       </div>
 
       {loading ? <div className="text-center py-10"><Loader2 className="animate-spin inline text-orange-500"/></div> : (
         <div className="grid grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pr-2">
             {content.folders.length === 0 && content.puzzles.length === 0 && <p className="col-span-3 text-center text-gray-400 py-8 italic">No content in this folder.</p>}
 
+            {/* FOLDERS */}
             {content.folders.map(f => (
-            <div key={f.id} onClick={() => setBreadcrumbs([...breadcrumbs, f])} className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-blue-100 transition-colors">
-                <Folder className="text-blue-500 mb-2"/>
-                <span className="text-xs font-bold text-center text-blue-900">{f.name}</span>
+            <div key={f.id} className="relative group bg-blue-50 border border-blue-100 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-blue-100 transition-colors h-32">
+                {/* Click main area to navigate */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-0" onClick={() => setBreadcrumbs([...breadcrumbs, f])}>
+                    <Folder className="text-blue-500 mb-2" size={32}/>
+                    <span className="text-xs font-bold text-center text-blue-900 px-2">{f.name}</span>
+                </div>
+                {/* Quick Assign Button for Folder */}
+                <button 
+                   onClick={(e) => { e.stopPropagation(); onAssign(f.id, 'FOLDER') }}
+                   className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded hover:bg-blue-700 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                   title="Assign Folder"
+                >
+                    <Plus size={14}/>
+                </button>
             </div>
             ))}
 
+            {/* PUZZLES */}
             {content.puzzles.map(p => (
-            <div key={p.id} className="p-4 bg-white border rounded-lg flex flex-col items-center justify-center relative group hover:border-orange-500 transition-all shadow-sm">
-                <FileText className="text-orange-500 mb-2"/>
+            <div key={p.id} className="p-4 bg-white border rounded-lg flex flex-col items-center justify-center relative group hover:border-orange-500 transition-all shadow-sm h-32">
+                <FileText className="text-orange-500 mb-2" size={28}/>
                 <span className="text-xs font-medium text-center truncate w-full text-slate-700">{p.title}</span>
                 <button 
-                onClick={() => onAssign(p.id)}
-                className="absolute inset-0 bg-orange-600/95 text-white font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition duration-200"
+                    onClick={() => onAssign(p.id, 'PUZZLE')}
+                    className="absolute inset-0 bg-orange-600/95 text-white font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition duration-200 z-10"
                 >
-                Assign +
+                Assign
                 </button>
             </div>
             ))}
