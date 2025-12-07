@@ -59,7 +59,7 @@ export function StatsSection() {
     },
     {
       value: "50",
-      label: "National Champions",
+      label: "Tournament Champions",
       suffix: "+",
       icon: <Award className="w-10 h-10" />,
       iconGrad: "from-yellow-500 to-amber-400",
