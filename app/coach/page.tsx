@@ -282,13 +282,24 @@ function MyStudentsView({ coachId }: { coachId: string }) {
 // ==========================================
 // 2. COURSES VIEW
 // ==========================================
+// ==========================================
+// 2. COURSES VIEW (Updated with Editor & Highlights)
+// ==========================================
 function CoursesView() {
   const [courses, setCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCourse, setSelectedCourse] = useState<any>(null)
   const [activeChapter, setActiveChapter] = useState<any>(null)
+  
+  // Board State
   const game = useRef(new Chess())
   const [boardFen, setBoardFen] = useState('start')
+  const [squares, setSquares] = useState<Record<string, any>>({})
+  const [orientation, setOrientation] = useState<'white'|'black'>('white')
+  
+  // Editor/Setup State
+  const [setupMode, setSetupMode] = useState(false)
+  const [selectedTool, setSelectedTool] = useState<Tool>(null)
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -304,11 +315,14 @@ function CoursesView() {
     fetchCourses()
   }, [])
 
+  // Load lesson content when chapter changes
   useEffect(() => {
     if (activeChapter) {
       try {
         game.current.load(activeChapter.fen)
         setBoardFen(activeChapter.fen)
+        setSquares({}) // Clear highlights on new lesson
+        setSetupMode(false) // Exit setup mode on new lesson
       } catch (e) {
         game.current.reset()
         setBoardFen('start')
@@ -316,7 +330,22 @@ function CoursesView() {
     }
   }, [activeChapter])
 
-  const onDrop = (source: string, target: string) => {
+  const updateBoard = () => setBoardFen(game.current.fen())
+
+  // --- INTERACTION HANDLERS ---
+
+  const onDrop = (source: string, target: string, piece: string) => {
+    // 1. Setup Mode Logic (Drag and drop any piece anywhere)
+    if (setupMode) {
+      const boardPiece = game.current.get(source as any)
+      if (source === target) return false;
+      game.current.remove(source as any)
+      game.current.put(boardPiece, target as any)
+      updateBoard()
+      return true
+    }
+
+    // 2. Normal Move Logic (Chess Rules Apply)
     try {
       const move = game.current.move({ from: source, to: target, promotion: 'q' })
       if (!move) return false
@@ -325,10 +354,49 @@ function CoursesView() {
     } catch { return false }
   }
 
+  const onSquareClick = (square: string) => {
+    if (setupMode && selectedTool) {
+       if (selectedTool === 'TRASH') {
+         game.current.remove(square as any)
+       } else {
+         game.current.put({ type: selectedTool.type as any, color: selectedTool.color }, square as any)
+       }
+       updateBoard()
+    }
+  }
+
+  const onSquareRightClick = (square: string) => {
+    // If in Setup Mode, right click removes piece
+    if (setupMode) {
+       game.current.remove(square as any)
+       updateBoard()
+       return
+    }
+
+    // Normal Mode: Cycle Highlights (Green -> Red -> Off)
+    setSquares((prev) => {
+      const newSquares = { ...prev }
+      const current = newSquares[square]
+
+      if (!current) {
+        // 1st Click: Green
+        newSquares[square] = { backgroundColor: 'rgba(0, 255, 0, 0.4)' }
+      } else if (current.backgroundColor === 'rgba(0, 255, 0, 0.4)') {
+        // 2nd Click: Red
+        newSquares[square] = { backgroundColor: 'rgba(255, 0, 0, 0.4)' }
+      } else {
+        // 3rd Click: Off
+        delete newSquares[square]
+      }
+      return newSquares
+    })
+  }
+
   if (loading && !selectedCourse) {
     return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-orange-600 w-8 h-8"/></div>
   }
 
+  // --- COURSE LIST SELECTION ---
   if (!selectedCourse) {
     return (
       <div className="animate-in fade-in slide-in-from-bottom-4">
@@ -364,27 +432,36 @@ function CoursesView() {
     )
   }
 
+  // --- CLASSROOM VIEW ---
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col bg-white rounded-xl shadow-lg border overflow-hidden animate-in fade-in">
-      <div className="bg-slate-800 text-white p-4 flex items-center justify-between shrink-0">
+    <div className="h-[calc(100vh-120px)] flex flex-col bg-white rounded-xl shadow-lg border overflow-hidden animate-in fade-in">
+      {/* Header */}
+      <div className="bg-slate-800 text-white p-3 flex items-center justify-between shrink-0">
          <div className="flex items-center gap-4">
            <button onClick={() => { setSelectedCourse(null); setActiveChapter(null) }} className="hover:bg-slate-700 p-2 rounded-lg transition">
              <ChevronLeft />
            </button>
            <div>
              <h2 className="font-bold text-lg">{selectedCourse.title}</h2>
-             <p className="text-xs text-slate-400">Teaching Mode</p>
+             <p className="text-xs text-slate-400">Classroom Mode</p>
            </div>
          </div>
-         <div className="flex items-center gap-2">
-            <span className="text-sm font-medium opacity-80 mr-2">
-              Lesson: {selectedCourse.chapters.findIndex((c:any) => c.id === activeChapter?.id) + 1} / {selectedCourse.chapters.length}
-            </span>
+         <div className="flex items-center gap-3">
+            <button onClick={() => setOrientation(o => o === 'white' ? 'black' : 'white')} className="p-2 hover:bg-slate-700 rounded" title="Flip Board">
+               <ArrowUpDown size={18}/>
+            </button>
+            <button 
+               onClick={() => { setSetupMode(!setupMode); setSelectedTool(null) }} 
+               className={`px-3 py-1 rounded text-sm font-bold flex items-center gap-2 transition ${setupMode ? 'bg-red-600' : 'bg-slate-700 hover:bg-slate-600'}`}
+            >
+               <Settings size={14}/> {setupMode ? 'Done' : 'Editor'}
+            </button>
          </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-64 bg-slate-50 border-r overflow-y-auto hidden md:block">
+        {/* Left Sidebar: Lessons */}
+        <div className="w-64 bg-slate-50 border-r overflow-y-auto hidden md:block shrink-0">
            <div className="p-4 font-bold text-xs text-slate-400 uppercase tracking-wider">Lessons</div>
            {selectedCourse.chapters.map((chap: any, idx: number) => (
              <button 
@@ -400,33 +477,72 @@ function CoursesView() {
            ))}
         </div>
 
-        <div className="flex-1 flex overflow-hidden flex-col md:flex-row">
-           <div className="flex-1 bg-slate-200 flex flex-col items-center justify-center p-4 relative">
-              <div className="w-full max-w-[550px] aspect-square shadow-2xl rounded-sm overflow-hidden border-4 border-white">
-                 <Chessboard 
-                    position={boardFen} 
-                    onPieceDrop={onDrop}
-                    arePiecesDraggable={true}
-                    animationDuration={200}
-                 />
+        {/* Center: Board Area */}
+        <div className="flex-1 flex overflow-hidden flex-col md:flex-row relative">
+           <div className="flex-1 bg-slate-200 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+              
+              {/* BOARD CONTAINER - RESIZES TO FIT */}
+              <div className="w-full h-full flex justify-center items-center">
+                  <div className="aspect-square h-full max-h-full w-auto shadow-2xl rounded-sm border-4 border-white relative">
+                      <Chessboard 
+                          position={boardFen} 
+                          onPieceDrop={onDrop}
+                          onSquareClick={onSquareClick}
+                          onSquareRightClick={onSquareRightClick}
+                          customSquareStyles={squares}
+                          boardOrientation={orientation}
+                          arePiecesDraggable={true}
+                          areArrowsAllowed={true} // Allow drawing arrows
+                          animationDuration={200}
+                          dropOffBoardAction={setupMode ? 'trash' : 'snapback'}
+                      />
+                      {setupMode && (
+                        <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 text-xs font-bold rounded animate-pulse pointer-events-none z-10">
+                          EDITOR MODE
+                        </div>
+                      )}
+                  </div>
               </div>
-              <div className="mt-4 flex gap-4">
-                 <button 
-                   onClick={() => { game.current.load(activeChapter.fen); setBoardFen(activeChapter.fen) }}
-                   className="bg-white px-4 py-2 rounded shadow text-sm font-bold flex items-center gap-2 hover:bg-orange-50 text-slate-700 transition"
-                 >
-                   <RotateCcw size={16}/> Reset Position
-                 </button>
-              </div>
+
+              {/* EDITOR PALETTE (Overlay when Setup Mode is ON) */}
+              {setupMode && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white p-2 rounded-xl shadow-2xl border flex flex-col items-center gap-2 animate-in slide-in-from-bottom-4 z-20">
+                    <div className="flex gap-1">
+                        {['p','n','b','r','q','k'].map(p => (
+                            <button key={'w'+p} onClick={() => setSelectedTool({type: p, color: 'w'})} className={`w-8 h-8 flex items-center justify-center text-xl hover:bg-gray-100 rounded border ${selectedTool?.type===p && selectedTool?.color==='w' ? 'border-orange-500 bg-orange-50' : 'border-transparent'}`}>{getPieceSymbol(p, 'w')}</button>
+                        ))}
+                    </div>
+                    <div className="flex gap-1">
+                        {['p','n','b','r','q','k'].map(p => (
+                            <button key={'b'+p} onClick={() => setSelectedTool({type: p, color: 'b'})} className={`w-8 h-8 flex items-center justify-center text-xl bg-slate-800 text-white hover:bg-slate-700 rounded border ${selectedTool?.type===p && selectedTool?.color==='b' ? 'border-orange-500 ring-1 ring-orange-500' : 'border-transparent'}`}>{getPieceSymbol(p, 'b')}</button>
+                        ))}
+                    </div>
+                    <div className="flex w-full gap-2 border-t pt-2 mt-1">
+                        <button onClick={() => setSelectedTool('TRASH')} className={`flex-1 flex items-center justify-center gap-1 text-xs font-bold p-1 rounded hover:bg-red-50 text-red-600 ${selectedTool==='TRASH'?'bg-red-100 ring-1 ring-red-500':''}`}><Trash2 size={14}/> Trash</button>
+                        <button onClick={() => { game.current.clear(); updateBoard() }} className="flex-1 text-xs font-bold p-1 rounded hover:bg-gray-100 text-gray-600">Clear</button>
+                        <button onClick={() => { game.current.reset(); updateBoard() }} className="flex-1 text-xs font-bold p-1 rounded hover:bg-gray-100 text-gray-600">Reset</button>
+                    </div>
+                </div>
+              )}
            </div>
 
-           <div className="w-full md:w-[400px] bg-white border-l flex flex-col overflow-hidden">
-              <div className="p-6 border-b bg-slate-50">
-                 <h3 className="text-xl font-bold text-slate-800 mb-1">{activeChapter?.title}</h3>
-                 <span className="text-xs font-bold text-slate-400 uppercase">Instructor Notes</span>
+           {/* Right Sidebar: Notes */}
+           <div className="w-full md:w-[350px] bg-white border-l flex flex-col overflow-hidden shrink-0">
+              <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
+                 <div>
+                    <h3 className="font-bold text-slate-800">{activeChapter?.title}</h3>
+                    <span className="text-xs font-bold text-slate-400 uppercase">Instructor Notes</span>
+                 </div>
+                 <button 
+                   onClick={() => { game.current.load(activeChapter.fen); setBoardFen(activeChapter.fen); setSquares({}) }}
+                   className="p-2 hover:bg-white rounded-full text-slate-500 hover:text-orange-600 transition shadow-sm"
+                   title="Reset Board to Lesson Start"
+                 >
+                   <RotateCcw size={16}/>
+                 </button>
               </div>
               <div className="p-6 overflow-y-auto flex-1 prose prose-slate">
-                 <p className="whitespace-pre-wrap text-slate-600 leading-relaxed text-sm md:text-base">
+                 <p className="whitespace-pre-wrap text-slate-600 leading-relaxed text-sm">
                    {activeChapter?.content || "No detailed notes provided for this lesson."}
                  </p>
               </div>
