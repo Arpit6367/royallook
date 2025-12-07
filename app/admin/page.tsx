@@ -14,7 +14,6 @@ type Tool = { type: string, color: 'w' | 'b' } | 'TRASH' | null
 
 // --- REUSABLE COMPONENTS ---
 
-// 1. Better Modal
 const Modal = ({ isOpen, onClose, title, children }: any) => {
   if (!isOpen) return null
   return (
@@ -34,7 +33,6 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
   )
 }
 
-// 2. Piece Palette (For Course & Puzzle Creation)
 const BoardSetupPalette = ({ selectedTool, setSelectedTool, onClear, onReset }: any) => {
     const pieces = ['p', 'n', 'b', 'r', 'q', 'k']
     
@@ -46,7 +44,6 @@ const BoardSetupPalette = ({ selectedTool, setSelectedTool, onClear, onReset }: 
             </div>
             
             <div className="grid grid-cols-2 gap-4 mb-3">
-                 {/* White Pieces */}
                  <div className="flex gap-1 flex-wrap justify-center">
                     {pieces.map(p => (
                         <div 
@@ -62,7 +59,6 @@ const BoardSetupPalette = ({ selectedTool, setSelectedTool, onClear, onReset }: 
                     ))}
                  </div>
                  
-                 {/* Black Pieces */}
                  <div className="flex gap-1 flex-wrap justify-center border-l pl-4">
                     {pieces.map(p => (
                         <div 
@@ -96,21 +92,17 @@ const BoardSetupPalette = ({ selectedTool, setSelectedTool, onClear, onReset }: 
                     <span className="text-[10px] font-bold">RESET</span>
                 </button>
             </div>
-            <div className="mt-2 text-[10px] text-center text-gray-400">
-                Select a tool, then click the board.
-            </div>
         </div>
     )
 }
 
-// --- MAIN DASHBOARD CONTAINER ---
+// --- MAIN DASHBOARD ---
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'users' | 'courses' | 'puzzles' | 'analysis'>('users')
 
   return (
     <div className="min-h-screen bg-gray-50 text-slate-900 font-sans">
-      {/* Header */}
       <header className="bg-white border-b px-6 py-4 flex flex-col md:flex-row justify-between items-center sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-2 mb-4 md:mb-0">
              <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white font-bold shadow-orange-200 shadow-lg">C</div>
@@ -138,7 +130,6 @@ export default function AdminDashboard() {
         </div>
       </header>
       
-      {/* Main Content Area */}
       <main className="p-4 md:p-6 max-w-7xl mx-auto">
         {activeTab === 'users' && <UserManager />}
         {activeTab === 'courses' && <CourseManager />}
@@ -150,7 +141,7 @@ export default function AdminDashboard() {
 }
 
 // ==========================================
-// TAB 1: USER MANAGER (Restored & Polished)
+// 1. USER MANAGER (Real API)
 // ==========================================
 function UserManager() {
     const [users, setUsers] = useState<any[]>([])
@@ -165,12 +156,12 @@ function UserManager() {
       try {
         const res = await fetch('/api/admin/users')
         const data = await res.json()
-        if (Array.isArray(data)) {
+        if (res.ok && Array.isArray(data)) {
           setUsers(data)
           setCoaches(data.filter((u: any) => u.role === 'COACH' || u.role === 'ADMIN'))
         }
       } catch (error) {
-        console.error(error)
+        console.error("Failed to fetch users", error)
       } finally {
         setLoading(false)
       }
@@ -190,21 +181,26 @@ function UserManager() {
               body: JSON.stringify(payload)
           })
           if (res.ok) {
-              alert(editingId ? "User Updated" : "User Created")
               setIsModalOpen(false)
               fetchUsers()
               setFormData({ name: '', email: '', password: '', role: 'STUDENT', stage: 'BEGINNER', coachId: '' })
           } else {
               const err = await res.json()
-              alert(err.error || "Failed")
+              alert(err.error || "Failed to save user")
           }
       } catch (e) { console.error(e) }
     }
   
     const handleDelete = async (id: string) => {
         if(!confirm("Are you sure?")) return
-        await fetch('/api/admin/users', { method: 'DELETE', body: JSON.stringify({ id })})
-        fetchUsers()
+        try {
+            const res = await fetch('/api/admin/users', { 
+                method: 'DELETE', 
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            })
+            if(res.ok) fetchUsers()
+        } catch(e) { console.error(e) }
     }
   
     const openEdit = (user: any) => {
@@ -312,23 +308,32 @@ function UserManager() {
 }
 
 // ==========================================
-// TAB 2: COURSE MANAGER (Enhanced UI)
+// 2. COURSE MANAGER (Real API)
 // ==========================================
 function CourseManager() {
   const [view, setView] = useState<'LIST' | 'EDIT_COURSE'>('LIST')
   const [courses, setCourses] = useState<any[]>([])
   const [editingCourse, setEditingCourse] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
   
   const [activeChapterIndex, setActiveChapterIndex] = useState<number>(-1)
   const game = useRef(new Chess())
   const [chapterFen, setChapterFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
   const [selectedTool, setSelectedTool] = useState<Tool>(null)
 
-  // Mock Fetch
+  // 1. Fetch Courses
   const fetchCourses = async () => {
-      // Replace with: const res = await fetch('/api/courses'); setCourses(await res.json());
-      setCourses([{ id: 'c1', title: 'Example Course', level: 'BEGINNER', chapters: [{ title: 'Lesson 1', fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1' }] }])
+      setLoading(true)
+      try {
+        const res = await fetch('/api/courses')
+        if(res.ok) {
+            const data = await res.json()
+            setCourses(data)
+        }
+      } catch(e) { console.error(e) }
+      finally { setLoading(false) }
   }
+
   useEffect(() => { fetchCourses() }, [])
 
   const handleCreateCourse = () => {
@@ -337,7 +342,24 @@ function CourseManager() {
     setActiveChapterIndex(-1)
   }
 
-  // --- BOARD LOGIC ---
+  // 2. Save Course
+  const saveCourse = async () => {
+    try {
+        const res = await fetch('/api/courses', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(editingCourse)
+        })
+        if(res.ok) {
+            alert('Course saved successfully!')
+            fetchCourses()
+            setView('LIST')
+        } else {
+            alert('Failed to save course')
+        }
+    } catch(e) { console.error(e); alert('Error saving course') }
+  }
+
   const updateBoard = () => {
     const fen = game.current.fen()
     setChapterFen(fen)
@@ -379,7 +401,10 @@ function CourseManager() {
             <Plus size={18}/> Create Course
           </button>
         </div>
+        
+        {loading ? <div className="text-center py-10"><Loader2 className="animate-spin inline"/></div> : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.length === 0 && <div className="col-span-3 text-center text-gray-400 py-10">No courses found.</div>}
             {courses.map(c => (
                 <div key={c.id} className="border rounded-xl p-5 hover:shadow-lg transition-shadow bg-gray-50 flex flex-col justify-between h-48">
                     <div>
@@ -393,6 +418,7 @@ function CourseManager() {
                 </div>
             ))}
         </div>
+        )}
       </div>
     )
   }
@@ -407,7 +433,7 @@ function CourseManager() {
             <p className="text-xs text-slate-500">Course Editor</p>
           </div>
         </div>
-        <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 shadow-sm transition-colors">
+        <button onClick={saveCourse} className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 shadow-sm transition-colors">
           <Save size={18}/> Save Changes
         </button>
       </div>
@@ -474,7 +500,6 @@ function CourseManager() {
         <div className="flex-1 p-6 overflow-y-auto bg-slate-50/50">
            {activeChapterIndex !== -1 ? (
                <div className="max-w-6xl mx-auto h-full grid grid-cols-1 lg:grid-cols-12 gap-8">
-                   {/* Left: Content */}
                    <div className="lg:col-span-5 flex flex-col gap-4 h-full">
                         <div className="bg-white p-6 rounded-xl border shadow-sm flex flex-col h-full">
                             <input 
@@ -503,7 +528,6 @@ function CourseManager() {
                         </div>
                    </div>
                    
-                   {/* Right: Board */}
                    <div className="lg:col-span-7 flex flex-col gap-4">
                         <div className="bg-white p-1 rounded-xl shadow-lg border border-slate-200">
                             <Chessboard 
@@ -534,7 +558,7 @@ function CourseManager() {
 }
 
 // ==========================================
-// TAB 3: CURRICULUM MANAGER (Move/Delete)
+// 3. CURRICULUM MANAGER (Real API)
 // ==========================================
 function CurriculumManager() {
     const [currentStage, setCurrentStage] = useState<string | null>(null)
@@ -543,52 +567,91 @@ function CurriculumManager() {
     const [view, setView] = useState<'BROWSE' | 'CREATE_PUZZLE'>('BROWSE')
     const [refreshTrigger, setRefreshTrigger] = useState(0)
 
-    // Move/Delete State
     const [moveModalOpen, setMoveModalOpen] = useState(false)
     const [movingItem, setMovingItem] = useState<{id: string, type: 'FOLDER' | 'PUZZLE'} | null>(null)
     const [availableFolders, setAvailableFolders] = useState<any[]>([]) 
     const [newFolderName, setNewFolderName] = useState('')
 
-    // Mock API Fetch
+    // 1. Fetch Content
     useEffect(() => {
-        // Simulation
-        setContent({
-            folders: [{id: 'f1', name: 'Mating Patterns'}, {id: 'f2', name: 'Openings'}],
-            puzzles: [{id: 'p1', title: 'Mate in 1'}]
-        })
+        if (!currentStage) return
+        
+        const parentId = breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].id : null
+        const params = new URLSearchParams()
+        if (parentId) params.append('parentId', parentId)
+        else params.append('stage', currentStage)
+
+        fetch(`/api/content?${params.toString()}`)
+            .then(res => res.json())
+            .then(data => {
+                if(data) setContent({ folders: data.folders || [], puzzles: data.puzzles || [] })
+            })
+            .catch(console.error)
     }, [currentStage, breadcrumbs, refreshTrigger])
 
+    // 2. Actions
     const handleDelete = async (id: string, type: string) => {
         if(!confirm(`Delete this ${type.toLowerCase()}? This cannot be undone.`)) return
-        // await fetch(`/api/content`, { method: 'DELETE', ... })
-        alert("Deleted (Mock)")
-        setRefreshTrigger(p => p+1)
+        try {
+            const res = await fetch(`/api/content`, { 
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, type })
+            })
+            if(res.ok) setRefreshTrigger(p => p+1)
+        } catch(e) { console.error(e) }
     }
 
-    const prepareMove = (item: any, type: 'FOLDER' | 'PUZZLE') => {
+    const prepareMove = async (item: any, type: 'FOLDER' | 'PUZZLE') => {
         setMovingItem({ id: item.id, type })
-        // Fetch all folders flat list for dropdown
-        setAvailableFolders([
-            {id: 'root', name: 'Root Level'},
-            {id: 'f1', name: 'Mating Patterns'},
-            {id: 'f2', name: 'Openings'},
-            {id: 'f3', name: 'Endgames'}
-        ]) 
+        // Fetch valid destination folders (e.g., all folders except current one and its children)
+        try {
+            const res = await fetch('/api/content/folders') // Endpoint to get list of potential parent folders
+            if(res.ok) {
+                const folders = await res.json()
+                setAvailableFolders([{id: 'root', name: 'Root Level'}, ...folders])
+            }
+        } catch(e) { console.error(e) }
         setMoveModalOpen(true)
     }
 
     const handleMoveSubmit = async (targetFolderId: string) => {
         if(!movingItem) return
-        alert(`Moved item ${movingItem.id} to folder ${targetFolderId}`)
-        setMoveModalOpen(false)
-        setMovingItem(null)
-        setRefreshTrigger(p => p+1)
+        try {
+            const res = await fetch('/api/content/move', { // Assuming a move endpoint exists
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ itemId: movingItem.id, targetFolderId })
+            })
+            if(res.ok) {
+                setMoveModalOpen(false)
+                setMovingItem(null)
+                setRefreshTrigger(p => p+1)
+            } else {
+                alert("Move failed")
+            }
+        } catch(e) { console.error(e) }
     }
 
-    const createFolder = () => {
+    const createFolder = async () => {
         if(!newFolderName) return
-        alert(`Created folder: ${newFolderName}`)
-        setNewFolderName('')
+        const parentId = breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].id : null
+        try {
+            const res = await fetch('/api/content', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    type: 'FOLDER',
+                    name: newFolderName,
+                    stage: !parentId ? currentStage : null,
+                    parentId: parentId
+                })
+            })
+            if(res.ok) {
+                setNewFolderName('')
+                setRefreshTrigger(p => p+1)
+            }
+        } catch(e) { console.error(e) }
     }
 
     // --- CARD COMPONENT ---
@@ -631,7 +694,7 @@ function CurriculumManager() {
 
     if (view === 'CREATE_PUZZLE') {
         const parent = breadcrumbs[breadcrumbs.length - 1]
-        return <PuzzleCreator folderId={parent?.id || 'root'} onBack={() => setView('BROWSE')} />
+        return <PuzzleCreator folderId={parent?.id || 'root'} onBack={() => { setView('BROWSE'); setRefreshTrigger(p=>p+1) }} />
     }
 
     if (!currentStage) {
@@ -710,7 +773,7 @@ function CurriculumManager() {
 }
 
 // ==========================================
-// TAB 3.5: PUZZLE CREATOR (Enhanced)
+// 4. PUZZLE CREATOR (Real API)
 // ==========================================
 function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => void }) {
     const game = useRef(new Chess())
@@ -719,6 +782,7 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
     const [title, setTitle] = useState('')
     const [mode, setMode] = useState<'SETUP'|'RECORD'>('SETUP')
     const [selectedTool, setSelectedTool] = useState<Tool>(null)
+    const [startFen, setStartFen] = useState<string | null>(null)
     
     const updateBoard = () => setFen(game.current.fen())
   
@@ -726,11 +790,13 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
       if (mode === 'SETUP') {
         const boardOnly = game.current.fen().split(" ")[0];
         if (!boardOnly.includes("K") || !boardOnly.includes("k")) return alert("Invalid board. Kings missing.");
+        setStartFen(game.current.fen())
         setMoves([])
         setMode('RECORD')
         setSelectedTool(null)
       } else {
         setMode('SETUP')
+        setStartFen(null)
       }
     }
   
@@ -762,9 +828,27 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
       return false
     }
 
-    const savePuzzle = () => {
-        alert("Puzzle Saved (Simulated)")
-        onBack()
+    const savePuzzle = async () => {
+        if(!title || !startFen) return
+        try {
+            const res = await fetch('/api/content', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    type: 'PUZZLE',
+                    title: title,
+                    fen: startFen,
+                    solution: moves.join(' '),
+                    parentId: folderId === 'root' ? null : folderId
+                })
+            })
+            if(res.ok) {
+                alert("Puzzle Saved Successfully!")
+                onBack()
+            } else {
+                alert("Failed to save puzzle")
+            }
+        } catch(e) { console.error(e) }
     }
   
     return (
@@ -838,7 +922,7 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
 }
 
 // ==========================================
-// TAB 4: ANALYSIS BOARD (Restored)
+// 5. ANALYSIS BOARD
 // ==========================================
 function AnalysisBoard() {
     const game = useRef(new Chess())
@@ -935,7 +1019,6 @@ function AnalysisBoard() {
   
           {setupMode && (
             <div className="border-t pt-4 animate-in fade-in slide-in-from-top-4">
-                {/* Reusing the new Palette logic for Analysis Setup */}
                <BoardSetupPalette 
                   selectedTool={selectedTool} 
                   setSelectedTool={setSelectedTool}
