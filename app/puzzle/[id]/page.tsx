@@ -67,7 +67,7 @@ export default function PuzzlePage() {
           setMoveIndex(0);
           setStatusState("IDLE");
         })
-        .catch(() => router.push("/student"));
+        .catch(() => router.push("/learn"));
 
       // B. Determine Next Puzzle ID based on Context
       const fetchNext = async () => {
@@ -100,7 +100,7 @@ export default function PuzzlePage() {
        if(folderId) query.set('folderId', folderId);
        router.push(`/puzzle/${nextPuzzleId}?${query.toString()}`);
     } else {
-       router.push('/student'); // Back to dashboard
+       router.push('/learn'); // Back to dashboard
     }
   };
 
