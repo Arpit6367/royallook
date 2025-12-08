@@ -1,66 +1,79 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { signIn, useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function SignInPage() {
-  const router = useRouter()
-  const { data: session, status } = useSession()
+  const router = useRouter();
+  const { data: session, status } = useSession();
 
-  // ✅ FIX: Define all state hooks BEFORE any return statements
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  // States
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Redirect when logged in
+  // -------------------------------------
+  // ✅ FIXED REDIRECT LOGIC
+  // -------------------------------------
   useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
-      const role = session.user.role
-      if (role === 'admin') router.push('/admin')
-      else if (role === 'coach') router.push('/coach')
-      else router.push('/learn')
-    }
-  }, [session, status, router])
+    if (status !== "authenticated") return;
+    if (!session?.user?.role) return; // prevent early redirect
 
-  const isAuth = status === 'authenticated'
-  const isLoading = status === 'loading'
+    const role = session.user.role;
 
-  // ✅ NOW it is safe to return early, because all hooks have been registered
-  if (isLoading || isAuth) {
+    if (role === "admin") router.replace("/admin");
+    else if (role === "coach") router.replace("/coach");
+    else router.replace("/learn");
+  }, [session, status, router]);
+
+  // -------------------------------------
+  // ✅ Proper loading check
+  // -------------------------------------
+  if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>{isLoading ? 'Loading...' : 'Redirecting...'}</p>
+        <p>Loading...</p>
       </div>
-    )
+    );
   }
 
-  // ---- Normal sign in screen ----
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+  // -------------------------------------
+  // 🔴 Do NOT block UI on authenticated
+  // (let redirect effect handle it)
+  // -------------------------------------
 
-    const result = await signIn('credentials', {
+  // -------------------------------------
+  // Handle Sign In
+  // -------------------------------------
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const result = await signIn("credentials", {
       email,
       password,
-      redirect: false
-    })
+      redirect: false,
+    });
 
     if (result?.error) {
-      setError('Invalid email or password')
+      setError("Invalid email or password");
     } else {
-      router.refresh()
+      router.refresh();
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
+  // -------------------------------------
+  // UI
+  // -------------------------------------
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#769656] to-[#5C1F1C] py-12 px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
@@ -69,18 +82,34 @@ export default function SignInPage() {
         <form onSubmit={handleSubmit} className="space-y-6 mt-8">
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
 
           <div>
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
           </div>
 
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
 
@@ -89,5 +118,5 @@ export default function SignInPage() {
         </p>
       </div>
     </div>
-  )
+  );
 }
