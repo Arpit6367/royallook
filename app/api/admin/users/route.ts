@@ -32,7 +32,8 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, name, role, stage, coachId } = body;
+    // Added 'status' to destructuring
+    const { email, password, name, role, stage, coachId, status } = body;
 
     // 1. Validate required fields
     if (!email || !password || !name || !role) {
@@ -51,6 +52,7 @@ export async function POST(req: Request) {
       email,
       password: hashedPassword,
       role,
+      status: status || "ACTIVE", // Default to ACTIVE if not provided
     };
 
     // 4. Role specific logic
@@ -90,13 +92,20 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, password, role, coachId, ...rest } = body;
+    // Added 'status' to destructuring so we can explicitly handle it if needed
+    const { id, password, role, coachId, status, ...rest } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Missing user id" }, { status: 400 });
     }
 
+    // Start with the generic rest properties (name, email, stage, etc.)
     const data: any = { ...rest };
+
+    // Explicitly add status if it was sent in the body
+    if (status) {
+        data.status = status;
+    }
 
     // Hash new password if provided
     if (password && password.trim() !== "") {
