@@ -102,7 +102,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'users' | 'courses' | 'puzzles' | 'analysis'>('users')
 
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-900 font-sans">
+    <div className="min-h-screen bg-gray-50 text-slate-900 font-sans mt-[90px]">
       <header className="bg-white border-b px-6 py-4 flex flex-col md:flex-row justify-between items-center sticky top-0 z-40 shadow-sm mb-12">
         <div className="flex items-center gap-2 mb-4 md:mb-0">
              <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white font-bold shadow-orange-200 shadow-lg">C</div>
