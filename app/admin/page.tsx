@@ -130,7 +130,7 @@ export default function AdminDashboard() {
         </div>
       </header>
       
-      <main className="p-4 md:p-6 max-w-7xl mx-auto">
+      <main className="p-4 md:p-6 max-w-7xl mx-auto pt-20">
         {activeTab === 'users' && <UserManager />}
         {activeTab === 'courses' && <CourseManager />}
         {activeTab === 'puzzles' && <CurriculumManager />}
