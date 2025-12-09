@@ -30,6 +30,15 @@ export function AuthNav() {
             </Button>
           </Link>
         )}
+
+        {session.user.role === 'COACH' && (
+          <Link href="/coach">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">COACH</span>
+            </Button>
+          </Link>
+        )}
         
         <div className="flex items-center gap-2 px-2">
           <User className="h-4 w-4 text-gray-600" />
