@@ -37,25 +37,25 @@
 // }
 
 // app/layout.tsx
-import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
+import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { Analytics } from "@vercel/analytics/next";
 
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { Providers } from "./providers"
-import "./globals.css"
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { Providers } from "./providers";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Chesspure Academy - Professional Chess Training",
-  description: "Professional chess training academy with FIDE rated coaches.",
-}
+  description: "Learn chess from FIDE-rated coaches. Online & offline classes.",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -68,5 +68,5 @@ export default function RootLayout({
         <Analytics />
       </body>
     </html>
-  )
+  );
 }
