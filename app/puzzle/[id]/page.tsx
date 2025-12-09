@@ -6,8 +6,16 @@ import { useEffect, useState, useRef } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import {
-  ArrowLeft, CheckCircle, XCircle, Lightbulb, RotateCcw, Play,
-  Loader2, SkipForward, ArrowRight, AlertTriangle
+  ArrowLeft,
+  CheckCircle,
+  XCircle,
+  Lightbulb,
+  RotateCcw,
+  Play,
+  Loader2,
+  SkipForward,
+  ArrowRight,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,7 +34,7 @@ export default function PuzzlePage() {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  const puzzleId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const puzzleId = Array.isArray(params?.id) ? params.id[0] : (params?.id as string | undefined);
 
   const context = searchParams.get("context") || null;
   const folderId = searchParams.get("folderId") || null;
@@ -77,9 +85,8 @@ export default function PuzzlePage() {
         const res = await fetch(`/api/puzzles/${puzzleId}`);
         if (!res.ok) throw new Error("Puzzle not found.");
 
-        const data = await res.json();
-        if (!data.fen || !data.solution)
-          throw new Error("Puzzle data incomplete.");
+        const data: Puzzle = await res.json();
+        if (!data.fen || !data.solution) throw new Error("Puzzle data incomplete.");
 
         const newGame = new Chess(data.fen);
         setGame(newGame);
@@ -99,19 +106,37 @@ export default function PuzzlePage() {
         }
 
         if (url) {
-          const nextRes = await fetch(url);
-          if (nextRes.ok) {
-            const nextData = await nextRes.json();
-            setNextPuzzleId(nextData?.id || null);
-          } else {
+          try {
+            const nextRes = await fetch(url);
+            console.log("Next puzzle fetch:", url, nextRes.status);
+
+            if (nextRes.ok) {
+              const nextData = await nextRes.json();
+              console.log("Next puzzle data:", nextData);
+
+              // Support multiple possible shapes from the API
+              const candidateId =
+                nextData?.id ??
+                nextData?.nextId ??
+                nextData?.nextPuzzleId ??
+                (Array.isArray(nextData) && nextData[0]?.id) ??
+                null;
+
+              setNextPuzzleId(candidateId || null);
+            } else {
+              setNextPuzzleId(null);
+            }
+          } catch (e) {
+            console.error("Failed to load next puzzle", e);
             setNextPuzzleId(null);
           }
         } else {
+          // No context / folder => no automatic next
           setNextPuzzleId(null);
         }
-
       } catch (err: any) {
-        setError(err.message);
+        console.error("Error loading puzzle", err);
+        setError(err.message || "Failed to load puzzle");
       }
     };
 
@@ -125,7 +150,9 @@ export default function PuzzlePage() {
       if (context) query.set("context", context);
       if (folderId) query.set("folderId", folderId);
 
-      router.push(`/puzzle/${nextPuzzleId}?${query.toString()}`);
+      const qs = query.toString();
+      const href = qs ? `/puzzle/${nextPuzzleId}?${qs}` : `/puzzle/${nextPuzzleId}`;
+      router.push(href);
     } else {
       router.push("/learn");
     }
@@ -261,7 +288,6 @@ export default function PuzzlePage() {
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 flex flex-col items-center">
       <div className="w-full max-w-6xl space-y-8">
-
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <button
@@ -272,9 +298,7 @@ export default function PuzzlePage() {
           </button>
 
           <div className="text-center">
-            <h1 className="text-3xl font-extrabold text-slate-800">
-              {puzzle.title}
-            </h1>
+            <h1 className="text-3xl font-extrabold text-slate-800">{puzzle.title}</h1>
             <span className="inline-block mt-1 px-3 py-0.5 text-xs font-bold rounded-full bg-orange-100 text-orange-700 uppercase">
               {puzzle.stage}
             </span>
@@ -290,7 +314,6 @@ export default function PuzzlePage() {
 
         {/* MAIN AREA */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
           {/* CHESSBOARD */}
           <div className="flex justify-center">
             <div
@@ -311,7 +334,6 @@ export default function PuzzlePage() {
 
           {/* CONTROLS */}
           <div className="flex flex-col justify-center space-y-6 pt-4">
-
             {/* STATUS */}
             <div
               className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
