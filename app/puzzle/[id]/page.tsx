@@ -38,9 +38,10 @@ export default function PuzzlePage() {
 
   const context = searchParams.get("context") || null;
   const folderId = searchParams.get("folderId") || null;
+  const nextFromUrl = searchParams.get("next") || null;
 
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
-  const [nextPuzzleId, setNextPuzzleId] = useState<string | null>(null);
+  const [nextPuzzleId, setNextPuzzleId] = useState<string | null>(nextFromUrl);
   const [error, setError] = useState<string | null>(null);
 
   const [game, setGame] = useState(new Chess());
@@ -67,7 +68,7 @@ export default function PuzzlePage() {
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Load Puzzle & Always Load Next Puzzle
+  // Load Puzzle & Next Puzzle
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/api/auth/signin");
@@ -96,7 +97,7 @@ export default function PuzzlePage() {
         setMoveIndex(0);
         setStatusState("IDLE");
 
-        // ---- ALWAYS LOAD NEXT PUZZLE ----
+        // ---- LOAD NEXT PUZZLE (API + URL fallback) ----
         let url = "";
 
         if (context === "todo") {
@@ -114,7 +115,6 @@ export default function PuzzlePage() {
               const nextData = await nextRes.json();
               console.log("Next puzzle data:", nextData);
 
-              // Support multiple possible shapes from the API
               const candidateId =
                 nextData?.id ??
                 nextData?.nextId ??
@@ -122,17 +122,18 @@ export default function PuzzlePage() {
                 (Array.isArray(nextData) && nextData[0]?.id) ??
                 null;
 
-              setNextPuzzleId(candidateId || null);
+              // Use API result, else fallback to ?next= from URL
+              setNextPuzzleId(candidateId || nextFromUrl || null);
             } else {
-              setNextPuzzleId(null);
+              setNextPuzzleId(nextFromUrl || null);
             }
           } catch (e) {
             console.error("Failed to load next puzzle", e);
-            setNextPuzzleId(null);
+            setNextPuzzleId(nextFromUrl || null);
           }
         } else {
-          // No context / folder => no automatic next
-          setNextPuzzleId(null);
+          // No context/folder -> only use ?next= if provided
+          setNextPuzzleId(nextFromUrl || null);
         }
       } catch (err: any) {
         console.error("Error loading puzzle", err);
@@ -141,7 +142,7 @@ export default function PuzzlePage() {
     };
 
     loadPuzzle();
-  }, [status, puzzleId, folderId, context, router]);
+  }, [status, puzzleId, folderId, context, nextFromUrl, router]);
 
   // Navigation
   const handleNext = () => {
