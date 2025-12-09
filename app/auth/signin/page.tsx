@@ -17,38 +17,49 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // -------------------------------------
-  // 1. REDIRECT LOGIC
-  // -------------------------------------
+  // -------------------------------------------------
+  // 1. REDIRECT AUTHENTICATED USERS IMMEDIATELY
+  // -------------------------------------------------
   useEffect(() => {
     if (status === "authenticated" && session?.user?.role) {
-      const role = session.user.role;
-      if (role === "admin") router.replace("/admin");
-      else if (role === "coach") router.replace("/coach");
-      else router.replace("/learn");
-    }
-  }, [session, status, router]);
+      const role = session.user.role as string;
 
-  // -------------------------------------
-  // 2. BLOCK UI IF AUTHENTICATED OR LOADING
-  // -------------------------------------
-  // This prevents the form from flashing if the user is already logged in
-  // or if the redirect is in progress.
-  if (status === "loading" || status === "authenticated") {
+      if (role === "admin") {
+        router.replace("/admin");
+      } else if (role === "coach") {
+        router.replace("/coach");
+      } else {
+        router.replace("/learn");
+      }
+    }
+  }, [status, session, router]);
+
+  // -------------------------------------------------
+  // 2. SHOW LOADING OR REDIRECTING SCREEN
+  // -------------------------------------------------
+  if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#769656] to-[#5C1F1C]">
-        <div className="bg-white p-6 rounded-lg shadow-xl">
-            <p className="text-lg font-semibold animate-pulse">
-                {status === "authenticated" ? "Redirecting..." : "Loading..."}
-            </p>
+        <div className="bg-white p-8 rounded-lg shadow-2xl">
+          <p className="text-xl font-semibold animate-pulse">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // -------------------------------------
-  // 3. HANDLE SUBMIT
-  // -------------------------------------
+  if (status === "authenticated") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#769656] to-[#5C1F1C]">
+        <div className="bg-white p-8 rounded-lg shadow-2xl">
+          <p className="text-xl font-bold animate-pulse">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------
+  // 3. HANDLE SIGN IN
+  // -------------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -57,29 +68,26 @@ export default function SignInPage() {
     const result = await signIn("credentials", {
       email,
       password,
-      redirect: false,
+      redirect: false, // Important: we handle redirect manually
     });
 
     if (result?.error) {
       setError("Invalid email or password");
-      setLoading(false); // 👈 ONLY stop loading on error
-    } else {
-      // ✅ SUCCESS: 
-      // Refresh to update server components, but keep 'loading' TRUE
-      // so the form remains disabled until the page changes.
-      router.refresh(); 
+      setLoading(false);
     }
+    // On success → do NOTHING here
+    // useEffect will catch the updated session and redirect
   };
 
-  // -------------------------------------
-  // UI
-  // -------------------------------------
+  // -------------------------------------------------
+  // 4. SIGN-IN FORM (Only shown when unauthenticated)
+  // -------------------------------------------------
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#769656] to-[#5C1F1C] py-12 px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
-        <h1 className="text-3xl font-bold text-center">Sign In</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">Sign In</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6 mt-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="email">Email</Label>
             <Input
@@ -88,6 +96,7 @@ export default function SignInPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
@@ -99,11 +108,12 @@ export default function SignInPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -113,8 +123,11 @@ export default function SignInPage() {
           </Button>
         </form>
 
-        <p className="text-center mt-6 text-sm">
-          Don’t have an account? <Link href="/auth/signup">Sign Up</Link>
+        <p className="text-center mt-6 text-sm text-gray-600">
+          Don’t have an account?{" "}
+          <Link href="/auth/signup" className="font-medium text-blue-600 hover:underline">
+            Sign Up
+          </Link>
         </p>
       </div>
     </div>
