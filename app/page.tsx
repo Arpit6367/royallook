@@ -25,7 +25,7 @@ export default function HomePage() {
       // Redirect based on role
       if (role === 'ADMIN') router.push('/admin')
       else if (role === 'COACH') router.push('/coach')
-      else if (role === 'STUDENT') router.push('/student')
+      else if (role === 'STUDENT') router.push('/learn')
       else router.push('/learn') // Fallback
     }
   }, [status, session, router])
