@@ -1,5 +1,5 @@
 "use client";
-//hello
+
 import { useSession } from "next-auth/react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
@@ -38,10 +38,9 @@ export default function PuzzlePage() {
 
   const context = searchParams.get("context") || null;
   const folderId = searchParams.get("folderId") || null;
-  const nextFromUrl = searchParams.get("next") || null;
 
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
-  const [nextPuzzleId, setNextPuzzleId] = useState<string | null>(nextFromUrl);
+  const [nextPuzzleId, setNextPuzzleId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [game, setGame] = useState(new Chess());
@@ -97,7 +96,7 @@ export default function PuzzlePage() {
         setMoveIndex(0);
         setStatusState("IDLE");
 
-        // ---- LOAD NEXT PUZZLE (API + URL fallback) ----
+        // ---- ALWAYS LOAD NEXT PUZZLE FROM API ----
         let url = "";
 
         if (context === "todo") {
@@ -122,18 +121,17 @@ export default function PuzzlePage() {
                 (Array.isArray(nextData) && nextData[0]?.id) ??
                 null;
 
-              // Use API result, else fallback to ?next= from URL
-              setNextPuzzleId(candidateId || nextFromUrl || null);
+              setNextPuzzleId(candidateId || null);
             } else {
-              setNextPuzzleId(nextFromUrl || null);
+              setNextPuzzleId(null);
             }
           } catch (e) {
             console.error("Failed to load next puzzle", e);
-            setNextPuzzleId(nextFromUrl || null);
+            setNextPuzzleId(null);
           }
         } else {
-          // No context/folder -> only use ?next= if provided
-          setNextPuzzleId(nextFromUrl || null);
+          // No context or folder: no automatic next
+          setNextPuzzleId(null);
         }
       } catch (err: any) {
         console.error("Error loading puzzle", err);
@@ -142,7 +140,7 @@ export default function PuzzlePage() {
     };
 
     loadPuzzle();
-  }, [status, puzzleId, folderId, context, nextFromUrl, router]);
+  }, [status, puzzleId, folderId, context, router]);
 
   // Navigation
   const handleNext = () => {
