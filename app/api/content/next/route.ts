@@ -15,13 +15,13 @@ export async function GET(req: Request) {
       );
     }
 
-    // Fetch content inside folder
-    const puzzles = await prisma.content.findMany({
+    // All puzzles in this folder, ordered by title (or id)
+    const puzzles = await prisma.puzzle.findMany({
       where: {
-        folderId: folderId,
+        folderId,
       },
       orderBy: {
-        order: "asc",     // replace with actual sorting field (position, index)
+        title: "asc", // or id: "asc"
       },
       select: {
         id: true,
@@ -32,20 +32,17 @@ export async function GET(req: Request) {
       return NextResponse.json({ id: null });
     }
 
-    // Find current puzzle index
-    const index = puzzles.findIndex(p => p.id === currentId);
+    const index = puzzles.findIndex((p: { id: string }) => p.id === currentId);
 
     if (index === -1) {
       return NextResponse.json({ id: null });
     }
 
-    // Get next one
     const nextPuzzle = puzzles[index + 1];
 
     return NextResponse.json({
       id: nextPuzzle ? nextPuzzle.id : null,
     });
-
   } catch (error) {
     console.error("Error fetching next folder puzzle:", error);
     return NextResponse.json(

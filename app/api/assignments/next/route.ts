@@ -8,16 +8,16 @@ export async function GET(req: Request) {
     const currentId = searchParams.get("currentId");
 
     if (!currentId) {
-      return NextResponse.json({ error: "currentId is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "currentId is required" },
+        { status: 400 }
+      );
     }
 
-    // Fetch all active TODO assignments sorted by order (or createdAt)
+    // All assignments ordered by assignedAt
     const assignments = await prisma.assignment.findMany({
-      where: {
-        status: "pending",   // adjust if your status field is different
-      },
       orderBy: {
-        order: "asc",        // change if using position, index, createdAt, etc.
+        assignedAt: "asc",
       },
       select: {
         id: true,
@@ -25,24 +25,20 @@ export async function GET(req: Request) {
     });
 
     if (!assignments.length) {
-      return NextResponse.json({ id: null }); // no assignments at all
+      return NextResponse.json({ id: null });
     }
 
-    // Find current index
-    const index = assignments.findIndex(a => a.id === currentId);
+    const index = assignments.findIndex((a) => a.id === currentId);
 
-    // Edge case: current not found
     if (index === -1) {
       return NextResponse.json({ id: null });
     }
 
-    // Get next assignment
     const nextAssignment = assignments[index + 1];
 
     return NextResponse.json({
       id: nextAssignment ? nextAssignment.id : null,
     });
-
   } catch (error) {
     console.error("Error fetching next assignment:", error);
     return NextResponse.json(
