@@ -28,8 +28,8 @@ export default function PuzzlePage() {
 
   const puzzleId = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
-  const context = searchParams.get("context");
-  const folderId = searchParams.get("folderId");
+  const context = searchParams.get("context") || null;
+  const folderId = searchParams.get("folderId") || null;
 
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [nextPuzzleId, setNextPuzzleId] = useState<string | null>(null);
@@ -59,7 +59,7 @@ export default function PuzzlePage() {
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Load Puzzle + Load Next Puzzle Always
+  // Load Puzzle & Always Load Next Puzzle
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/api/auth/signin");
@@ -89,30 +89,27 @@ export default function PuzzlePage() {
         setMoveIndex(0);
         setStatusState("IDLE");
 
-        // ALWAYS Fetch Next Puzzle
-        try {
-          let url = "";
+        // ---- ALWAYS LOAD NEXT PUZZLE ----
+        let url = "";
 
-          if (context === "todo") {
-            url = `/api/assignments/next?currentId=${puzzleId}`;
-          } else if (folderId) {
-            url = `/api/content/next?folderId=${folderId}&currentId=${puzzleId}`;
-          }
+        if (context === "todo") {
+          url = `/api/assignments/next?currentId=${puzzleId}`;
+        } else if (folderId) {
+          url = `/api/content/next?folderId=${folderId}&currentId=${puzzleId}`;
+        }
 
-          if (url) {
-            const nextRes = await fetch(url);
-            if (nextRes.ok) {
-              const nextData = await nextRes.json();
-              setNextPuzzleId(nextData?.id || null);
-            } else {
-              setNextPuzzleId(null);
-            }
+        if (url) {
+          const nextRes = await fetch(url);
+          if (nextRes.ok) {
+            const nextData = await nextRes.json();
+            setNextPuzzleId(nextData?.id || null);
           } else {
             setNextPuzzleId(null);
           }
-        } catch {
+        } else {
           setNextPuzzleId(null);
         }
+
       } catch (err: any) {
         setError(err.message);
       }
@@ -136,13 +133,11 @@ export default function PuzzlePage() {
 
   const handleSkip = () => handleNext();
 
-  // Hint System
+  // Hint
   const handleHint = () => {
-    if (statusState === "COMPLETED" || moveIndex >= solutionMoves.length)
-      return;
+    if (statusState === "COMPLETED" || moveIndex >= solutionMoves.length) return;
 
     const correctSan = solutionMoves[moveIndex];
-
     const tempGame = new Chess(game.fen());
     const moves = tempGame.moves({ verbose: true });
     const correctMoveObj = moves.find((m) => m.san === correctSan);
@@ -150,12 +145,10 @@ export default function PuzzlePage() {
     if (correctMoveObj) {
       setHintArrow([[correctMoveObj.from, correctMoveObj.to]]);
       toast.info("Best Move Highlighted!");
-    } else {
-      toast.error("Unable to show hint.");
     }
   };
 
-  // Move Handler
+  // On Drop
   const onDrop = (from: string, to: string) => {
     if (statusState === "COMPLETED" || statusState === "WRONG") return false;
 
@@ -177,7 +170,6 @@ export default function PuzzlePage() {
     }
   };
 
-  // When correct move played
   const handleCorrectStep = () => {
     const nextIndex = moveIndex + 1;
 
@@ -191,7 +183,7 @@ export default function PuzzlePage() {
     setMoveIndex(nextIndex);
     setStatusState("CORRECT");
 
-    // Auto-play reply
+    // Auto-opponent reply
     setTimeout(() => {
       const reply = solutionMoves[nextIndex];
       if (reply) {
@@ -210,7 +202,7 @@ export default function PuzzlePage() {
     setStatusState("WRONG");
     toast.error("Wrong Move!");
     saveProgress(false, wrongSan);
-    setTimeout(() => setStatusState("IDLE"), 800);
+    setTimeout(() => setStatusState("IDLE"), 700);
   };
 
   // Save Progress
@@ -238,22 +230,18 @@ export default function PuzzlePage() {
     setHintArrow([]);
   };
 
-  // ---- UI BELOW ----
+  // UI ----------------------------------------------------
 
   if (error) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-stone-100 p-4">
         <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md text-center border-2 border-red-100">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-stone-800 mb-2">
-            Unable to Load Puzzle
-          </h2>
-          <p className="text-stone-500 mb-6 font-mono text-sm bg-stone-50 p-2 rounded">
-            {error}
-          </p>
+          <h2 className="text-xl font-bold mb-2">Unable to Load Puzzle</h2>
+          <p className="text-slate-500 text-sm">{error}</p>
           <button
             onClick={() => router.back()}
-            className="w-full py-3 bg-stone-800 text-white rounded-lg font-bold hover:bg-black transition"
+            className="mt-6 w-full py-3 bg-stone-800 text-white rounded-lg"
           >
             Go Back
           </button>
@@ -273,6 +261,7 @@ export default function PuzzlePage() {
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 flex flex-col items-center">
       <div className="w-full max-w-6xl space-y-8">
+
         {/* HEADER */}
         <div className="flex items-center justify-between">
           <button
@@ -300,10 +289,10 @@ export default function PuzzlePage() {
         </div>
 
         {/* MAIN AREA */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
           {/* CHESSBOARD */}
-          <div className="flex justify-center md:justify-end">
+          <div className="flex justify-center">
             <div
               ref={boardContainerRef}
               className="w-full max-w-[550px] aspect-square rounded-xl overflow-hidden shadow-2xl bg-white border-4 border-white"
@@ -323,7 +312,7 @@ export default function PuzzlePage() {
           {/* CONTROLS */}
           <div className="flex flex-col justify-center space-y-6 pt-4">
 
-            {/* STATUS CARD */}
+            {/* STATUS */}
             <div
               className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
                 statusState === "COMPLETED"
@@ -343,23 +332,14 @@ export default function PuzzlePage() {
                 )}
 
                 <div>
-                  <h2
-                    className={`text-xl font-bold ${
-                      statusState === "COMPLETED"
-                        ? "text-green-800"
-                        : statusState === "WRONG"
-                        ? "text-red-800"
-                        : "text-slate-800"
-                    }`}
-                  >
+                  <h2 className="text-xl font-bold">
                     {statusState === "COMPLETED"
                       ? "Puzzle Solved!"
                       : statusState === "WRONG"
                       ? "Incorrect Move"
                       : `${game.turn() === "w" ? "White" : "Black"} to Move`}
                   </h2>
-
-                  <p className="text-sm text-slate-500 font-medium">
+                  <p className="text-sm text-slate-500">
                     {statusState === "COMPLETED"
                       ? "Great job! Continue to next puzzle."
                       : "Find the best move."}
@@ -373,13 +353,14 @@ export default function PuzzlePage() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={resetPuzzle}
-                  className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-white border-2 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition"
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-white border-2 border-slate-200"
                 >
                   <RotateCcw className="h-5 w-5" /> Reset
                 </button>
+
                 <button
                   onClick={handleHint}
-                  className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-blue-50 border-2 border-blue-100 text-blue-600 hover:bg-blue-100 transition"
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-blue-50 border-2 border-blue-100"
                 >
                   <Lightbulb className="h-5 w-5" /> Hint
                 </button>
@@ -387,7 +368,7 @@ export default function PuzzlePage() {
             ) : (
               <button
                 onClick={handleNext}
-                className="w-full py-4 rounded-xl font-bold text-lg shadow-lg bg-orange-500 hover:bg-orange-600 text-white transition transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-xl font-bold text-lg shadow-lg bg-orange-500 text-white flex items-center justify-center gap-2"
               >
                 {nextPuzzleId ? "Next Puzzle" : "Back to Library"} <ArrowRight />
               </button>
@@ -395,9 +376,7 @@ export default function PuzzlePage() {
 
             {puzzle.description && (
               <div className="mt-4 p-4 bg-slate-100 rounded-xl text-slate-600 text-sm">
-                <span className="font-bold block mb-1 text-slate-700">
-                  Description:
-                </span>
+                <span className="font-bold block mb-1">Description:</span>
                 {puzzle.description}
               </div>
             )}
