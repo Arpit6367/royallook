@@ -114,7 +114,14 @@ export default function StudentDashboard() {
     fetchLibrary(stage, null)
   }
 
-  const launchPuzzle = (puzzleId: string) => router.push(`/puzzle/${puzzleId}`)
+  // UPDATED: Accepts nextPuzzleId to create the chain
+  const launchPuzzle = (puzzleId: string, nextPuzzleId?: string) => {
+    let url = `/puzzle/${puzzleId}`
+    if (nextPuzzleId) {
+      url += `?next=${nextPuzzleId}`
+    }
+    router.push(url)
+  }
 
   // Helpers
   const isStageLocked = (targetStage: string) => {
@@ -173,19 +180,25 @@ export default function StudentDashboard() {
                   <p className="text-slate-500">Check the Library to practice more.</p>
                </div>
             )}
-            {pending.map((item) => (
-              <div key={item.id} onClick={() => launchPuzzle(item.puzzle.id)} className="group bg-white rounded-2xl p-6 border shadow-sm hover:shadow-lg hover:border-orange-300 transition cursor-pointer relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-500 group-hover:w-3 transition-all" />
-                <div className="flex justify-between mb-4 pl-3">
-                   <div className="bg-orange-50 text-orange-600 p-3 rounded-full"><PlayCircle size={24} /></div>
-                   <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded">ASSIGNED</span>
+            {pending.map((item, index) => {
+              // Calculate Next Puzzle ID for ToDo List
+              const nextAssignment = pending[index + 1];
+              const nextId = nextAssignment ? nextAssignment.puzzle.id : undefined;
+
+              return (
+                <div key={item.id} onClick={() => launchPuzzle(item.puzzle.id, nextId)} className="group bg-white rounded-2xl p-6 border shadow-sm hover:shadow-lg hover:border-orange-300 transition cursor-pointer relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-500 group-hover:w-3 transition-all" />
+                  <div className="flex justify-between mb-4 pl-3">
+                    <div className="bg-orange-50 text-orange-600 p-3 rounded-full"><PlayCircle size={24} /></div>
+                    <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded">ASSIGNED</span>
+                  </div>
+                  <div className="pl-3">
+                    <h3 className="text-xl font-bold text-slate-800">{item.puzzle.title}</h3>
+                    <div className="text-sm text-slate-500 mt-1">By Coach {item.assignedBy}</div>
+                  </div>
                 </div>
-                <div className="pl-3">
-                   <h3 className="text-xl font-bold text-slate-800">{item.puzzle.title}</h3>
-                   <div className="text-sm text-slate-500 mt-1">By Coach {item.assignedBy}</div>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
@@ -261,14 +274,18 @@ export default function StudentDashboard() {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                   {curriculumItems.puzzles.map(p => {
+                   {curriculumItems.puzzles.map((p, index) => {
                      const progress = puzzleProgress[p.id]
                      const isSolved = progress?.isSolved
+
+                     // Calculate Next Puzzle ID for Library List
+                     const nextPuzzle = curriculumItems.puzzles[index + 1];
+                     const nextId = nextPuzzle ? nextPuzzle.id : undefined;
                      
                      return (
                        <div 
                          key={p.id} 
-                         onClick={() => launchPuzzle(p.id)} 
+                         onClick={() => launchPuzzle(p.id, nextId)} 
                          className={`group p-4 border rounded-xl cursor-pointer transition flex items-center justify-between ${isSolved ? 'bg-green-50 border-green-200' : 'bg-white hover:border-blue-500 hover:shadow-md'}`}
                        >
                           <div className="flex items-center gap-3 overflow-hidden">
