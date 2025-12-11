@@ -22,12 +22,7 @@ export function Header() {
     { name: "Home", href: "/" },
     {
       name: "About",
-      href: "/about",
-      hasDropdown: true,
-      dropdownItems: [
-        { name: "Mission", href: "/about/mission" },
-        { name: "Team", href: "/about/team" },
-      ]
+      href: "/about"
     },
     { name: "Courses", href: "/courses" },
     { name: "Our Coaches", href: "/coaches" },
