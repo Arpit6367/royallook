@@ -23,6 +23,11 @@ export function Header() {
     {
       name: "About",
       href: "/about",
+      hasDropdown: true,
+      dropdownItems: [
+        { name: "Mission", href: "/about/mission" },
+        { name: "Team", href: "/about/team" },
+      ]
     },
     { name: "Courses", href: "/courses" },
     { name: "Our Coaches", href: "/coaches" },
@@ -128,40 +133,41 @@ export function Header() {
                 </div>
               ))}
               
-              <AuthNav />
+              {/* Desktop Auth Nav */}
+              <div className="ml-4">
+                <AuthNav />
+              </div>
             </nav>
 
-            {/* Mobile Menu Button and Auth Nav */}
-            <div className="lg:hidden flex items-center gap-2">
-              <AuthNav />
+            {/* Mobile Header Controls */}
+            {/* CHANGED: Removed AuthNav from here to prevent overcrowding */}
+            <div className="lg:hidden flex items-center">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 rounded-md text-gray-800 hover:bg-gray-100 transition-colors"
+                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={isMobileMenuOpen ? "close" : "open"}
+                    initial={{ opacity: 0, rotate: -180 }}
+                    animate={{ opacity: 1, rotate: 0 }}
+                    exit={{ opacity: 0, rotate: 180 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {isMobileMenuOpen ? (
+                      <X className="w-6 h-6" />
+                    ) : (
+                      <Menu className="w-6 h-6" />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </button>
             </div>
-            
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-md text-gray-800 hover:bg-gray-100 transition-colors"
-              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={isMobileMenuOpen ? "close" : "open"}
-                  initial={{ opacity: 0, rotate: -180 }}
-                  animate={{ opacity: 1, rotate: 0 }}
-                  exit={{ opacity: 0, rotate: 180 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {isMobileMenuOpen ? (
-                    <X className="w-6 h-6" />
-                  ) : (
-                    <Menu className="w-6 h-6" />
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu Dropdown */}
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
@@ -169,9 +175,9 @@ export function Header() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="lg:hidden bg-white border-t border-gray-200 overflow-hidden"
+              className="lg:hidden bg-white border-t border-gray-200 overflow-hidden shadow-lg"
             >
-              <div className="px-4 py-3 space-y-1">
+              <div className="px-4 py-3 space-y-1 max-h-[80vh] overflow-y-auto">
                 {navItems.map((item) => (
                   <div key={item.name}>
                     {item.hasDropdown ? (
@@ -195,13 +201,13 @@ export function Header() {
                               animate={{ height: "auto" }}
                               exit={{ height: 0 }}
                               transition={{ duration: 0.2 }}
-                              className="ml-4 mt-1 space-y-1 overflow-hidden"
+                              className="ml-4 mt-1 space-y-1 overflow-hidden border-l-2 border-gray-100 pl-2"
                             >
                               {item.dropdownItems?.map((dropItem) => (
                                 <Link
                                   key={dropItem.name}
                                   href={dropItem.href}
-                                  className="block py-2 pl-3 pr-4 text-sm text-gray-700 hover:bg-yellow-50 hover:text-[#5C1F1C] rounded-md"
+                                  className="block py-2 pl-3 pr-4 text-sm text-gray-700 hover:text-[#5C1F1C] rounded-md"
                                   onClick={() => {
                                     setIsAboutOpen(false);
                                     setIsMobileMenuOpen(false);
@@ -225,6 +231,9 @@ export function Header() {
                     )}
                   </div>
                 ))}
+                
+                {/* CHANGED: Added AuthNav here with isMobile prop */}
+                <AuthNav isMobile={true} />
               </div>
             </motion.div>
           )}

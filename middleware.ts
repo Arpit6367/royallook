@@ -1,4 +1,4 @@
-// middleware.ts - FINAL VERSION (Handles case-insensitive roles like "ADMIN" or "admin")
+// // middleware.ts - FINAL VERSION (Handles case-insensitive roles like "ADMIN" or "admin")
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
