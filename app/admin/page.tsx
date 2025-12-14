@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useEffect, useState, useRef } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
@@ -9,12 +8,9 @@ import {
   Play, Copy, Settings, ArrowUpDown, BookOpen, Video, List, Loader2,
   MoreVertical, FolderInput, X, Search, Star, CheckSquare, Square
 } from 'lucide-react'
-
 // --- TYPES ---
 type Tool = { type: string, color: 'w' | 'b' } | 'TRASH' | null
-
 // --- REUSABLE COMPONENTS ---
-
 const Modal = ({ isOpen, onClose, title, children }: any) => {
   if (!isOpen) return null
   return (
@@ -33,7 +29,6 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
     </div>
   )
 }
-
 const BoardSetupPalette = ({ selectedTool, setSelectedTool, onClear, onReset }: any) => {
     const pieces = ['p', 'n', 'b', 'r', 'q', 'k']
    
@@ -75,7 +70,6 @@ const BoardSetupPalette = ({ selectedTool, setSelectedTool, onClear, onReset }: 
                     ))}
                  </div>
             </div>
-
             <div className="border-t pt-3 flex gap-2">
                 <button
                     onClick={() => setSelectedTool('TRASH')}
@@ -96,12 +90,9 @@ const BoardSetupPalette = ({ selectedTool, setSelectedTool, onClear, onReset }: 
         </div>
     )
 }
-
 // --- MAIN DASHBOARD ---
-
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'users' | 'courses' | 'puzzles' | 'analysis'>('users')
-
   return (
     <div className="min-h-screen bg-gray-50 text-slate-900 font-sans mt-[90px]">
       <header className="bg-white border-b px-6 py-4 flex flex-col md:flex-row justify-between items-center sticky top-0 z-40 shadow-sm mb-12">
@@ -140,7 +131,6 @@ export default function AdminDashboard() {
     </div>
   )
 }
-
 // ==========================================
 // 1. USER MANAGER
 // ==========================================
@@ -170,13 +160,11 @@ function UserManager() {
     }
  
     useEffect(() => { fetchUsers() }, [])
-
     const handleToggleStatus = async (user: any) => {
         const newStatus = user.status === 'BLOCKED' ? 'ACTIVE' : 'BLOCKED'
         const action = newStatus === 'BLOCKED' ? 'Block' : 'Activate'
        
         if(!confirm(`Are you sure you want to ${action} ${user.name}?`)) return
-
         try {
             const res = await fetch('/api/admin/users', {
                 method: 'PUT',
@@ -301,7 +289,6 @@ function UserManager() {
                 <label className="text-xs font-bold text-gray-500">Password</label>
                 <input className="w-full border p-2 rounded focus:ring-2 ring-orange-200 outline-none" type="password" placeholder={editingId ? "Leave blank to keep current" : "Secure Password"} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
             </div>
-
             <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500">System Role</label>
                 <select className="w-full border p-2 rounded bg-white" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
@@ -310,7 +297,6 @@ function UserManager() {
                 <option value="ADMIN">Admin</option>
                 </select>
             </div>
-
             {formData.role === 'STUDENT' && (
               <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded border">
                 <div>
@@ -338,7 +324,6 @@ function UserManager() {
       </div>
     )
 }
-
 // ==========================================
 // 2. COURSE MANAGER
 // ==========================================
@@ -352,7 +337,6 @@ function CourseManager() {
   const game = useRef(new Chess())
   const [chapterFen, setChapterFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
   const [selectedTool, setSelectedTool] = useState<Tool>(null)
-
   const fetchCourses = async () => {
       setLoading(true)
       try {
@@ -364,15 +348,12 @@ function CourseManager() {
       } catch(e) { console.error(e) }
       finally { setLoading(false) }
   }
-
   useEffect(() => { fetchCourses() }, [])
-
   const handleCreateCourse = () => {
     setEditingCourse({ title: '', description: '', level: 'BEGINNER', chapters: [] })
     setView('EDIT_COURSE')
     setActiveChapterIndex(-1)
   }
-
   const saveCourse = async () => {
     try {
         const res = await fetch('/api/courses', {
@@ -389,7 +370,6 @@ function CourseManager() {
         }
     } catch(e) { console.error(e); alert('Error saving course') }
   }
-
   const updateBoard = () => {
     const fen = game.current.fen()
     setChapterFen(fen)
@@ -399,29 +379,25 @@ function CourseManager() {
         setEditingCourse({ ...editingCourse, chapters: updatedChapters })
     }
   }
-
   const onSquareClick = (square: string) => {
     if (activeChapterIndex === -1 || !selectedTool) return
-    if (selectedTool === 'TRASH') game.current.remove(square as any)
-    else game.current.put({ type: selectedTool.type as any, color: selectedTool.color }, square as any)
+    if (selectedTool === 'TRASH') game.current.remove(square)
+    else game.current.put({ type: selectedTool.type, color: selectedTool.color }, square)
     updateBoard()
   }
-
-  const onPieceDrop = (source: string, target: string) => {
+  const onPieceDrop = (source: string, target: string, piece: string) => {
     if (activeChapterIndex === -1) return false
-    const piece = game.current.get(source as any)
-    if (!piece) return false
-    game.current.remove(source as any)
-    game.current.put(piece, target as any)
+    const p = game.current.get(source)
+    if (!p) return false
+    game.current.remove(source)
+    game.current.put(p, target)
     updateBoard()
     return true
   }
-
   const onSquareRightClick = (square: string) => {
-    game.current.remove(square as any)
+    game.current.remove(square)
     updateBoard()
   }
-
   if (view === 'LIST') {
     return (
       <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -452,7 +428,6 @@ function CourseManager() {
       </div>
     )
   }
-
   return (
     <div className="bg-white rounded-xl shadow-lg border overflow-hidden flex flex-col h-[85vh]">
       <div className="bg-white border-b p-4 flex justify-between items-center shrink-0">
@@ -467,7 +442,6 @@ function CourseManager() {
           <Save size={18}/> Save Changes
         </button>
       </div>
-
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-80 border-r bg-gray-50 flex flex-col shrink-0">
@@ -525,7 +499,6 @@ function CourseManager() {
                 ))}
             </div>
         </div>
-
         {/* Editor Area */}
         <div className="flex-1 p-6 overflow-y-auto bg-slate-50/50">
            {activeChapterIndex !== -1 ? (
@@ -586,7 +559,6 @@ function CourseManager() {
     </div>
   )
 }
-
 // ==========================================
 // 3. CURRICULUM MANAGER
 // ==========================================
@@ -596,15 +568,12 @@ function CurriculumManager() {
     const [content, setContent] = useState<{folders: any[], puzzles: any[]}>({ folders: [], puzzles: [] })
     const [view, setView] = useState<'BROWSE' | 'CREATE_PUZZLE'>('BROWSE')
     const [refreshTrigger, setRefreshTrigger] = useState(0)
-
     const [moveModalOpen, setMoveModalOpen] = useState(false)
     const [movingItem, setMovingItem] = useState<{id: string, type: 'FOLDER' | 'PUZZLE'} | null>(null)
     const [availableFolders, setAvailableFolders] = useState<any[]>([])
     const [newFolderName, setNewFolderName] = useState('')
-
     // Multi-Select State
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
-
     // 1. Fetch Content
     useEffect(() => {
         if (!currentStage) return
@@ -613,7 +582,6 @@ function CurriculumManager() {
         const params = new URLSearchParams()
         if (parentId) params.append('parentId', parentId)
         else params.append('stage', currentStage)
-
         fetch(`/api/content?${params.toString()}`)
             .then(res => res.json())
             .then(data => {
@@ -624,7 +592,6 @@ function CurriculumManager() {
             })
             .catch(console.error)
     }, [currentStage, breadcrumbs, refreshTrigger])
-
     // 2. Actions
     const handleDelete = async (id: string, type: string) => {
         if(!confirm(`Delete this ${type.toLowerCase()}? This cannot be undone.`)) return
@@ -637,7 +604,6 @@ function CurriculumManager() {
             if(res.ok) setRefreshTrigger(p => p+1)
         } catch(e) { console.error(e) }
     }
-
     // Bulk Delete
     const handleBulkDelete = async () => {
         if(!confirm(`Delete ${selectedItems.size} items? This cannot be undone.`)) return
@@ -652,19 +618,16 @@ function CurriculumManager() {
                 body: JSON.stringify({ id, type })
             })
         })
-
         await Promise.all(promises)
         setRefreshTrigger(p => p + 1)
         setSelectedItems(new Set())
     }
-
     const toggleSelection = (id: string) => {
         const newSet = new Set(selectedItems)
         if(newSet.has(id)) newSet.delete(id)
         else newSet.add(id)
         setSelectedItems(newSet)
     }
-
     const prepareMove = async (item: any, type: 'FOLDER' | 'PUZZLE') => {
         setMovingItem({ id: item.id, type })
         // Fetch valid destination folders
@@ -677,7 +640,6 @@ function CurriculumManager() {
         } catch(e) { console.error(e) }
         setMoveModalOpen(true)
     }
-
     const handleMoveSubmit = async (targetFolderId: string) => {
         if(!movingItem) return
         try {
@@ -695,7 +657,6 @@ function CurriculumManager() {
             }
         } catch(e) { console.error(e) }
     }
-
     const createFolder = async () => {
         if(!newFolderName) return
         const parentId = breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].id : null
@@ -716,7 +677,6 @@ function CurriculumManager() {
             }
         } catch(e) { console.error(e) }
     }
-
     // --- CARD COMPONENT ---
     const ItemCard = ({ item, type }: { item: any, type: 'FOLDER' | 'PUZZLE' }) => {
         const [showMenu, setShowMenu] = useState(false)
@@ -735,7 +695,6 @@ function CurriculumManager() {
                 <div className="absolute top-2 left-2 z-10" onClick={(e) => { e.stopPropagation(); toggleSelection(item.id) }}>
                     {isSelected ? <CheckSquare className="text-orange-600"/> : <Square className="text-gray-300 hover:text-gray-500"/>}
                 </div>
-
                 <div className="absolute top-2 right-2">
                     <button
                         onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu) }}
@@ -755,7 +714,6 @@ function CurriculumManager() {
                     )}
                     {showMenu && <div className="fixed inset-0 z-10 cursor-default" onClick={(e) => { e.stopPropagation(); setShowMenu(false)}} />}
                 </div>
-
                 {type === 'FOLDER' ? <Folder className="w-10 h-10 text-blue-500 mb-2"/> : <FileText className="w-8 h-8 text-orange-500 mb-2"/>}
                 <span className={`font-bold text-sm px-4 text-center truncate w-full ${type === 'FOLDER' ? 'text-blue-900' : 'text-slate-700'}`}>
                     {type === 'FOLDER' ? item.name : item.title}
@@ -763,12 +721,10 @@ function CurriculumManager() {
             </div>
         )
     }
-
     if (view === 'CREATE_PUZZLE') {
         const parent = breadcrumbs[breadcrumbs.length - 1]
         return <PuzzleCreator folderId={parent?.id || 'root'} onBack={() => { setView('BROWSE'); setRefreshTrigger(p=>p+1) }} />
     }
-
     if (!currentStage) {
         return (
             <div className="bg-white rounded-xl shadow-sm border p-8 min-h-[500px]">
@@ -785,7 +741,6 @@ function CurriculumManager() {
             </div>
         )
     }
-
     return (
         <div className="bg-white rounded-xl shadow-sm border p-6 min-h-[600px] flex flex-col">
             <div className="flex items-center gap-2 mb-8 pb-4 border-b justify-between">
@@ -806,7 +761,6 @@ function CurriculumManager() {
                     </button>
                 )}
             </div>
-
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-auto">
                 {/* Folder Creation Input */}
                 <div className="h-36 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center p-4 gap-2">
@@ -823,13 +777,11 @@ function CurriculumManager() {
                 {content.folders.map(f => <ItemCard key={f.id} item={f} type="FOLDER" />)}
                 {content.puzzles.map(p => <ItemCard key={p.id} item={p} type="PUZZLE" />)}
             </div>
-
             <div className="border-t pt-6 mt-6 flex justify-end">
                  <button onClick={() => setView('CREATE_PUZZLE')} className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 transition-transform hover:scale-105 font-bold">
                      <Plus size={20}/> New Puzzle
                  </button>
             </div>
-
             <Modal isOpen={moveModalOpen} onClose={() => setMoveModalOpen(false)} title="Move to Folder">
                 <div className="space-y-2">
                     <p className="text-sm text-gray-500 mb-2">Select destination:</p>
@@ -850,7 +802,6 @@ function CurriculumManager() {
         </div>
     )
 }
-
 // ==========================================
 // 4. PUZZLE CREATOR (Updated: Direct FEN, Stars, Kingless Support)
 // ==========================================
@@ -878,54 +829,35 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
         const parts = fenStr.split(' ')
         return parts.length > 1 ? parts[1] : 'w'
     }
-
     const updateBoard = () => {
+        // If game is valid, get FEN from chess.js
+        // If custom board (kingless), we might rely on what was dropped last,
+        // but react-chessboard keeps internal state. We just sync 'fen' state.
         try {
             setFen(game.current.fen())
         } catch(e) {
             // Chess.js might fail if position is invalid (no king).
+            // We just keep current 'fen' state if it was updated manually via drop.
         }
     }
-
     // 1. Sync Manual Input when Board Changes
     useEffect(() => {
         setManualFen(fen)
     }, [fen])
-
     // 2. Handle Direct FEN Input
-    const ensureFullFen = (partialFen: string): string => {
-        let fen = partialFen.trim();
-        let parts = fen.split(' ');
-        
-        // Add missing fields if user pastes just board
-        if (parts.length === 1) {
-            const hasWhite = /[PRNBQK]/.test(parts[0]);
-            const turn = hasWhite ? 'w' : 'b';
-            parts.push(turn, 'KQkq', '-', '0', '1');
-        } else {
-            while (parts.length < 6) {
-                if (parts.length === 1) parts.push('w');
-                else if (parts.length === 2) parts.push('KQkq');
-                else if (parts.length === 3) parts.push('-');
-                else if (parts.length === 4) parts.push('0');
-                else if (parts.length === 5) parts.push('1');
-            }
-        }
-        return parts.join(' ');
-    };
-
     const handleManualFenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const input = e.target.value.trim();
-        setManualFen(input);
-
-        const fullFen = ensureFullFen(input);
+        const input = e.target.value
+        setManualFen(input)
+       
+        // Try to load strictly. If fail, assume custom board and just set FEN for visual.
         try {
-            game.current.load(fullFen);
-            setFen(game.current.fen());
+            const result = game.current.load(input)
+            setFen(game.current.fen())
         } catch (error) {
-            setFen(fullFen); // Still show it visually even if chess.js rejects it (e.g. no kings)
+            // It's an invalid FEN for standard chess (e.g. no king), but we allow it for custom puzzles
+            setFen(input)
         }
-    };
+    }
  
     // --- Toggle Side to Move (White/Black) ---
     const toggleTurn = (color: 'w' | 'b') => {
@@ -938,7 +870,6 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
             try { game.current.load(newFen) } catch(e) {}
         }
     }
-
     // --- Handle PGN Import ---
     const handleImportPgn = () => {
         try {
@@ -962,52 +893,30 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
             alert("Invalid PGN. Please check syntax.")
         }
     }
-
+ 
     const toggleMode = () => {
-        if (mode === 'SETUP') {
-            let currentFen = fen.trim();
-            let parts = currentFen.split(' ');
-
-            // Ensure full valid FEN
-            while (parts.length < 6) {
-                if (parts.length === 1) {
-                    const board = parts[0];
-                    const hasWhitePiece = /[PRNBQK]/.test(board);
-                    const hasBlackPiece = /[prnbqk]/.test(board);
-                    const turn = hasWhitePiece && !hasBlackPiece ? 'w' :
-                                !hasWhitePiece && hasBlackPiece ? 'b' : 'w'; 
-                    parts.push(turn);
-                } else if (parts.length === 2) parts.push('KQkq');     
-                else if (parts.length === 3) parts.push('-');          
-                else if (parts.length === 4) parts.push('0');          
-                else if (parts.length === 5) parts.push('1');          
-            }
-
-            const fullFen = parts.join(' ');
-
-            // Validation: Allow Kingless ONLY if user confirms (Custom Mode)
-            const boardOnly = parts[0];
-            const hasKings = boardOnly.includes('K') && boardOnly.includes('k');
-            
-            // If standard puzzle (no stars), warn about kings. If star puzzle, kingless is common.
-            if (stars.length === 0 && !hasKings) {
-                if (!confirm("No kings on board — this will be a custom exercise. Continue?")) return;
-            }
-
-            setStartFen(fullFen);
-            setFen(fullFen);
-            setMoves([]);
-            setMode('RECORD');
-            setSelectedTool(null);
-        } else {
-            setMode('SETUP');
-            setStartFen(null);
+      if (mode === 'SETUP') {
+        // Validation: If standard chess, check kings. If custom (stars present), skip validation.
+        const boardOnly = fen.split(" ")[0];
+        const hasKings = boardOnly.includes("K") && boardOnly.includes("k");
+       
+        // If it's a star puzzle, we don't care about kings.
+        if (stars.length === 0 && !hasKings) {
+             if(!confirm("Board has missing kings. This will be treated as a custom exercise (non-standard chess). Continue?")) return;
         }
-    };
+        setStartFen(fen)
+        setMoves([])
+        setMode('RECORD')
+        setSelectedTool(null)
+      } else {
+        setMode('SETUP')
+        setStartFen(null)
+        setStars([]) // Optional: reset stars if going back? or keep them. Let's keep them.
+      }
+    }
  
     // --- Interaction Handlers ---
-
-    // Right Click: Toggle Star
+    // Right Click: Toggle Star (in Setup), Remove Piece (in Setup if not star)
     const onSquareRightClick = (square: string) => {
         if (mode === 'SETUP') {
             if (stars.includes(square)) {
@@ -1017,58 +926,55 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
             }
         }
     }
-
-    // Left Click: Place/Remove Piece in Setup
+    // Left Click: Place Piece / Remove
     const onSquareClick = (square: string) => {
       if (mode !== 'SETUP' || !selectedTool) return
      
+      // If clicking with a tool, remove any star on that square to avoid visual clutter
       if (stars.includes(square)) setStars(stars.filter(s => s !== square))
-
+      // We manually manipulate FEN string if chess.js fails (Kingless support)
+      // BUT react-chessboard doesn't expose easy FEN manipulation without chess.js.
+      // So we prioritize chess.js, fallback to visual update is complex without library support.
+      // Simplified: We rely on chess.js for placement. If it fails, user must use FEN input for Kingless setups.
+      // Actually, game.put() works even if FEN is invalid for .move().
       if (selectedTool === 'TRASH') {
-          game.current.remove(square as any)
+          game.current.remove(square)
       } else {
-          game.current.put({ type: selectedTool.type as any, color: selectedTool.color }, square as any)
+          game.current.put({ type: selectedTool.type, color: selectedTool.color }, square)
       }
       setFen(game.current.fen())
     }
  
     const onPieceDrop = (source: string, target: string, piece: string) => {
       if (mode === 'SETUP') {
-        const p = game.current.get(source as any)
+        const p = game.current.get(source)
         if(!p) return false
-        game.current.remove(source as any)
-        game.current.put(p, target as any)
+        game.current.remove(source)
+        game.current.put(p, target)
         setFen(game.current.fen())
         return true
       }
      
       if (mode === 'RECORD') {
-        // 1. Check for Star Collection (Custom Move)
-        if (stars.includes(target) || game.current.get(source as any)?.color === game.current.turn()) {
-            
-            // We allow moves that chess.js might block if it's the wrong turn, 
-            // OR if it's a star collection (custom puzzle).
-            // Especially for "One piece moving multiple times to collect stars".
-            
-            // Simulating move manually to bypass turn/legality check for custom puzzles
-            const p = game.current.get(source as any)
-            if (p) {
-                game.current.remove(source as any)
-                game.current.put(p, target as any)
-                
-                // If it was a star, remove it
-                if (stars.includes(target)) {
-                    setStars(stars.filter(s => s !== target))
-                }
-
-                // Record as custom coordinate string
-                setMoves([...moves, `${source}-${target}`])
-                setFen(game.current.fen())
-                return true
-            }
+        // 1. Check for Star Collection
+        if (stars.includes(target)) {
+            // Remove star
+            setStars(stars.filter(s => s !== target))
+            // We allow the move even if illegal in standard chess (Custom Exercise Mode)
+            // Manually move piece in game state if possible, else strictly visual?
+            // To support "Knight moving freely", we can't use game.move().
+            // We force the move by manipulating the board state directly.
+           
+            const p = game.current.get(source)
+            game.current.remove(source)
+            game.current.put(p, target)
+           
+            // Record 'move' as simple coordinate string for custom puzzles
+            setMoves([...moves, `${source}-${target}`])
+            setFen(game.current.fen())
+            return true
         }
-
-        // 2. Standard Chess Move fallback
+        // 2. Standard Chess Move
         try {
           const move = game.current.move({ from: source, to: target, promotion: 'q' })
           if (!move) return false
@@ -1079,7 +985,6 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
       }
       return false
     }
-
     // Render Stars overlay
     const customSquareStyles: Record<string, React.CSSProperties> = {}
     stars.forEach(square => {
@@ -1090,7 +995,6 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
             backgroundSize: '50%',
         }
     })
-
     const savePuzzle = async () => {
         if(!title || !startFen) return
         try {
@@ -1238,7 +1142,8 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
                         game.current.load(startFen!);
                         setFen(startFen!);
                         setMoves([]);
-                        // Reset stars if they were collected (simplified)
+                        // Reset stars if they were collected
+                        // Note: Logic to restore specific stars on undo is complex, simpler to reset all
                         alert("Resetting position...");
                     }} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded font-bold text-gray-700 flex items-center gap-2">
                         <RotateCcw size={16}/> Reset
@@ -1275,7 +1180,6 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
       </div>
     )
 }
-
 // ==========================================
 // 5. ANALYSIS BOARD
 // ==========================================
@@ -1303,10 +1207,10 @@ function AnalysisBoard() {
  
     const onPieceDrop = (source: string, target: string, piece: string) => {
       if (setupMode) {
-        const p = game.current.get(source as any)
+        const p = game.current.get(source)
         if(!p) return false
-        game.current.remove(source as any)
-        game.current.put(p, target as any)
+        game.current.remove(source)
+        game.current.put(p, target)
         updateBoard()
         clearHighlight(target)
         return true
@@ -1322,8 +1226,8 @@ function AnalysisBoard() {
  
     const onSquareClick = (square: string) => {
       if (setupMode && selectedTool) {
-         if (selectedTool === 'TRASH') game.current.remove(square as any)
-         else game.current.put({ type: selectedTool.type as any, color: selectedTool.color }, square as any)
+         if (selectedTool === 'TRASH') game.current.remove(square)
+         else game.current.put({ type: selectedTool.type, color: selectedTool.color }, square)
          updateBoard()
          clearHighlight(square)
       }
