@@ -424,20 +424,7 @@ Fix these 7. Jump 300 ELO in 30 days.
                           </span>
                         </div>
 
-                        {/* Author */}
-                        <div className="flex items-center gap-2 sm:gap-3 mb-4">
-                          <img
-                            src={post.authorImage}
-                            alt={post.author}
-                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full ring-2 ring-[#5C1F1C]/20 object-cover"
-                          />
-                          <div>
-                            <p className="font-semibold text-[#5C1F1C] text-xs sm:text-sm">{post.author}</p>
-                            <p className="text-xs text-gray-500">
-                              {format(new Date(post.date), "MMM dd, yyyy")}
-                            </p>
-                          </div>
-                        </div>
+
 
                         {/* CTA Button */}
                         <Button

@@ -21,20 +21,20 @@ export function TestimonialsSection() {
   const testimonials = [
     {
       id: 1,
-      name: "Priya Sharma",
-      role: "Parent & Student",
+      name: "Janina budi",
+      role: "Faye's mother",
       rating: 5,
       content:
-        "My son started at 6 years old and now plays in national tournaments. The coaches are patient, fun, and truly care about each child.",
+        "Prashant has been a fantastic chess coach for our son over three years—patient, kind, and dedicated. He builds trust, provides honest feedback, and teaches that true progress comes from dedication and learning from failures. Thank you for these life lessons!",
       image: "/demo-priya.jpg",
     },
     {
       id: 2,
-      name: "Rohan Mehta",
-      role: "Adult Beginner",
+      name: "Jayasree Chettipilli",
+      role: "Mother of Rhea and Jay",
       rating: 5,
       content:
-        "I never thought I'd enjoy chess, but the structured lessons and live practice games made it addictive. Up 400 ELO in 4 months!",
+        "For 1.5 years, Prashant Sir has been an exceptional home chess coach for Rhea and Jay. Patient and friendly, he makes learning fun—especially for playful Jay—while focusing on enjoyment over winning. With milestone treats and genuine encouragement, he's boosted their confidence and skills, leading to tournament wins in the US and India. Highly recommended!",
       image: "/demo-rohan.jpg",
     },
     {
@@ -45,34 +45,7 @@ export function TestimonialsSection() {
       content:
         "The tactical puzzles and endgame drills are gold. My coach gives personalized feedback — I just won my first rated tournament!",
       image: "/demo-ananya.jpg",
-    },
-    {
-      id: 4,
-      name: "Vikram Singh",
-      role: "Tournament Player",
-      rating: 5,
-      content:
-        "Best decision for serious improvement. Weekly analysis sessions + opening prep helped me break 1800 rating.",
-      image: "/demo-vikram.jpg",
-    },
-    {
-      id: 5,
-      name: "Little Aryan",
-      role: "Age 8, Chess Prodigy",
-      rating: 5,
-      content:
-        "I love the fun puzzles and story-based lessons! My teacher says I’m getting really good at checkmates!",
-      image: "/demo-aryan.jpg",
-    },
-    {
-      id: 6,
-      name: "Neha Kapoor",
-      role: "Working Professional",
-      rating: 5,
-      content:
-        "Flexible online classes fit my schedule. The community tournaments are exciting — I even beat a 1500-rated player!",
-      image: "/demo-neha.jpg",
-    },
+    }
   ];
 
   // Auto-rotate every 5 seconds

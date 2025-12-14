@@ -136,19 +136,13 @@ function MyStudentsView({ coachId }: { coachId: string }) {
   // Handle Assignment Logic
   const handleAssign = async (id: string, type: 'PUZZLE' | 'FOLDER') => {
       try {
-          // If it's a folder, we need to assign all puzzles inside it (and potentially subfolders if you want deep recursion)
-          // For simplicity, let's assume the API handles "bulk assignment" or we fetch the puzzles here.
-          // Option A: Enhanced API endpoint that accepts folderId
-          // Option B: Frontend fetches folder content then loops assign.
-          
-          // Let's go with Option A: Send { type, id } to the API
           const res = await fetch('/api/assignments', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
                   studentId: selectedStudent.id, 
                   itemId: id, 
-                  type: type // 'PUZZLE' or 'FOLDER' 
+                  type: type 
               })
           })
           
@@ -280,10 +274,7 @@ function MyStudentsView({ coachId }: { coachId: string }) {
 }
 
 // ==========================================
-// 2. COURSES VIEW
-// ==========================================
-// ==========================================
-// 2. COURSES VIEW (Updated with Editor & Highlights)
+// 2. COURSES VIEW (Updated with Navigation)
 // ==========================================
 function CoursesView() {
   const [courses, setCourses] = useState<any[]>([])
@@ -331,6 +322,19 @@ function CoursesView() {
   }, [activeChapter])
 
   const updateBoard = () => setBoardFen(game.current.fen())
+
+  // --- NAVIGATION LOGIC ---
+  const currentChapterIndex = selectedCourse?.chapters?.findIndex((c: any) => c.id === activeChapter?.id) ?? -1
+  const hasNext = currentChapterIndex !== -1 && currentChapterIndex < (selectedCourse?.chapters?.length || 0) - 1
+  const hasPrev = currentChapterIndex > 0
+
+  const handleNext = () => {
+      if (hasNext) setActiveChapter(selectedCourse.chapters[currentChapterIndex + 1])
+  }
+
+  const handlePrev = () => {
+      if (hasPrev) setActiveChapter(selectedCourse.chapters[currentChapterIndex - 1])
+  }
 
   // --- INTERACTION HANDLERS ---
 
@@ -545,6 +549,24 @@ function CoursesView() {
                  <p className="whitespace-pre-wrap text-slate-600 leading-relaxed text-sm">
                    {activeChapter?.content || "No detailed notes provided for this lesson."}
                  </p>
+              </div>
+
+              {/* NEW: Navigation Footer */}
+              <div className="p-4 border-t bg-slate-50 flex gap-2">
+                  <button 
+                    onClick={handlePrev} 
+                    disabled={!hasPrev}
+                    className="flex-1 py-2 px-3 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 transition"
+                  >
+                    <ChevronLeft size={16}/> Previous
+                  </button>
+                  <button 
+                    onClick={handleNext}
+                    disabled={!hasNext}
+                    className="flex-1 py-2 px-3 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 transition shadow-sm"
+                  >
+                    Next Lesson <ChevronRight size={16}/>
+                  </button>
               </div>
            </div>
         </div>

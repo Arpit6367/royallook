@@ -25,8 +25,6 @@ export function Header() {
       href: "/about"
     },
     { name: "Courses", href: "/courses" },
-    { name: "Our Coaches", href: "/coaches" },
-    { name: "Events", href: "/events" },
     { name: "Gallery", href: "/gallery" },
     { name: "Blogs", href: "/blogs" },
     { name: "Contact", href: "/contact" },

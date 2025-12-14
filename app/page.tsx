@@ -49,7 +49,6 @@ export default function HomePage() {
         <StatsSection />
         <WhyChessForKids/>
         <TestimonialsSection />
-        <CTASection />
       </main>
     </div>
   )

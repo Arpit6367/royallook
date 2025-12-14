@@ -47,6 +47,9 @@ export default function PuzzlePage() {
   const [solutionMoves, setSolutionMoves] = useState<string[]>([]);
   const [moveIndex, setMoveIndex] = useState(0);
 
+  // Added state for board orientation
+  const [orientation, setOrientation] = useState<"white" | "black">("white");
+
   const [hintArrow, setHintArrow] = useState<string[][]>([]);
 
   const [statusState, setStatusState] =
@@ -90,6 +93,10 @@ export default function PuzzlePage() {
 
         const newGame = new Chess(data.fen);
         setGame(newGame);
+
+        // ---- SET ORIENTATION BASED ON TURN ----
+        // If it's Black's turn in the FEN, flip the board to 'black'
+        setOrientation(newGame.turn() === 'b' ? 'black' : 'white');
 
         setPuzzle(data);
         setSolutionMoves(data.solution.trim().split(" "));
@@ -250,7 +257,10 @@ export default function PuzzlePage() {
 
   const resetPuzzle = () => {
     if (!puzzle) return;
-    setGame(new Chess(puzzle.fen));
+    const newGame = new Chess(puzzle.fen);
+    setGame(newGame);
+    // Ensure orientation stays consistent on reset
+    setOrientation(newGame.turn() === 'b' ? 'black' : 'white');
     setMoveIndex(0);
     setStatusState("IDLE");
     setHintArrow([]);
@@ -322,6 +332,7 @@ export default function PuzzlePage() {
               <Chessboard
                 position={game.fen()}
                 onPieceDrop={onDrop}
+                boardOrientation={orientation}
                 boardWidth={containerWidth}
                 animationDuration={200}
                 customDarkSquareStyle={{ backgroundColor: "#779556" }}

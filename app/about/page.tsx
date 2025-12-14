@@ -140,37 +140,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Achievements / Stats */}
-      <section className="py-12 sm:py-16 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-10 sm:mb-16 leading-tight" style={{ color: "#5C1F1C" }}>
-            Growing <span style={{ color: "#8B4513" }}>Together</span>
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-            {[
-              { icon: Users, number: "1000+", label: "Students Guided" },
-              { icon: Trophy, number: "100+", label: "Levels Mastered" },
-              { icon: Award, number: "25+", label: "Rated Players" },
-              { icon: BookOpen, number: "14+", label: "Years of Teaching" },
-            ].map((stat, index) => (
-              <Card
-                key={index}
-                className="text-center p-6 sm:p-8 bg-white border-b-4 border-[#5C1F1C] rounded-xl shadow-md hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 group"
-              >
-                <CardContent className="p-0">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-5 bg-[#5C1F1C] rounded-full flex items-center justify-center shadow-lg group-hover:bg-[#FFC727] transition-colors duration-300">
-                    <stat.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white group-hover:text-[#5C1F1C] transition-colors duration-300" />
-                  </div>
-                  <div className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2" style={{ color: "#5C1F1C" }}>
-                    {stat.number}
-                  </div>
-                  <div className="text-sm sm:text-lg font-semibold text-gray-700">{stat.label}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* Pillars of Academy - Center Image + Orbiting Cards */}
       <section className="py-16 sm:py-20 px-4 bg-[#5C1F1C] text-white">
@@ -244,7 +214,7 @@ export default function AboutPage() {
                   year: "2010",
                   title: "The Beginning",
                   description:
-                    "ChessPure was founded with a simple vision: make chess accessible to every child. We started with just 10 students in a small room, focusing on making the game fun and understandable.",
+                    "Chesspure was founded with a simple yet powerful vision — to make high-quality chess coaching accessible to every aspiring player. Recognizing the need for structured, personalized, and practical training, focusing on making the game fun and understandable.  Chesspure was founded to help beginners and intermediate players build strong fundamentals, improve confidence, and succeed in competitive play.",
                   image: "/found.png",
                   position: "left",
                   icon: <Star className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
@@ -465,6 +435,21 @@ export default function AboutPage() {
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+      <section className="py-24 px-6 bg-gradient-to-r from-[#5C1F1C] to-[#8B4513] text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-5xl md:text-6xl font-extrabold mb-6">
+            Ready to Transform Your Chess?
+          </h2>
+          <p className="text-2xl mb-10 opacity-90">
+            Join 500+ students who went from beginner to advanced.
+          </p>
+          <Link href="/contact">
+            <Button size="lg" className="bg-white text-[#5C1F1C] hover:bg-[#FFC727] px-16 py-10 text-3xl font-bold rounded-full shadow-2xl">
+              Claim Your Free Trial Class
+            </Button>
+          </Link>
         </div>
       </section>
     </div>

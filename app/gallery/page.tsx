@@ -242,8 +242,6 @@ export default function GalleryPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="absolute bottom-3 left-3 right-3 text-white">
-                      <h3 className="text-sm sm:text-base font-semibold line-clamp-1">{image.title}</h3>
-                      <p className="text-xs sm:text-sm opacity-90 line-clamp-2">{image.description}</p>
                     </div>
                   </div>
                   <div
