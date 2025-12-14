@@ -2089,25 +2089,42 @@ const ensureFullFen = (partialFen: string): string => {
 
 const toggleMode = () => {
   if (mode === 'SETUP') {
-    // Ensure full valid-looking FEN before saving
-    const fullFen = ensureFullFen(fen);
+    let currentFen = fen.trim();
+    let parts = currentFen.split(' ');
 
-    // Optional king check only for standard puzzles
-    const boardOnly = fullFen.split(" ")[0];
-    const hasKings = boardOnly.includes("K") && boardOnly.includes("k");
+    // Ensure all 6 FEN fields exist
+    while (parts.length < 6) {
+      if (parts.length === 1) {
+        // Only board — auto-detect turn based on pieces
+        const board = parts[0];
+        const hasWhitePiece = /[PRNBQK]/.test(board);
+        const hasBlackPiece = /[prnbqk]/.test(board);
+        const turn = hasWhitePiece && !hasBlackPiece ? 'w' :
+                     !hasWhitePiece && hasBlackPiece ? 'b' : 'w'; // default white
+        parts.push(turn);
+      } else if (parts.length === 2) parts.push('KQkq');     // castling (doesn't matter)
+      else if (parts.length === 3) parts.push('-');          // en passant
+      else if (parts.length === 4) parts.push('0');          // halfmove
+      else if (parts.length === 5) parts.push('1');          // fullmove
+    }
+
+    const fullFen = parts.join(' ');
+
+    // Optional: warn only if standard puzzle missing kings
+    const boardOnly = parts[0];
+    const hasKings = boardOnly.includes('K') && boardOnly.includes('k');
     if (stars.length === 0 && !hasKings) {
-      if (!confirm("Board has missing kings. This will be a custom exercise. Continue?")) return;
+      if (!confirm("No kings on board — this will be a custom exercise. Continue?")) return;
     }
 
     setStartFen(fullFen);
-    setFen(fullFen); // Update display too
+    setFen(fullFen);
     setMoves([]);
     setMode('RECORD');
     setSelectedTool(null);
   } else {
     setMode('SETUP');
     setStartFen(null);
-    // Keep stars when going back
   }
 };
  
