@@ -2017,19 +2017,18 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
         setManualFen(fen)
     }, [fen])
     // 2. Handle Direct FEN Input
-    const handleManualFenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const input = e.target.value
-        setManualFen(input)
-       
-        // Try to load strictly. If fail, assume custom board and just set FEN for visual.
-        try {
-            const result = game.current.load(input)
-            setFen(game.current.fen())
-        } catch (error) {
-            // It's an invalid FEN for standard chess (e.g. no king), but we allow it for custom puzzles
-            setFen(input)
-        }
-    }
+const handleManualFenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const input = e.target.value.trim();
+  setManualFen(input);
+
+  const fullFen = ensureFullFen(input);
+  try {
+    game.current.load(fullFen);
+    setFen(game.current.fen());
+  } catch (error) {
+    setFen(fullFen); // Still show it visually
+  }
+};
  
     // --- Toggle Side to Move (White/Black) ---
     const toggleTurn = (color: 'w' | 'b') => {
@@ -2065,27 +2064,52 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
             alert("Invalid PGN. Please check syntax.")
         }
     }
- 
-    const toggleMode = () => {
-      if (mode === 'SETUP') {
-        // Validation: If standard chess, check kings. If custom (stars present), skip validation.
-        const boardOnly = fen.split(" ")[0];
-        const hasKings = boardOnly.includes("K") && boardOnly.includes("k");
-       
-        // If it's a star puzzle, we don't care about kings.
-        if (stars.length === 0 && !hasKings) {
-             if(!confirm("Board has missing kings. This will be treated as a custom exercise (non-standard chess). Continue?")) return;
-        }
-        setStartFen(fen)
-        setMoves([])
-        setMode('RECORD')
-        setSelectedTool(null)
-      } else {
-        setMode('SETUP')
-        setStartFen(null)
-        setStars([]) // Optional: reset stars if going back? or keep them. Let's keep them.
-      }
+// Add this helper anywhere in PuzzleCreator
+const ensureFullFen = (partialFen: string): string => {
+  let fen = partialFen.trim();
+  let parts = fen.split(' ');
+  
+  // Add missing fields
+  if (parts.length === 1) {
+    // Only board — assume white to move if white pieces present, else black
+    const hasWhite = /[PRNBQK]/.test(parts[0]);
+    const turn = hasWhite ? 'w' : 'b';
+    parts.push(turn, 'KQkq', '-', '0', '1');
+  } else {
+    while (parts.length < 6) {
+      if (parts.length === 1) parts.push('w');
+      else if (parts.length === 2) parts.push('KQkq');
+      else if (parts.length === 3) parts.push('-');
+      else if (parts.length === 4) parts.push('0');
+      else if (parts.length === 5) parts.push('1');
     }
+  }
+  return parts.join(' ');
+};
+
+const toggleMode = () => {
+  if (mode === 'SETUP') {
+    // Ensure full valid-looking FEN before saving
+    const fullFen = ensureFullFen(fen);
+
+    // Optional king check only for standard puzzles
+    const boardOnly = fullFen.split(" ")[0];
+    const hasKings = boardOnly.includes("K") && boardOnly.includes("k");
+    if (stars.length === 0 && !hasKings) {
+      if (!confirm("Board has missing kings. This will be a custom exercise. Continue?")) return;
+    }
+
+    setStartFen(fullFen);
+    setFen(fullFen); // Update display too
+    setMoves([]);
+    setMode('RECORD');
+    setSelectedTool(null);
+  } else {
+    setMode('SETUP');
+    setStartFen(null);
+    // Keep stars when going back
+  }
+};
  
     // --- Interaction Handlers ---
     // Right Click: Toggle Star (in Setup), Remove Piece (in Setup if not star)
