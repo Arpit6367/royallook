@@ -509,9 +509,11 @@ export default function PuzzlePage() {
         const data: Puzzle = await res.json();
         if (!data.fen || !data.solution) throw new Error("Puzzle data incomplete.");
 
-        // Initialize game (chess.js allows kingless boards via direct fen load)
+        // Initialize game with skipValidation to support kingless/custom boards
         const newGame = new Chess();
-        newGame.load(data.fen); // Works even without kings
+        newGame.clear(); // Clean slate
+        newGame.load(data.fen, { skipValidation: true }); // Critical fix
+
         setGame(newGame);
 
         // Set board orientation based on whose turn it is
@@ -529,7 +531,7 @@ export default function PuzzlePage() {
         setMoveIndex(0);
         setStatusState("IDLE");
 
-        // Load next puzzle logic (unchanged)
+        // Load next puzzle (unchanged)
         let url = "";
         if (context === "todo") {
           url = `/api/assignments/next?currentId=${puzzleId}`;
@@ -596,7 +598,7 @@ export default function PuzzlePage() {
     }
   };
 
-  // Core move logic — supports both standard and star-collection puzzles
+  // Core move logic — supports standard puzzles AND custom star-collection (kingless) puzzles
   const onDrop = (from: string, to: string) => {
     if (statusState === "COMPLETED" || statusState === "WRONG") return false;
 
@@ -607,25 +609,23 @@ export default function PuzzlePage() {
     try {
       move = gameCopy.move({ from, to, promotion: "q" });
     } catch (e) {
-      // Illegal move — but maybe it's a star puzzle?
+      // Illegal in standard chess — ignore
     }
 
-    // If no legal move, but target is a star → allow it (custom exercise)
+    // If illegal but target is a star → allow custom move
     if (!move && stars.includes(to)) {
       const piece = gameCopy.get(from);
       if (piece) {
         gameCopy.remove(from);
         gameCopy.put(piece, to);
-        move = { from, to, san: `${from}-${to}` }; // custom notation
+        move = { from, to, san: `${from}-${to}` }; // custom notation for solution matching
       }
     }
 
     if (!move) return false;
 
-    // Check if this matches expected solution move
+    // Check against expected solution
     const expected = solutionMoves[moveIndex];
-
-    // For star puzzles, solution might be coordinate-based like "e2-e4"
     const isCorrect =
       move.san === expected ||
       (expected.includes("-") && `${from}-${to}` === expected);
@@ -651,24 +651,26 @@ export default function PuzzlePage() {
     const nextIndex = moveIndex + 1;
 
     if (nextIndex >= solutionMoves.length) {
-      // All moves done AND all stars collected?
-      const allStarsCollected = stars.length === 0;
-      if (puzzle?.data?.stars && puzzle.data.stars.length > 0 && !allStarsCollected) {
-        toast.warning("Collect all stars to complete!");
+      // Check if all stars collected (only if puzzle has stars)
+      const hasStars = puzzle?.data?.stars && puzzle.data.stars.length > 0;
+      const allCollected = stars.length === 0;
+
+      if (hasStars && !allCollected) {
+        toast.warning("Collect all stars to complete the puzzle!");
         setStatusState("IDLE");
         return;
       }
 
       setStatusState("COMPLETED");
       saveProgress(true, null);
-      toast.success("Puzzle Completed!");
+      toast.success("Puzzle Completed! 🎉");
       return;
     }
 
     setMoveIndex(nextIndex);
     setStatusState("CORRECT");
 
-    // Auto-play opponent reply (only for standard alternating moves)
+    // Auto-play opponent reply only for standard SAN moves
     const reply = solutionMoves[nextIndex];
     if (reply && !reply.includes("-")) {
       setTimeout(() => {
@@ -677,7 +679,7 @@ export default function PuzzlePage() {
           try {
             g.move(reply);
           } catch (e) {
-            // ignore if invalid (custom puzzle)
+            // ignore invalid moves in custom puzzles
           }
           return g;
         });
@@ -715,7 +717,8 @@ export default function PuzzlePage() {
   const resetPuzzle = () => {
     if (!puzzle) return;
     const newGame = new Chess();
-    newGame.load(puzzle.fen);
+    newGame.clear();
+    newGame.load(puzzle.fen, { skipValidation: true }); // Important for kingless reset
     setGame(newGame);
     setOrientation(newGame.turn() === "b" ? "black" : "white");
     setMoveIndex(0);
@@ -724,12 +727,12 @@ export default function PuzzlePage() {
     setStars(puzzle.data?.stars || []);
   };
 
-  // Custom square styles for stars
+  // Custom square styles for golden stars
   const customSquareStyles: Record<string, React.CSSProperties> = {};
   stars.forEach((square) => {
     customSquareStyles[square] = {
       backgroundImage:
-        'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iZ29sZCIgc3Ryb2tlPSJnb2xkIiBzdHJva2Utd2lkdGg9IjMiPjxwb2x5Z29uIHBvaW50cz0iMTIgMiAxNS4wOSA4LjI2IDIyIDkuMjcgMTcgMTQuMTQgMTguMTggMjEuMDIgMTIgMTcuNzcgNS44MiAyMS4wMiA3IDE0LjE0IDIgOS4yNyA4LjkxIDguMjYgMTIgMiIvPjwvc3ZnPg==")',
+        'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZDcwMCIgc3Ryb2tlPSJnb2xkIiBzdHJva2Utd2lkdGg9IjMiPjxwb2x5Z29uIHBvaW50cz0iMTIgMiAxNS4wOSA4LjI2IDIyIDkuMjcgMTcgMTQuMTQgMTguMTggMjEuMDIgMTIgMTcuNzcgNS44MiAyMS4wMiA3IDE0LjE0IDIgOS4yNyA4LjkxIDguMjYgMTIgMiIvPjwvc3ZnPg==")',
       backgroundPosition: "center",
       backgroundRepeat: "no-repeat",
       backgroundSize: "60%",
@@ -841,7 +844,7 @@ export default function PuzzlePage() {
                     {stars.length > 0
                       ? `${stars.length} star${stars.length > 1 ? "s" : ""} remaining`
                       : statusState === "COMPLETED"
-                      ? "Great job!"
+                      ? "Great job! All done."
                       : "Find the best move."}
                   </p>
                 </div>
@@ -853,14 +856,14 @@ export default function PuzzlePage() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={resetPuzzle}
-                  className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-white border-2 border-slate-200"
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-white border-2 border-slate-200 hover:bg-slate-50"
                 >
                   <RotateCcw className="h-5 w-5" /> Reset
                 </button>
 
                 <button
                   onClick={handleHint}
-                  className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-blue-50 border-2 border-blue-100"
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-blue-50 border-2 border-blue-100 hover:bg-blue-100"
                 >
                   <Lightbulb className="h-5 w-5" /> Hint
                 </button>
@@ -868,9 +871,9 @@ export default function PuzzlePage() {
             ) : (
               <button
                 onClick={handleNext}
-                className="w-full py-4 rounded-xl font-bold text-lg shadow-lg bg-orange-500 text-white flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-xl font-bold text-lg shadow-lg bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 transition"
               >
-                {nextPuzzleId ? "Next Puzzle" : "Back to Library"} <ArrowRight />
+                {nextPuzzleId ? "Next Puzzle" : "Back to Library"} <ArrowRight className="h-5 w-5" />
               </button>
             )}
 
