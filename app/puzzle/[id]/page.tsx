@@ -89,19 +89,9 @@ export default function PuzzlePage() {
         if (!data.fen || !data.solution) throw new Error("Puzzle data incomplete.");
 
         // Initialize game with skipValidation to support kingless/custom boards
-        // NOTE: chess.js v1.0.0+ syntax for loading loose FENs usually just works, 
-        // but for safety we catch errors or use a loose FEN logic if needed.
         const newGame = new Chess();
-        try {
-            newGame.load(data.fen); 
-        } catch (e) {
-            // If strict loading fails (missing kings), we might need a custom object
-            // For now, react-chessboard handles FENs well, but chess.js logic needs a valid internal state.
-            // We'll force load it even if invalid for standard chess.
-            // Hack: Create a new game, clear it, put pieces manually based on FEN? 
-            // Simplified: Assume valid FEN or minimal valid FEN.
-            console.warn("FEN might be non-standard", e);
-        }
+        newGame.clear(); // Clean slate
+        newGame.load(data.fen, { skipValidation: true }); // Critical fix
 
         setGame(newGame);
 
@@ -120,7 +110,7 @@ export default function PuzzlePage() {
         setMoveIndex(0);
         setStatusState("IDLE");
 
-        // Load next puzzle
+        // Load next puzzle (unchanged)
         let url = "";
         if (context === "todo") {
           url = `/api/assignments/next?currentId=${puzzleId}`;
@@ -176,20 +166,10 @@ export default function PuzzlePage() {
   const handleHint = () => {
     if (statusState === "COMPLETED" || moveIndex >= solutionMoves.length) return;
 
-    const correctMove = solutionMoves[moveIndex]; // e.g. "e4-e5" or "Nf3"
-    
-    // Check if it is a coordinate move (Custom/Star)
-    if (correctMove.includes("-")) {
-        const [from, to] = correctMove.split("-");
-        setHintArrow([[from, to]]);
-        toast.info("Best Move Highlighted!");
-        return;
-    }
-
-    // Standard Chess Move
+    const correctSan = solutionMoves[moveIndex];
     const tempGame = new Chess(game.fen());
     const moves = tempGame.moves({ verbose: true });
-    const correctMoveObj = moves.find((m) => m.san === correctMove);
+    const correctMoveObj = moves.find((m) => m.san === correctSan);
 
     if (correctMoveObj) {
       setHintArrow([[correctMoveObj.from, correctMoveObj.to]]);
@@ -197,58 +177,51 @@ export default function PuzzlePage() {
     }
   };
 
-  // --- CORE MOVE LOGIC ---
+  // Core move logic — supports standard puzzles AND custom star-collection (kingless) puzzles
   const onDrop = (from: string, to: string) => {
     if (statusState === "COMPLETED" || statusState === "WRONG") return false;
 
     const gameCopy = new Chess(game.fen());
-    const expected = solutionMoves[moveIndex];
-    const moveString = `${from}-${to}`; // Standardize "e2-e4"
 
-    let isCorrect = false;
-    let moveSan = "";
-
-    // 1. Try Standard Legal Move
+    // Try normal legal move first
+    let move = null;
     try {
-      const result = gameCopy.move({ from, to, promotion: "q" });
-      if (result) {
-        moveSan = result.san;
-        if (moveSan === expected) isCorrect = true;
-      }
-    } catch (e) { /* Move illegal in strict chess rules */ }
-
-    // 2. If Standard failed, check Custom/Star Move
-    // This allows moving a piece even if it's "not your turn" or checking a kingless board
-    if (!isCorrect && expected === moveString) {
-        // Double check: Is there actually a piece there?
-        const piece = gameCopy.get(from as any);
-        if (piece) {
-            isCorrect = true;
-            // Force the move manually
-            gameCopy.remove(from as any);
-            gameCopy.put(piece, to as any);
-            
-            // IMPORTANT: If we want to chain moves for the same color (Star collection),
-            // we do NOT change the turn. We just update the board state.
-            // chess.js .move() automatically flips turn. Manual .put() does not.
-        }
+      move = gameCopy.move({ from, to, promotion: "q" });
+    } catch (e) {
+      // Illegal in standard chess — ignore
     }
 
+    // If illegal but target is a star → allow custom move
+    if (!move && stars.includes(to)) {
+      const piece = gameCopy.get(from);
+      if (piece) {
+        gameCopy.remove(from);
+        gameCopy.put(piece, to);
+        move = { from, to, san: `${from}-${to}` }; // custom notation for solution matching
+      }
+    }
+
+    if (!move) return false;
+
+    // Check against expected solution
+    const expected = solutionMoves[moveIndex];
+    const isCorrect =
+      move.san === expected ||
+      (expected.includes("-") && `${from}-${to}` === expected);
+
     if (isCorrect) {
-      // Update Game State
       setGame(gameCopy);
 
-      // Collect Star Effect
+      // Collect star if landed on one
       if (stars.includes(to)) {
         setStars((prev) => prev.filter((s) => s !== to));
-        // Optional: Add sound effect here
       }
 
       setHintArrow([]);
       handleCorrectStep();
       return true;
     } else {
-      handleIncorrect(moveSan || moveString);
+      handleIncorrect(move.san);
       return false;
     }
   };
@@ -256,20 +229,16 @@ export default function PuzzlePage() {
   const handleCorrectStep = () => {
     const nextIndex = moveIndex + 1;
 
-    // Check if stars remain (Custom requirement)
-    // If it's a star puzzle (has stars data), we generally want them all cleared.
-    // However, some puzzles might end before clearing all? Usually not.
-    // We'll trust the 'solutionMoves' length primarily.
-    
     if (nextIndex >= solutionMoves.length) {
-      // Edge case: Puzzle finished moves, but stars remain?
-      // Usually solution covers all stars.
-      
+      // Check if all stars collected (only if puzzle has stars)
       const hasStars = puzzle?.data?.stars && puzzle.data.stars.length > 0;
-      const allCollected = stars.length === 0; // Note: 'stars' state updates async, check careful logic
-      // In onDrop, we called setStars. React state might not be updated *immediately* inside this function
-      // but usually okay for next render. 
-      // For immediate feedback, we assume if move touched last star it's done.
+      const allCollected = stars.length === 0;
+
+      if (hasStars && !allCollected) {
+        toast.warning("Collect all stars to complete the puzzle!");
+        setStatusState("IDLE");
+        return;
+      }
 
       setStatusState("COMPLETED");
       saveProgress(true, null);
@@ -280,7 +249,7 @@ export default function PuzzlePage() {
     setMoveIndex(nextIndex);
     setStatusState("CORRECT");
 
-    // Auto-play opponent reply (Only for Standard Chess Moves)
+    // Auto-play opponent reply only for standard SAN moves
     const reply = solutionMoves[nextIndex];
     if (reply && !reply.includes("-")) {
       setTimeout(() => {
@@ -288,14 +257,15 @@ export default function PuzzlePage() {
           const g = new Chess(prev.fen());
           try {
             g.move(reply);
-          } catch (e) { /* ignore */ }
+          } catch (e) {
+            // ignore invalid moves in custom puzzles
+          }
           return g;
         });
         setMoveIndex(nextIndex + 1);
         setStatusState("IDLE");
       }, 400);
     } else {
-      // For star puzzles (coordinate moves), we usually wait for user to make next move immediately
       setStatusState("IDLE");
     }
   };
@@ -326,22 +296,13 @@ export default function PuzzlePage() {
   const resetPuzzle = () => {
     if (!puzzle) return;
     const newGame = new Chess();
-    // Use .load directly if valid, else manual construction could be needed but usually load works for FEN
-    try { newGame.load(puzzle.fen); } catch(e) {
-        // If load fails, try just setting position without validation if lib allows, 
-        // or re-init puzzle state manually.
-        console.log("Resetting kingless board");
-    }
-    
+    newGame.clear();
+    newGame.load(puzzle.fen, { skipValidation: true }); // Important for kingless reset
     setGame(newGame);
-    // Reset Orientation
     setOrientation(newGame.turn() === "b" ? "black" : "white");
-    
     setMoveIndex(0);
     setStatusState("IDLE");
     setHintArrow([]);
-    
-    // Restore original stars
     setStars(puzzle.data?.stars || []);
   };
 
@@ -456,7 +417,7 @@ export default function PuzzlePage() {
                       ? "Puzzle Solved!"
                       : statusState === "WRONG"
                       ? "Incorrect Move"
-                      : stars.length > 0 ? "Collect the Stars!" : `${game.turn() === "w" ? "White" : "Black"} to Move`}
+                      : `${game.turn() === "w" ? "White" : "Black"} to Move`}
                   </h2>
                   <p className="text-sm text-slate-500">
                     {stars.length > 0
