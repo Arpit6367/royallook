@@ -64,6 +64,7 @@ model Puzzle {
   title     String
   fen       String   @db.Text
   solution  String   @db.Text // space separated moves
+  data      Json?  
 
   folderId  String?  // Made optional in case a puzzle doesn't belong to a folder immediately
   folder    Folder?  @relation(fields: [folderId], references: [id], onDelete: Cascade)
