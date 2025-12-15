@@ -805,6 +805,386 @@ function CurriculumManager() {
 // ==========================================
 // 4. PUZZLE CREATOR (Updated: Direct FEN, Stars, Kingless Support)
 // ==========================================
+// function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => void }) {
+//     // Game Reference
+//     const game = useRef(new Chess())
+   
+//     // State
+//     const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+//     const [manualFen, setManualFen] = useState(fen) // Text input state
+//     const [moves, setMoves] = useState<string[]>([])
+//     const [title, setTitle] = useState('')
+//     const [mode, setMode] = useState<'SETUP'|'RECORD'>('SETUP')
+//     const [selectedTool, setSelectedTool] = useState<Tool>(null)
+//     const [startFen, setStartFen] = useState<string | null>(null)
+   
+//     // Stars State (Array of squares e.g. ['e4', 'h5'])
+//     const [stars, setStars] = useState<string[]>([])
+//     // PGN Import State
+//     const [isPgnModalOpen, setIsPgnModalOpen] = useState(false)
+//     const [pgnInput, setPgnInput] = useState('')
+   
+//     // Helper to extract active turn from FEN string (w or b)
+//     const getTurnFromFen = (fenStr: string) => {
+//         const parts = fenStr.split(' ')
+//         return parts.length > 1 ? parts[1] : 'w'
+//     }
+//     const updateBoard = () => {
+//         // If game is valid, get FEN from chess.js
+//         // If custom board (kingless), we might rely on what was dropped last,
+//         // but react-chessboard keeps internal state. We just sync 'fen' state.
+//         try {
+//             setFen(game.current.fen())
+//         } catch(e) {
+//             // Chess.js might fail if position is invalid (no king).
+//             // We just keep current 'fen' state if it was updated manually via drop.
+//         }
+//     }
+//     // 1. Sync Manual Input when Board Changes
+//     useEffect(() => {
+//         setManualFen(fen)
+//     }, [fen])
+//     // 2. Handle Direct FEN Input
+//     const handleManualFenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//         const input = e.target.value
+//         setManualFen(input)
+       
+//         // Try to load strictly. If fail, assume custom board and just set FEN for visual.
+//         try {
+//             const result = game.current.load(input)
+//             setFen(game.current.fen())
+//         } catch (error) {
+//             // It's an invalid FEN for standard chess (e.g. no king), but we allow it for custom puzzles
+//             setFen(input)
+//         }
+//     }
+ 
+//     // --- Toggle Side to Move (White/Black) ---
+//     const toggleTurn = (color: 'w' | 'b') => {
+//         if (mode !== 'SETUP') return
+//         const parts = fen.split(' ')
+//         if(parts.length >= 2) {
+//             parts[1] = color
+//             const newFen = parts.join(' ')
+//             setFen(newFen)
+//             try { game.current.load(newFen) } catch(e) {}
+//         }
+//     }
+//     // --- Handle PGN Import ---
+//     const handleImportPgn = () => {
+//         try {
+//             game.current.loadPgn(pgnInput)
+//             const history = game.current.history()
+           
+//             if(history.length > 0) {
+//                  while(game.current.undo() !== null) {}
+//                  const initialFen = game.current.fen()
+//                  setStartFen(initialFen)
+//                  setFen(initialFen)
+//                  setMoves(history)
+//                  setMode('RECORD')
+//                  alert(`Imported! ${history.length} moves loaded as solution.`)
+//             } else {
+//                  setFen(game.current.fen())
+//             }
+//             setIsPgnModalOpen(false)
+//             setPgnInput('')
+//         } catch (e) {
+//             alert("Invalid PGN. Please check syntax.")
+//         }
+//     }
+ 
+//     const toggleMode = () => {
+//       if (mode === 'SETUP') {
+//         // Validation: If standard chess, check kings. If custom (stars present), skip validation.
+//         const boardOnly = fen.split(" ")[0];
+//         const hasKings = boardOnly.includes("K") && boardOnly.includes("k");
+       
+//         // If it's a star puzzle, we don't care about kings.
+//         if (stars.length === 0 && !hasKings) {
+//              if(!confirm("Board has missing kings. This will be treated as a custom exercise (non-standard chess). Continue?")) return;
+//         }
+//         setStartFen(fen)
+//         setMoves([])
+//         setMode('RECORD')
+//         setSelectedTool(null)
+//       } else {
+//         setMode('SETUP')
+//         setStartFen(null)
+//         setStars([]) // Optional: reset stars if going back? or keep them. Let's keep them.
+//       }
+//     }
+ 
+//     // --- Interaction Handlers ---
+//     // Right Click: Toggle Star (in Setup), Remove Piece (in Setup if not star)
+//     const onSquareRightClick = (square: string) => {
+//         if (mode === 'SETUP') {
+//             if (stars.includes(square)) {
+//                 setStars(stars.filter(s => s !== square))
+//             } else {
+//                 setStars([...stars, square])
+//             }
+//         }
+//     }
+//     // Left Click: Place Piece / Remove
+//     const onSquareClick = (square: string) => {
+//       if (mode !== 'SETUP' || !selectedTool) return
+     
+//       // If clicking with a tool, remove any star on that square to avoid visual clutter
+//       if (stars.includes(square)) setStars(stars.filter(s => s !== square))
+//       // We manually manipulate FEN string if chess.js fails (Kingless support)
+//       // BUT react-chessboard doesn't expose easy FEN manipulation without chess.js.
+//       // So we prioritize chess.js, fallback to visual update is complex without library support.
+//       // Simplified: We rely on chess.js for placement. If it fails, user must use FEN input for Kingless setups.
+//       // Actually, game.put() works even if FEN is invalid for .move().
+//       if (selectedTool === 'TRASH') {
+//           game.current.remove(square)
+//       } else {
+//           game.current.put({ type: selectedTool.type, color: selectedTool.color }, square)
+//       }
+//       setFen(game.current.fen())
+//     }
+ 
+//     const onPieceDrop = (source: string, target: string, piece: string) => {
+//       if (mode === 'SETUP') {
+//         const p = game.current.get(source)
+//         if(!p) return false
+//         game.current.remove(source)
+//         game.current.put(p, target)
+//         setFen(game.current.fen())
+//         return true
+//       }
+     
+//       if (mode === 'RECORD') {
+//         // 1. Check for Star Collection
+//         if (stars.includes(target)) {
+//             // Remove star
+//             setStars(stars.filter(s => s !== target))
+//             // We allow the move even if illegal in standard chess (Custom Exercise Mode)
+//             // Manually move piece in game state if possible, else strictly visual?
+//             // To support "Knight moving freely", we can't use game.move().
+//             // We force the move by manipulating the board state directly.
+           
+//             const p = game.current.get(source)
+//             game.current.remove(source)
+//             game.current.put(p, target)
+           
+//             // Record 'move' as simple coordinate string for custom puzzles
+//             setMoves([...moves, `${source}-${target}`])
+//             setFen(game.current.fen())
+//             return true
+//         }
+//         // 2. Standard Chess Move
+//         try {
+//           const move = game.current.move({ from: source, to: target, promotion: 'q' })
+//           if (!move) return false
+//           setMoves([...moves, move.san])
+//           setFen(game.current.fen())
+//           return true
+//         } catch { return false }
+//       }
+//       return false
+//     }
+//     // Render Stars overlay
+//     const customSquareStyles: Record<string, React.CSSProperties> = {}
+//     stars.forEach(square => {
+//         customSquareStyles[square] = {
+//             backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iZ29sZCIgc3Ryb2tlPSJnb2xkIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBvbHlnb24gcG9pbnRzPSIxMiAyIDE1LjA5IDguMjYgMjIgOS4yNyAxNyAxNC4xNCAxOC4xOCAyMS4wMiAxMiAxNy43NyA1LjgyIDIxLjAyIDcgMTQuMTQgMiA5LjI3IDguOTEgOC4yNiAxMiAyIi8+PC9zdmc+")',
+//             backgroundPosition: 'center',
+//             backgroundRepeat: 'no-repeat',
+//             backgroundSize: '50%',
+//         }
+//     })
+//     const savePuzzle = async () => {
+//         if(!title || !startFen) return
+//         try {
+//             const res = await fetch('/api/content', {
+//                 method: 'POST',
+//                 headers: {'Content-Type': 'application/json'},
+//                 body: JSON.stringify({
+//                     type: 'PUZZLE',
+//                     title: title,
+//                     fen: startFen,
+//                     solution: moves.join(' '),
+//                     parentId: folderId === 'root' ? null : folderId,
+//                     data: { stars } // Save star locations in metadata
+//                 })
+//             })
+//             if(res.ok) {
+//                 alert("Puzzle Saved Successfully!")
+//                 onBack()
+//             } else {
+//                 alert("Failed to save puzzle")
+//             }
+//         } catch(e) { console.error(e) }
+//     }
+ 
+//     return (
+//       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-white p-6 rounded-xl border h-full min-h-[600px]">
+//         {/* Left: Board */}
+//         <div className="lg:col-span-5 flex justify-center">
+//           <div className={`w-full max-w-[500px] border-4 rounded-xl shadow-lg overflow-hidden transition-colors ${mode === 'RECORD' ? 'border-green-500' : 'border-blue-500'}`}>
+//             <Chessboard
+//                 position={fen}
+//                 onPieceDrop={onPieceDrop}
+//                 onSquareClick={onSquareClick}
+//                 onSquareRightClick={onSquareRightClick}
+//                 customSquareStyles={customSquareStyles}
+//             />
+//           </div>
+//         </div>
+ 
+//         {/* Right: Tools */}
+//         <div className="lg:col-span-7 flex flex-col gap-6">
+//           <div className="flex items-center gap-2 border-b pb-4 justify-between">
+//              <div className="flex items-center gap-2">
+//                 <button onClick={onBack} className="text-gray-500 hover:bg-gray-100 p-2 rounded-full transition-colors"><ArrowLeft size={20}/></button>
+//                 <div>
+//                     <h2 className="text-2xl font-bold text-slate-800">New Puzzle</h2>
+//                     <div className="flex items-center gap-2 text-sm text-gray-500">
+//                         <span className={`w-2 h-2 rounded-full ${mode === 'SETUP' ? 'bg-blue-500' : 'bg-green-500'}`}></span>
+//                         Step {mode === 'SETUP' ? '1: Setup Board' : '2: Play Solution'}
+//                     </div>
+//                 </div>
+//              </div>
+            
+//              {/* PGN IMPORT BUTTON */}
+//              {mode === 'SETUP' && (
+//                  <button
+//                     onClick={() => setIsPgnModalOpen(true)}
+//                     className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors"
+//                  >
+//                     <FileText size={14}/> Import PGN
+//                  </button>
+//              )}
+//           </div>
+ 
+//           {mode === 'SETUP' && (
+//             <div className="animate-in fade-in slide-in-from-right-4 space-y-6">
+//                <BoardSetupPalette
+//                   selectedTool={selectedTool}
+//                   setSelectedTool={setSelectedTool}
+//                   onClear={() => { game.current.clear(); updateBoard() }}
+//                   onReset={() => { game.current.reset(); updateBoard() }}
+//                />
+//                 {/* Instructions for Stars */}
+//                <div className="text-xs text-gray-500 bg-yellow-50 p-2 rounded border border-yellow-200 flex items-center gap-2">
+//                    <Star size={14} className="text-yellow-600 fill-yellow-600"/>
+//                    <span><b>Right-Click</b> on a square to add/remove a Star target.</span>
+//                </div>
+//                {/* SIDE TO MOVE SELECTOR */}
+//                <div className="bg-gray-50 p-4 rounded-xl border">
+//                    <div className="flex justify-between items-center mb-2">
+//                       <span className="text-xs font-bold text-gray-400 uppercase">Side to Move</span>
+//                    </div>
+//                    <div className="flex gap-2">
+//                        <button
+//                          onClick={() => toggleTurn('w')}
+//                          className={`flex-1 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all
+//                          ${getTurnFromFen(fen) === 'w' ? 'bg-white border-2 border-orange-500 text-orange-600 shadow-sm' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
+//                        >
+//                            <div className="w-3 h-3 rounded-full bg-white border border-gray-300 shadow-sm"></div> White
+//                        </button>
+//                        <button
+//                          onClick={() => toggleTurn('b')}
+//                          className={`flex-1 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all
+//                          ${getTurnFromFen(fen) === 'b' ? 'bg-slate-800 border-2 border-slate-800 text-white shadow-sm' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}
+//                        >
+//                            <div className="w-3 h-3 rounded-full bg-black shadow-sm"></div> Black
+//                        </button>
+//                    </div>
+//                </div>
+//                 {/* DIRECT FEN INPUT */}
+//                 <div className="bg-gray-50 p-4 rounded-xl border">
+//                    <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Direct FEN Input</label>
+//                    <div className="flex gap-2">
+//                        <input
+//                           type="text"
+//                           className="w-full border p-2 rounded text-sm font-mono text-slate-600 focus:ring-2 focus:ring-orange-500 outline-none"
+//                           value={manualFen}
+//                           onChange={handleManualFenChange}
+//                           placeholder="Paste FEN string here..."
+//                        />
+//                        <button
+//                         onClick={() => { navigator.clipboard.writeText(manualFen); alert("FEN Copied!") }}
+//                         className="p-2 bg-white border rounded hover:bg-gray-100 text-gray-500"
+//                         title="Copy FEN"
+//                        >
+//                           <Copy size={16}/>
+//                        </button>
+//                    </div>
+//                </div>
+//                <div className="mt-4 flex justify-end">
+//                    <button onClick={toggleMode} className="bg-slate-900 text-white px-8 py-3 rounded-lg font-bold shadow hover:bg-black transition-all flex items-center gap-2">
+//                        Next: Record Solution <ChevronRight size={18}/>
+//                    </button>
+//                </div>
+//             </div>
+//           )}
+ 
+//           {mode === 'RECORD' && (
+//              <div className="animate-in fade-in slide-in-from-right-4 space-y-4">
+//                 <div className="bg-green-50 border border-green-200 p-5 rounded-xl">
+//                     <h3 className="font-bold text-green-800 flex items-center gap-2 mb-2"><Play size={18}/> Recording Moves...</h3>
+//                     <p className="text-sm text-green-700 mb-3">
+//                         {stars.length > 0
+//                             ? `Collect the stars! (${stars.length} remaining). Move pieces to star squares.`
+//                             : "Play the solution on the board. The computer opponent moves will be auto-calculated later."}
+//                     </p>
+//                     <div className="bg-white p-4 rounded-lg font-mono text-lg min-h-[60px] shadow-inner border border-green-100 break-words">
+//                         {moves.length > 0 ? moves.join(' ') : <span className="text-gray-300">Make a move...</span>}
+//                     </div>
+//                 </div>
+               
+//                 <div className="flex gap-3">
+//                     <button onClick={() => {
+//                         // Undo is complex with custom moves, simple reload for now
+//                         game.current.load(startFen!);
+//                         setFen(startFen!);
+//                         setMoves([]);
+//                         // Reset stars if they were collected
+//                         // Note: Logic to restore specific stars on undo is complex, simpler to reset all
+//                         alert("Resetting position...");
+//                     }} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded font-bold text-gray-700 flex items-center gap-2">
+//                         <RotateCcw size={16}/> Reset
+//                     </button>
+//                 </div>
+//                 <div className="pt-6 border-t mt-6 space-y-4">
+//                     <input className="w-full text-lg border-2 border-gray-200 rounded-lg p-3 font-bold focus:border-orange-500 outline-none" placeholder="Puzzle Title (e.g. Knight Star Hunt)" value={title} onChange={e => setTitle(e.target.value)} />
+//                     <div className="flex gap-4">
+//                         <button onClick={toggleMode} className="px-6 py-3 rounded-lg font-bold text-gray-600 bg-gray-100 hover:bg-gray-200">Back to Setup</button>
+//                         <button onClick={savePuzzle} disabled={moves.length === 0} className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-bold shadow-lg disabled:opacity-50 disabled:shadow-none transition-all">
+//                             Save Puzzle
+//                         </button>
+//                     </div>
+//                 </div>
+//              </div>
+//           )}
+//           {/* PGN Modal */}
+//           <Modal isOpen={isPgnModalOpen} onClose={() => setIsPgnModalOpen(false)} title="Import PGN">
+//               <div className="space-y-4">
+//                   <p className="text-sm text-gray-500">Paste a PGN (Portable Game Notation) string below. If the PGN contains moves, they will be automatically loaded as the puzzle solution.</p>
+//                   <textarea
+//                     className="w-full h-40 border rounded-lg p-3 font-mono text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+//                     placeholder={`[Event "Casual Game"]\n[Site "Berlin GER"]\n...\n\n1. e4 e5 2. Nf3 Nc6...`}
+//                     value={pgnInput}
+//                     onChange={(e) => setPgnInput(e.target.value)}
+//                   />
+//                   <div className="flex justify-end gap-2">
+//                       <button onClick={() => setIsPgnModalOpen(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded">Cancel</button>
+//                       <button onClick={handleImportPgn} className="px-6 py-2 bg-slate-900 text-white rounded font-bold hover:bg-black">Import</button>
+//                   </div>
+//               </div>
+//           </Modal>
+//         </div>
+//       </div>
+//     )
+// }
+
+
+// ==========================================
+// 4. PUZZLE CREATOR (Updated: Correct Star Saving)
+// ==========================================
 function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => void }) {
     // Game Reference
     const game = useRef(new Chess())
@@ -818,8 +1198,12 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
     const [selectedTool, setSelectedTool] = useState<Tool>(null)
     const [startFen, setStartFen] = useState<string | null>(null)
    
-    // Stars State (Array of squares e.g. ['e4', 'h5'])
+    // Stars State (Current visible stars)
     const [stars, setStars] = useState<string[]>([])
+    
+    // NEW: Store original stars layout when entering Record mode
+    const [initialStars, setInitialStars] = useState<string[]>([])
+
     // PGN Import State
     const [isPgnModalOpen, setIsPgnModalOpen] = useState(false)
     const [pgnInput, setPgnInput] = useState('')
@@ -830,14 +1214,10 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
         return parts.length > 1 ? parts[1] : 'w'
     }
     const updateBoard = () => {
-        // If game is valid, get FEN from chess.js
-        // If custom board (kingless), we might rely on what was dropped last,
-        // but react-chessboard keeps internal state. We just sync 'fen' state.
         try {
             setFen(game.current.fen())
         } catch(e) {
             // Chess.js might fail if position is invalid (no king).
-            // We just keep current 'fen' state if it was updated manually via drop.
         }
     }
     // 1. Sync Manual Input when Board Changes
@@ -849,12 +1229,10 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
         const input = e.target.value
         setManualFen(input)
        
-        // Try to load strictly. If fail, assume custom board and just set FEN for visual.
         try {
             const result = game.current.load(input)
             setFen(game.current.fen())
         } catch (error) {
-            // It's an invalid FEN for standard chess (e.g. no king), but we allow it for custom puzzles
             setFen(input)
         }
     }
@@ -896,14 +1274,16 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
  
     const toggleMode = () => {
       if (mode === 'SETUP') {
-        // Validation: If standard chess, check kings. If custom (stars present), skip validation.
         const boardOnly = fen.split(" ")[0];
         const hasKings = boardOnly.includes("K") && boardOnly.includes("k");
        
-        // If it's a star puzzle, we don't care about kings.
         if (stars.length === 0 && !hasKings) {
              if(!confirm("Board has missing kings. This will be treated as a custom exercise (non-standard chess). Continue?")) return;
         }
+        
+        // --- KEY FIX: Save the stars configuration before entering record mode ---
+        setInitialStars([...stars]);
+        
         setStartFen(fen)
         setMoves([])
         setMode('RECORD')
@@ -911,12 +1291,12 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
       } else {
         setMode('SETUP')
         setStartFen(null)
-        setStars([]) // Optional: reset stars if going back? or keep them. Let's keep them.
+        // Optionally restore stars to initial state if going back
+        setStars([...initialStars]) 
       }
     }
  
     // --- Interaction Handlers ---
-    // Right Click: Toggle Star (in Setup), Remove Piece (in Setup if not star)
     const onSquareRightClick = (square: string) => {
         if (mode === 'SETUP') {
             if (stars.includes(square)) {
@@ -926,17 +1306,12 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
             }
         }
     }
-    // Left Click: Place Piece / Remove
+    
     const onSquareClick = (square: string) => {
       if (mode !== 'SETUP' || !selectedTool) return
      
-      // If clicking with a tool, remove any star on that square to avoid visual clutter
       if (stars.includes(square)) setStars(stars.filter(s => s !== square))
-      // We manually manipulate FEN string if chess.js fails (Kingless support)
-      // BUT react-chessboard doesn't expose easy FEN manipulation without chess.js.
-      // So we prioritize chess.js, fallback to visual update is complex without library support.
-      // Simplified: We rely on chess.js for placement. If it fails, user must use FEN input for Kingless setups.
-      // Actually, game.put() works even if FEN is invalid for .move().
+      
       if (selectedTool === 'TRASH') {
           game.current.remove(square)
       } else {
@@ -958,18 +1333,13 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
       if (mode === 'RECORD') {
         // 1. Check for Star Collection
         if (stars.includes(target)) {
-            // Remove star
+            // Remove star from CURRENT VIEW ONLY
             setStars(stars.filter(s => s !== target))
-            // We allow the move even if illegal in standard chess (Custom Exercise Mode)
-            // Manually move piece in game state if possible, else strictly visual?
-            // To support "Knight moving freely", we can't use game.move().
-            // We force the move by manipulating the board state directly.
            
             const p = game.current.get(source)
             game.current.remove(source)
             game.current.put(p, target)
            
-            // Record 'move' as simple coordinate string for custom puzzles
             setMoves([...moves, `${source}-${target}`])
             setFen(game.current.fen())
             return true
@@ -985,16 +1355,18 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
       }
       return false
     }
+    
     // Render Stars overlay
     const customSquareStyles: Record<string, React.CSSProperties> = {}
     stars.forEach(square => {
         customSquareStyles[square] = {
-            backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iZ29sZCIgc3Ryb2tlPSJnb2xkIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBvbHlnb24gcG9pbnRzPSIxMiAyIDE1LjA5IDguMjYgMjIgOS4yNyAxNyAxNC4xNCAxOC4xOCAyMS4wMiAxMiAxNy43NyA1LjgyIDIxLjAyIDcgMTQuMTQgMiA5LjI3IDguOTEgOC4yNiAxMiAyIi8+PC9zdmc+")',
+            backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iZ29sZCIgc3Ryb2tlPSJnb2xkIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBvbHlnb24gcG9pbnRzPSIxMiAyIDE1LjA5IDguMjYgMjIgOS4yNyAxNyAxNC4xNCAxOC4xOCAyMS4wMiAxMiAxNyAxNyA1LjgyIDIxLjAyIDcgMTQuMTQgMiA5LjI3IDguOTEgOC4yNiAxMiAyIi8+PC9zdmc+")',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             backgroundSize: '50%',
         }
     })
+
     const savePuzzle = async () => {
         if(!title || !startFen) return
         try {
@@ -1007,7 +1379,8 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
                     fen: startFen,
                     solution: moves.join(' '),
                     parentId: folderId === 'root' ? null : folderId,
-                    data: { stars } // Save star locations in metadata
+                    // --- KEY FIX: Save initialStars, NOT current stars (which might be empty) ---
+                    data: { stars: initialStars } 
                 })
             })
             if(res.ok) {
@@ -1142,9 +1515,8 @@ function PuzzleCreator({ folderId, onBack }: { folderId: string, onBack: () => v
                         game.current.load(startFen!);
                         setFen(startFen!);
                         setMoves([]);
-                        // Reset stars if they were collected
-                        // Note: Logic to restore specific stars on undo is complex, simpler to reset all
-                        alert("Resetting position...");
+                        // RESTORE INITIAL STARS ON RESET
+                        setStars([...initialStars]);
                     }} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded font-bold text-gray-700 flex items-center gap-2">
                         <RotateCcw size={16}/> Reset
                     </button>
