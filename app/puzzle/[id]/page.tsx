@@ -547,8 +547,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// --- INTERFACES ---
-
 interface PuzzleData {
   stars?: string[];
 }
@@ -560,15 +558,8 @@ interface Puzzle {
   stage: string;
   title: string;
   description?: string;
-  // Ensure the 'data' field is handled correctly, often stored as JSON in the database
-  data?: PuzzleData | string; 
+  data?: PuzzleData | string;
 }
-
-// --- UTILITY: Get piece info from react-chessboard string ('wN', 'bR', etc.)
-const getPieceInfo = (pieceStr: string) => ({
-    color: pieceStr[0] as Color,
-    type: pieceStr[1].toLowerCase() as PieceSymbol,
-});
 
 export default function PuzzlePage() {
   const { data: session, status } = useSession();
@@ -584,7 +575,7 @@ export default function PuzzlePage() {
   const [nextPuzzleId, setNextPuzzleId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize with a fresh game instance
+  // Game State
   const [game, setGame] = useState(new Chess());
   const [currentFen, setCurrentFen] = useState("start");
   const [solutionMoves, setSolutionMoves] = useState<string[]>([]);
@@ -600,7 +591,7 @@ export default function PuzzlePage() {
   const [containerWidth, setContainerWidth] = useState(500);
   const boardContainerRef = useRef<HTMLDivElement>(null);
 
-  // Responsive Board Observer
+  // Resize Observer
   useEffect(() => {
     if (!boardContainerRef.current) return;
     const resizeObserver = new ResizeObserver(() => {
@@ -609,6 +600,35 @@ export default function PuzzlePage() {
     resizeObserver.observe(boardContainerRef.current);
     return () => resizeObserver.disconnect();
   }, []);
+
+  // --- HELPER: Safe Board Loading ---
+  // This manually places pieces if standard load fails (e.g. no kings)
+  const getSafeGame = (fen: string) => {
+    const g = new Chess();
+    g.clear();
+    try {
+      g.load(fen);
+    } catch (e) {
+      // Manual setup for "illegal" boards
+      const [placement] = fen.split(' ');
+      const rows = placement.split('/');
+      rows.forEach((row, rIdx) => {
+        let cIdx = 0;
+        for (const char of row) {
+          if (/\d/.test(char)) {
+            cIdx += parseInt(char);
+          } else {
+            const square = String.fromCharCode(97 + cIdx) + (8 - rIdx);
+            const color = char === char.toUpperCase() ? 'w' : 'b';
+            const type = char.toLowerCase();
+            g.put({ type: type as PieceSymbol, color: color as Color }, square as any);
+            cIdx++;
+          }
+        }
+      });
+    }
+    return g;
+  };
 
   // Load Puzzle
   useEffect(() => {
@@ -628,36 +648,26 @@ export default function PuzzlePage() {
 
         const data: Puzzle = await res.json();
         
-        // --- 1. Parse Stars (Robust JSON handling) ---
+        // Parse Stars
         let parsedData: PuzzleData = {};
         if (typeof data.data === "string") {
-            try { parsedData = JSON.parse(data.data); } catch (e) { console.error("Error parsing puzzle data string:", e); }
+            try { parsedData = JSON.parse(data.data); } catch (e) {}
         } else if (typeof data.data === "object" && data.data !== null) {
             parsedData = data.data as PuzzleData;
         }
         setStars(parsedData.stars && Array.isArray(parsedData.stars) ? parsedData.stars : []);
 
-        // --- 2. Robust Game Loading ---
-        const newGame = new Chess();
-        try {
-            // Try standard load. This handles most standard FENs.
-            newGame.load(data.fen);
-        } catch (e) {
-            console.warn("Standard load failed. Using FEN for display, piece movement might rely on custom logic.");
-             // If load fails (e.g., no kings), we still use the engine for basic features.
-             // We MUST keep the original FEN for display and subsequent manual updates.
-        }
-
+        // Load Game State safely
+        const newGame = getSafeGame(data.fen);
         setGame(newGame);
-        setCurrentFen(data.fen);
+        setCurrentFen(data.fen); 
         
-        // Auto-detect orientation based on side to move
-        const turn = data.fen.split(' ')[1];
-        if (turn === "w") setOrientation("white");
-        else if (turn === "b") setOrientation("black");
+        // Orientation
+        if (data.fen.includes(" w ")) setOrientation("white");
+        else if (data.fen.includes(" b ")) setOrientation("black");
         
         setPuzzle(data);
-        setSolutionMoves(data.solution.trim().split(/\s+/)); // Use regex to handle multiple spaces
+        setSolutionMoves(data.solution.trim().split(" "));
         setMoveIndex(0);
         setStatusState("IDLE");
 
@@ -698,19 +708,16 @@ export default function PuzzlePage() {
 
   const handleSkip = () => handleNext();
 
-  // Hint: Highlight Source Square
+  // Hint Logic
   const handleHint = () => {
     if (statusState === "COMPLETED" || moveIndex >= solutionMoves.length) return;
     const correctMoveStr = solutionMoves[moveIndex];
     let fromSquare = "";
 
-    // 1. Try Coordinate Notation (e2-e4 or e2e4)
-    if (correctMoveStr.includes("-") || correctMoveStr.length === 4) {
-        fromSquare = correctMoveStr.slice(0, 2);
-    } else {
-        // 2. Try SAN (Standard Notation) via engine
+    if (correctMoveStr.includes("-")) fromSquare = correctMoveStr.split("-")[0];
+    else {
         try {
-            const temp = new Chess(currentFen);
+            const temp = getSafeGame(currentFen); // Use safe loader
             const move = temp.move(correctMoveStr); 
             if (move) fromSquare = move.from;
         } catch(e) {}
@@ -724,35 +731,20 @@ export default function PuzzlePage() {
     }
   };
 
-  // --- CUSTOM MOVEMENT LOGIC (Only piece geometry) ---
+  // Geometry Check for Custom Moves
   const isGeometryValid = (piece: string, from: string, to: string) => {
-    const { type } = getPieceInfo(piece);
+    const type = piece[1].toLowerCase(); 
     const x1 = from.charCodeAt(0), y1 = parseInt(from[1]);
     const x2 = to.charCodeAt(0), y2 = parseInt(to[1]);
     const dx = Math.abs(x1 - x2);
     const dy = Math.abs(y1 - y2);
 
-    // Checks basic legal moves for all pieces
     if (type === 'n') return (dx === 1 && dy === 2) || (dx === 2 && dy === 1);
     if (type === 'r') return dx === 0 || dy === 0;
     if (type === 'b') return dx === dy;
     if (type === 'q') return dx === 0 || dy === 0 || dx === dy;
     if (type === 'k') return dx <= 1 && dy <= 1;
-    
-    // Simplifed Pawn logic for custom puzzles
-    if (type === 'p') {
-        const direction = piece[0] === 'w' ? 1 : -1;
-        const startRank = piece[0] === 'w' ? 2 : 7;
-        const fromRank = parseInt(from[1]);
-        const isInitialMove = fromRank === startRank;
-
-        // Forward 1 step
-        if (dx === 0 && y2 - y1 === direction) return true;
-        // Forward 2 steps from start
-        if (dx === 0 && y2 - y1 === 2 * direction && isInitialMove) return true;
-        // Capture
-        if (dx === 1 && y2 - y1 === direction) return true;
-    }
+    if (type === 'p') return (piece[0] === 'w' ? (y2 > y1) : (y2 < y1)) && dx <= 1 && dy <= 2; 
     
     return false;
   };
@@ -760,74 +752,52 @@ export default function PuzzlePage() {
   const onDrop = (from: string, to: string, piece: string) => {
     if (statusState === "COMPLETED" || statusState === "WRONG") return false;
 
+    // Use Safe Game Loader (Critical Fix)
+    const gameCopy = getSafeGame(currentFen);
+
     let validMove = false;
-    let newFen = currentFen;
+    let newFen = "";
 
-    // Use a fresh game instance for validation and update
-    const tempGame = new Chess();
-    try { 
-        tempGame.load(currentFen); 
-    } catch { 
-        // If load fails (e.g., non-standard FEN), manually clear and put pieces
-        tempGame.clear(); 
-        console.warn("Attempting custom load...");
-        // This is complex, so we will rely purely on manual board manipulation below
-    }
-
-    // --- 1. Try Standard Move (For standard Puzzles) ---
+    // 1. Try Standard Move
     try {
-        const move = tempGame.move({ from, to, promotion: "q" });
+        const move = gameCopy.move({ from, to, promotion: "q" });
         if (move) {
             validMove = true;
-            newFen = tempGame.fen();
+            newFen = gameCopy.fen();
         }
-    } catch (e) {
-        // console.log("Standard move failed:", e);
-    }
-    
-    // --- 2. Try Custom/Forced Move (For non-standard/custom Puzzles) ---
+    } catch (e) {}
+
+    // 2. Try Custom Move (Geometry Check)
     if (!validMove) {
         if (isGeometryValid(piece, from, to)) {
             validMove = true;
             
-            // Re-load the state for manual manipulation
-            const forcedGame = new Chess();
-            try { forcedGame.load(currentFen); } catch {}
+            // Manual Board Update
+            gameCopy.remove(from as any);
+            gameCopy.put({ type: piece[1].toLowerCase() as PieceSymbol, color: piece[0] as Color }, to as any);
             
-            const { color, type } = getPieceInfo(piece);
+            // Generate FEN manually to force update
+            newFen = gameCopy.fen();
             
-            // Force the move using `put` and `remove`
-            forcedGame.remove(from as any);
-            forcedGame.put({ type, color }, to as any);
-            
-            // --- FEN Construction Fix ---
-            const fenParts = currentFen.split(' ');
-            const newBoardPlacement = forcedGame.fen().split(' ')[0];
-            const newTurnColor = color === 'w' ? 'b' : 'w'; // Flip the turn color
-            
-            // Use the forced board state but keep simplified non-piece parts (no castling, no en passant)
-            // This is the safest way to update the FEN for custom, rule-bending puzzles.
-            newFen = `${newBoardPlacement} ${newTurnColor} - - 0 1`; 
+            // Hack: If chess.js generated a FEN with missing parts because of no kings,
+            // we accept it because getSafeGame handles it on next render.
         }
     }
 
     if (!validMove) return false;
 
-    // --- 3. Check Solution ---
+    // 3. Check Solution
     const expected = solutionMoves[moveIndex];
-    const userMoveStr = `${from}-${to}`; // Coordinate notation
+    // Allow coordinate match (e2-e4) or SAN match if available
+    const isCorrect = 
+        expected === `${from}-${to}` || 
+        expected === `${from}${to}` ||
+        (validMove && !expected.includes("-") && expected === to) ||
+        (validMove && expected === `${from}${to}`.replace("-", ""));
 
-    // Robust solution check to handle e4-f6, e4f6, or e4->f6 notations
-    const moveMatches = 
-      expected === userMoveStr ||
-      expected === userMoveStr.replace("-", "") ||
-      expected.includes(userMoveStr) ||
-      expected.includes(userMoveStr.replace("-", ""));
-
-    if (moveMatches) {
-        // Update game state
-        setGame(new Chess(newFen)); // Use the calculated newFen
-        setCurrentFen(newFen);      // Update visual board
+    if (isCorrect) {
+        setGame(gameCopy);
+        setCurrentFen(newFen);
 
         // Collect Star
         if (stars.includes(to)) {
@@ -838,9 +808,7 @@ export default function PuzzlePage() {
         handleCorrectStep(newFen);
         return true;
     } else {
-        handleIncorrect(userMoveStr);
-        // Return true to allow the piece to briefly move, then reset by statusState update
-        // Or return false to revert the move immediately. (Returning false is safer for UX)
+        handleIncorrect(`${from}-${to}`);
         return false;
     }
   };
@@ -858,63 +826,45 @@ export default function PuzzlePage() {
     setMoveIndex(nextIndex);
     setStatusState("CORRECT");
 
-    // Auto-Play Opponent (Only if not a star puzzle, or if the solution move is a SAN/to square notation)
     const reply = solutionMoves[nextIndex];
-    const isCoordinateMove = reply.includes("-") || reply.length === 4;
-
-    if (stars.length === 0 && reply && !isCoordinateMove) {
-          setTimeout(() => {
-              const g = new Chess(fenAfterMove);
-              try { 
-                  // Move using SAN (or just the target square if it works)
-                  const move = g.move(reply); 
-                  if (move) {
-                      const replyFen = g.fen();
-                      setGame(g);
-                      setCurrentFen(replyFen);
-                      setMoveIndex(nextIndex + 1);
-                  } else {
-                      // Fallback: If SAN fails, rely on the next user move.
-                      setMoveIndex(nextIndex + 1);
-                  }
-              } catch {
-                 // If move throws, rely on the next user move
-                 setMoveIndex(nextIndex + 1);
-              }
-              setStatusState("IDLE");
-          }, 500);
+    // Only auto-play if stars are gone (assuming star puzzle requires manual moves)
+    if (stars.length === 0 && reply && !reply.includes("-")) {
+         setTimeout(() => {
+            const g = getSafeGame(fenAfterMove);
+            try { 
+                g.move(reply); 
+                const replyFen = g.fen();
+                setGame(g);
+                setCurrentFen(replyFen);
+                setMoveIndex(nextIndex + 1);
+            } catch {}
+            setStatusState("IDLE");
+         }, 500);
     } else {
-        // If it's a coordinate move, it's the next player's (user's) move
-        setMoveIndex(nextIndex); // Keep index here for the user to make the move
         setStatusState("IDLE");
     }
   };
 
   const handleIncorrect = (wrongSan: string) => {
     setStatusState("WRONG");
-    toast.error("Wrong Move! Resetting...");
+    toast.error("Wrong Move!");
     saveProgress(false, wrongSan);
-    
-    // Reset the board to the start position after a brief delay
-    setTimeout(() => {
-        resetPuzzle();
-    }, 1000); 
+    setTimeout(() => setStatusState("IDLE"), 500);
   };
 
   const saveProgress = (isCorrect: boolean, wrongMove: string | null) => {
     const studentId = (session?.user as any)?.id;
-    if (!studentId || !puzzleId) return;
+    if (!studentId) return;
     fetch("/api/progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ studentId, puzzleId, isCorrect, wrongMove }),
-    }).catch(e => console.error("Failed to save progress:", e));
+    });
   };
 
   const resetPuzzle = () => {
     if (!puzzle) return;
-    const newGame = new Chess();
-    try { newGame.load(puzzle.fen); } catch { /* Keep default or handle manually */ }
+    const newGame = getSafeGame(puzzle.fen);
     
     setGame(newGame);
     setCurrentFen(puzzle.fen);
@@ -929,7 +879,6 @@ export default function PuzzlePage() {
 
   const customSquareStyles = useMemo(() => {
     const styles: Record<string, React.CSSProperties> = {};
-    // Add star graphics
     stars.forEach((square) => {
       styles[square] = {
         backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZDcwMCIgc3Ryb2tlPSJnb2xkIiBzdHJva2Utd2lkdGg9IjMiPjxwb2x5Z29uIHBvaW50cz0iMTIgMiAxNS4wOSA4LjI2IDIyIDkuMjcgMTcgMTQuMTQgMTguMTggMjEuMDIgMTIgMTcuNzcgNS44MiAyMS4wMiA3IDE0LjE0IDIgOS4yNyA4LjkxIDguMjYgMTIgMiIvPjwvc3ZnPg==")',
@@ -938,14 +887,9 @@ export default function PuzzlePage() {
         backgroundSize: "60%",
       };
     });
-    // Add hint highlighting
     Object.entries(hintSquares).forEach(([square, style]) => {
       styles[square] = { ...styles[square], ...style };
     });
-
-    // Add visual feedback for last move (optional, requires tracking last move in state)
-    // Example: Highlight the 'from' square and 'to' square
-    
     return styles;
   }, [stars, hintSquares]);
 
@@ -955,14 +899,14 @@ export default function PuzzlePage() {
     <div className="min-h-screen bg-slate-50 py-10 px-4 flex flex-col items-center">
       <div className="w-full max-w-6xl space-y-8">
         <div className="flex items-center justify-between">
-          <button onClick={() => router.back()} className="flex items-center gap-2 font-bold text-slate-700 hover:text-slate-900"><ArrowLeft /> Back</button>
+          <button onClick={() => router.back()} className="flex items-center gap-2 font-bold"><ArrowLeft /> Back</button>
           <div className="text-center">
             <h1 className="text-3xl font-extrabold">{puzzle.title}</h1>
             <span className="inline-block mt-1 px-3 py-0.5 text-xs font-bold rounded-full bg-orange-100 text-orange-700 uppercase">
                 {puzzle.stage}
             </span>
           </div>
-          <button onClick={handleSkip} className="flex items-center gap-2 font-bold text-gray-500 hover:text-gray-700">Skip <SkipForward/></button>
+          <button onClick={handleSkip} className="flex items-center gap-2 font-bold text-gray-500">Skip <SkipForward/></button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -987,27 +931,19 @@ export default function PuzzlePage() {
                     {statusState === "COMPLETED" ? <CheckCircle className="h-10 w-10 text-green-600" /> : statusState === "WRONG" ? <XCircle className="h-10 w-10 text-red-600" /> : <Play className="h-10 w-10 text-blue-500" />}
                     <div>
                         <h2 className="text-xl font-bold">{statusState === "COMPLETED" ? "Solved!" : statusState === "WRONG" ? "Try Again" : `${orientation === 'white' ? 'White' : 'Black'} to Move`}</h2>
-                        <p className="text-sm text-gray-500">{stars.length > 0 ? `${stars.length} stars remaining` : `Move ${solutionMoves[moveIndex] || '...'} (${moveIndex + 1}/${solutionMoves.length})`}</p>
+                        <p className="text-sm text-gray-500">{stars.length > 0 ? `${stars.length} stars remaining` : "Find the best move"}</p>
                     </div>
                 </div>
             </div>
             {statusState !== "COMPLETED" ? (
                 <div className="grid grid-cols-2 gap-4">
-                    <button onClick={resetPuzzle} className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-white border hover:bg-gray-50 text-slate-700"><RotateCcw/> Reset</button>
-                    <button onClick={handleHint} className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-blue-50 border hover:bg-blue-100 text-blue-600"><Lightbulb/> Hint</button>
+                    <button onClick={resetPuzzle} className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-white border hover:bg-gray-50"><RotateCcw/> Reset</button>
+                    <button onClick={handleHint} className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold bg-blue-50 border hover:bg-blue-100"><Lightbulb/> Hint</button>
                 </div>
             ) : (
-                <button onClick={handleNext} className="w-full py-4 rounded-xl font-bold text-lg bg-orange-500 text-white hover:bg-orange-600 flex items-center justify-center gap-2">
-                    {nextPuzzleId ? 'Next Puzzle' : 'Go to Library'} <ArrowRight/>
-                </button>
+                <button onClick={handleNext} className="w-full py-4 rounded-xl font-bold text-lg bg-orange-500 text-white hover:bg-orange-600 flex items-center justify-center gap-2">Next <ArrowRight/></button>
             )}
-            {puzzle.description && <div className="mt-4 p-4 bg-slate-100 rounded-xl text-sm text-slate-700">{puzzle.description}</div>}
-            {error && (
-                <div className="mt-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-xl flex items-center gap-3">
-                    <AlertTriangle className="h-5 w-5"/>
-                    <p className="font-semibold">Error: {error}</p>
-                </div>
-            )}
+            {puzzle.description && <div className="mt-4 p-4 bg-slate-100 rounded-xl text-sm">{puzzle.description}</div>}
           </div>
         </div>
       </div>
