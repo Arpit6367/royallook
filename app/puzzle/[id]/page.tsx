@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import {
@@ -26,7 +26,7 @@ interface Puzzle {
   title: string;
   description?: string;
   data?: {
-    stars?: string[]; // e.g. ["e4", "g6", "c3"]
+    stars?: string[];
   };
 }
 
@@ -49,10 +49,12 @@ export default function PuzzlePage() {
   const [moveIndex, setMoveIndex] = useState(0);
   const [orientation, setOrientation] = useState<"white" | "black">("white");
 
-  // Stars state - squares that need to be "collected"
+  // Stars state
   const [stars, setStars] = useState<string[]>([]);
 
-  const [hintArrow, setHintArrow] = useState<string[][]>([]);
+  // REPLACED: hintArrow with hintSquares for highlighting
+  const [hintSquares, setHintSquares] = useState<Record<string, React.CSSProperties>>({});
+  
   const [statusState, setStatusState] =
     useState<"IDLE" | "CORRECT" | "WRONG" | "COMPLETED">("IDLE");
 
@@ -78,7 +80,7 @@ export default function PuzzlePage() {
     if (status !== "authenticated" || !puzzleId) return;
 
     setError(null);
-    setHintArrow([]);
+    setHintSquares({}); // Reset hints on load
 
     const loadPuzzle = async () => {
       try {
@@ -88,17 +90,13 @@ export default function PuzzlePage() {
         const data: Puzzle = await res.json();
         if (!data.fen || !data.solution) throw new Error("Puzzle data incomplete.");
 
-        // Initialize game with skipValidation to support kingless/custom boards
         const newGame = new Chess();
-        newGame.clear(); // Clean slate
-        newGame.load(data.fen, { skipValidation: true }); // Critical fix
+        newGame.clear();
+        newGame.load(data.fen, { skipValidation: true });
 
         setGame(newGame);
-
-        // Set board orientation based on whose turn it is
         setOrientation(newGame.turn() === "b" ? "black" : "white");
 
-        // Load stars if present
         if (data.data?.stars && Array.isArray(data.data.stars)) {
           setStars(data.data.stars);
         } else {
@@ -110,7 +108,7 @@ export default function PuzzlePage() {
         setMoveIndex(0);
         setStatusState("IDLE");
 
-        // Load next puzzle (unchanged)
+        // Load next puzzle logic
         let url = "";
         if (context === "todo") {
           url = `/api/assignments/next?currentId=${puzzleId}`;
@@ -134,14 +132,12 @@ export default function PuzzlePage() {
               setNextPuzzleId(null);
             }
           } catch (e) {
-            console.error("Failed to load next puzzle", e);
             setNextPuzzleId(null);
           }
         } else {
           setNextPuzzleId(null);
         }
       } catch (err: any) {
-        console.error("Error loading puzzle", err);
         setError(err.message || "Failed to load puzzle");
       }
     };
@@ -163,47 +159,49 @@ export default function PuzzlePage() {
 
   const handleSkip = () => handleNext();
 
+  // MODIFIED: Highlight Squares instead of Arrow
   const handleHint = () => {
     if (statusState === "COMPLETED" || moveIndex >= solutionMoves.length) return;
 
     const correctSan = solutionMoves[moveIndex];
     const tempGame = new Chess(game.fen());
     const moves = tempGame.moves({ verbose: true });
+    
+    // Find the move object to get 'from' and 'to' squares
     const correctMoveObj = moves.find((m) => m.san === correctSan);
 
     if (correctMoveObj) {
-      setHintArrow([[correctMoveObj.from, correctMoveObj.to]]);
+      // Set background color for the From and To squares
+      setHintSquares({
+        [correctMoveObj.from]: { backgroundColor: "rgba(255, 255, 0, 0.5)" }, // Yellow transparent
+        [correctMoveObj.to]: { backgroundColor: "rgba(255, 255, 0, 0.5)" }
+      });
       toast.info("Best Move Highlighted!");
     }
   };
 
-  // Core move logic — supports standard puzzles AND custom star-collection (kingless) puzzles
   const onDrop = (from: string, to: string) => {
     if (statusState === "COMPLETED" || statusState === "WRONG") return false;
 
     const gameCopy = new Chess(game.fen());
-
-    // Try normal legal move first
     let move = null;
     try {
       move = gameCopy.move({ from, to, promotion: "q" });
     } catch (e) {
-      // Illegal in standard chess — ignore
+      // Illegal normal move
     }
 
-    // If illegal but target is a star → allow custom move
     if (!move && stars.includes(to)) {
       const piece = gameCopy.get(from);
       if (piece) {
         gameCopy.remove(from);
         gameCopy.put(piece, to);
-        move = { from, to, san: `${from}-${to}` }; // custom notation for solution matching
+        move = { from, to, san: `${from}-${to}` };
       }
     }
 
     if (!move) return false;
 
-    // Check against expected solution
     const expected = solutionMoves[moveIndex];
     const isCorrect =
       move.san === expected ||
@@ -211,13 +209,11 @@ export default function PuzzlePage() {
 
     if (isCorrect) {
       setGame(gameCopy);
-
-      // Collect star if landed on one
       if (stars.includes(to)) {
         setStars((prev) => prev.filter((s) => s !== to));
       }
 
-      setHintArrow([]);
+      setHintSquares({}); // Clear hints on correct move
       handleCorrectStep();
       return true;
     } else {
@@ -230,7 +226,6 @@ export default function PuzzlePage() {
     const nextIndex = moveIndex + 1;
 
     if (nextIndex >= solutionMoves.length) {
-      // Check if all stars collected (only if puzzle has stars)
       const hasStars = puzzle?.data?.stars && puzzle.data.stars.length > 0;
       const allCollected = stars.length === 0;
 
@@ -249,7 +244,6 @@ export default function PuzzlePage() {
     setMoveIndex(nextIndex);
     setStatusState("CORRECT");
 
-    // Auto-play opponent reply only for standard SAN moves
     const reply = solutionMoves[nextIndex];
     if (reply && !reply.includes("-")) {
       setTimeout(() => {
@@ -257,9 +251,7 @@ export default function PuzzlePage() {
           const g = new Chess(prev.fen());
           try {
             g.move(reply);
-          } catch (e) {
-            // ignore invalid moves in custom puzzles
-          }
+          } catch (e) {}
           return g;
         });
         setMoveIndex(nextIndex + 1);
@@ -297,26 +289,40 @@ export default function PuzzlePage() {
     if (!puzzle) return;
     const newGame = new Chess();
     newGame.clear();
-    newGame.load(puzzle.fen, { skipValidation: true }); // Important for kingless reset
+    newGame.load(puzzle.fen, { skipValidation: true });
     setGame(newGame);
     setOrientation(newGame.turn() === "b" ? "black" : "white");
     setMoveIndex(0);
     setStatusState("IDLE");
-    setHintArrow([]);
+    setHintSquares({}); // Clear hints
     setStars(puzzle.data?.stars || []);
   };
 
-  // Custom square styles for golden stars
-  const customSquareStyles: Record<string, React.CSSProperties> = {};
-  stars.forEach((square) => {
-    customSquareStyles[square] = {
-      backgroundImage:
-        'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZDcwMCIgc3Ryb2tlPSJnb2xkIiBzdHJva2Utd2lkdGg9IjMiPjxwb2x5Z29uIHBvaW50cz0iMTIgMiAxNS4wOSA4LjI2IDIyIDkuMjcgMTcgMTQuMTQgMTguMTggMjEuMDIgMTIgMTcuNzcgNS44MiAyMS4wMiA3IDE0LjE0IDIgOS4yNyA4LjkxIDguMjYgMTIgMiIvPjwvc3ZnPg==")',
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
-      backgroundSize: "60%",
-    };
-  });
+  // MERGE STYLES: Combine Stars (Image) + Hints (Background Color)
+  const customSquareStyles = useMemo(() => {
+    const styles: Record<string, React.CSSProperties> = {};
+
+    // 1. Apply Star Styles (Background Image)
+    stars.forEach((square) => {
+      styles[square] = {
+        backgroundImage:
+          'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZDcwMCIgc3Ryb2tlPSJnb2xkIiBzdHJva2Utd2lkdGg9IjMiPjxwb2x5Z29uIHBvaW50cz0iMTIgMiAxNS4wOSA4LjI2IDIyIDkuMjcgMTcgMTQuMTQgMTguMTggMjEuMDIgMTIgMTcuNzcgNS44MiAyMS4wMiA3IDE0LjE0IDIgOS4yNyA4LjkxIDguMjYgMTIgMiIvPjwvc3ZnPg==")',
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "60%",
+      };
+    });
+
+    // 2. Apply/Merge Hint Styles (Background Color)
+    Object.entries(hintSquares).forEach(([square, style]) => {
+      styles[square] = {
+        ...styles[square], // Keep star image if it exists
+        ...style, // Add highlight color
+      };
+    });
+
+    return styles;
+  }, [stars, hintSquares]);
 
   if (error) {
     return (
@@ -384,7 +390,6 @@ export default function PuzzlePage() {
                 animationDuration={200}
                 customDarkSquareStyle={{ backgroundColor: "#779556" }}
                 customLightSquareStyle={{ backgroundColor: "#ebecd0" }}
-                customArrows={hintArrow as [string, string][]}
                 customSquareStyles={customSquareStyles}
               />
             </div>
