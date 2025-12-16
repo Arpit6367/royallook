@@ -39,6 +39,24 @@ export function TestimonialsSection() {
     },
     {
       id: 3,
+      name: "Shanthi",
+      role: "Mother of student",
+      rating: 5,
+      content:
+        "An excellent chess coach who focuses on building strong fundamentals. He explains ideas step by step and makes learning enjoyable. My child looks forward to every class and has shown improvement in focus, planning, and decision-making. His teaching style is calm, disciplined, and motivating. Very trustworthy and committed.",
+      image: "/demo-ananya.jpg",
+    },
+    {
+      id: 4,
+      name: "Praveen",
+      role: "Intermediate Player",
+      rating: 5,
+      content:
+        "We are very happy with our chess coach. He is patient, knowledgeable, and explains concepts in a very clear and structured way. My child’s understanding of chess, especially strategic thinking, has improved noticeably. He encourages logical thinking and confidence, not just winning games. We truly appreciate his dedication and highly recommend him.",
+      image: "/demo-ananya.jpg",
+    },
+    {
+      id: 5,
       name: "Ananya Desai",
       role: "Intermediate Player",
       rating: 5,
