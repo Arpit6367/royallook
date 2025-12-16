@@ -560,7 +560,7 @@ function CourseManager() {
   )
 }
 // ==========================================
-// 4. PUZZLE CREATOR (Create + Edit Support)
+// 4. PUZZLE CREATOR (FIXED EDIT + PLAY)
 // ==========================================
 function PuzzleCreator({
   folderId,
@@ -577,10 +577,9 @@ function PuzzleCreator({
     data?: { stars?: string[] }
   }
 }) {
-  // Game Reference
   const game = useRef(new Chess())
 
-  // State
+  // ---------------- STATE ----------------
   const [fen, setFen] = useState(
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
   )
@@ -595,13 +594,7 @@ function PuzzleCreator({
   const [stars, setStars] = useState<string[]>([])
   const [initialStars, setInitialStars] = useState<string[]>([])
 
-  // PGN
-  const [isPgnModalOpen, setIsPgnModalOpen] = useState(false)
-  const [pgnInput, setPgnInput] = useState('')
-
-  // ==========================================
-  // EDIT MODE: LOAD EXISTING PUZZLE
-  // ==========================================
+  // ---------------- EDIT LOAD ----------------
   useEffect(() => {
     if (!puzzle) return
 
@@ -612,85 +605,41 @@ function PuzzleCreator({
     setFen(puzzle.fen)
     setManualFen(puzzle.fen)
     setStartFen(puzzle.fen)
-
-    const loadedStars = puzzle.data?.stars || []
-    setStars([...loadedStars])
-    setInitialStars([...loadedStars])
-
     setTitle(puzzle.title)
 
-    if (puzzle.solution) {
-      setMoves(puzzle.solution.split(' '))
-      setMode('RECORD')
-    }
+    const savedStars = puzzle.data?.stars || []
+    setInitialStars([...savedStars])
+    setStars([...savedStars])
+
+    setMoves(puzzle.solution ? puzzle.solution.split(' ') : [])
+    setMode('SETUP') // 🔑 DO NOT force RECORD
   }, [puzzle])
 
-  // Helpers
-  const getTurnFromFen = (fenStr: string) => fenStr.split(' ')[1] || 'w'
-
-  const updateBoard = () => {
-    try {
-      setFen(game.current.fen())
-    } catch {}
-  }
-
+  // ---------------- HELPERS ----------------
   useEffect(() => setManualFen(fen), [fen])
-
-  const handleManualFenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value
-    setManualFen(input)
-    try {
-      game.current.load(input)
-      setFen(game.current.fen())
-    } catch {
-      setFen(input)
-    }
-  }
-
-  const toggleTurn = (color: 'w' | 'b') => {
-    if (mode !== 'SETUP') return
-    const parts = fen.split(' ')
-    parts[1] = color
-    const newFen = parts.join(' ')
-    setFen(newFen)
-    try { game.current.load(newFen) } catch {}
-  }
 
   const toggleMode = () => {
     if (mode === 'SETUP') {
-      setInitialStars([...stars])
+      // 🔑 Always restore stars when recording starts
+      setStars([...initialStars])
       setStartFen(fen)
       setMoves([])
       setMode('RECORD')
       setSelectedTool(null)
     } else {
       setMode('SETUP')
-      setStartFen(null)
       setStars([...initialStars])
+      setStartFen(null)
     }
   }
 
-  // Interactions
+  // ---------------- INTERACTIONS ----------------
   const onSquareRightClick = (square: string) => {
     if (mode !== 'SETUP') return
     setStars(stars.includes(square)
       ? stars.filter(s => s !== square)
       : [...stars, square]
     )
-  }
-
-  const onSquareClick = (square: string) => {
-    if (mode !== 'SETUP' || !selectedTool) return
-    if (stars.includes(square)) setStars(stars.filter(s => s !== square))
-
-    selectedTool === 'TRASH'
-      ? game.current.remove(square)
-      : game.current.put(
-          { type: selectedTool.type, color: selectedTool.color },
-          square
-        )
-
-    setFen(game.current.fen())
   }
 
   const onPieceDrop = (source: string, target: string) => {
@@ -723,7 +672,7 @@ function PuzzleCreator({
     return false
   }
 
-  // Stars overlay
+  // ---------------- STAR STYLES ----------------
   const customSquareStyles: Record<string, React.CSSProperties> = {}
   stars.forEach(sq => {
     customSquareStyles[sq] = {
@@ -735,9 +684,7 @@ function PuzzleCreator({
     }
   })
 
-  // ==========================================
-  // SAVE (CREATE OR UPDATE)
-  // ==========================================
+  // ---------------- SAVE ----------------
   const savePuzzle = async () => {
     if (!title || !startFen) return
 
@@ -763,47 +710,267 @@ function PuzzleCreator({
     } else alert('Save failed')
   }
 
+  // ---------------- UI ----------------
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-white p-6 rounded-xl border">
-      {/* BOARD */}
-      <div className="lg:col-span-5 flex justify-center">
+      <div className="lg:col-span-5">
         <Chessboard
           position={fen}
           onPieceDrop={onPieceDrop}
-          onSquareClick={onSquareClick}
           onSquareRightClick={onSquareRightClick}
           customSquareStyles={customSquareStyles}
         />
       </div>
 
-      {/* CONTROLS */}
-      <div className="lg:col-span-7 space-y-6">
+      <div className="lg:col-span-7 space-y-4">
         <h2 className="text-2xl font-bold">
           {puzzle ? 'Edit Puzzle' : 'New Puzzle'}
         </h2>
 
         {mode === 'RECORD' && (
           <>
-            <div className="font-mono bg-gray-100 p-3 rounded min-h-[60px]">
+            <div className="font-mono bg-gray-100 p-3 rounded">
               {moves.join(' ') || 'Make a move...'}
             </div>
 
-            <div className="flex gap-3">
-              <button onClick={toggleMode}>Back</button>
-              <button
-                onClick={savePuzzle}
-                disabled={moves.length === 0}
-                className="bg-orange-600 text-white px-6 py-2 rounded"
-              >
-                {puzzle ? 'Update Puzzle' : 'Save Puzzle'}
-              </button>
-            </div>
+            <button
+              onClick={savePuzzle}
+              className="bg-orange-600 text-white px-6 py-3 rounded"
+            >
+              {puzzle ? 'Update Puzzle' : 'Save Puzzle'}
+            </button>
           </>
         )}
+
+        <button onClick={toggleMode} className="text-blue-600 font-bold">
+          {mode === 'SETUP' ? 'Next: Record Solution' : 'Back to Setup'}
+        </button>
       </div>
     </div>
   )
 }
+
+// ==========================================
+//  PUZZLE CREATOR (CREATE + EDIT) – FINAL
+// ==========================================
+function PuzzleCreator({
+  folderId,
+  onBack,
+  puzzle,
+}: {
+  folderId: string
+  onBack: () => void
+  puzzle?: {
+    id: string
+    title: string
+    fen: string
+    solution: string
+    data?: { stars?: string[] }
+  }
+}) {
+  const game = useRef(new Chess())
+
+  const [fen, setFen] = useState(
+    'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+  )
+  const [manualFen, setManualFen] = useState(fen)
+  const [moves, setMoves] = useState<string[]>([])
+  const [title, setTitle] = useState('')
+  const [mode, setMode] = useState<'SETUP' | 'RECORD'>('SETUP')
+  const [selectedTool, setSelectedTool] = useState<Tool>(null)
+  const [startFen, setStartFen] = useState<string | null>(null)
+
+  const [stars, setStars] = useState<string[]>([])
+  const [initialStars, setInitialStars] = useState<string[]>([])
+
+  const [isPgnModalOpen, setIsPgnModalOpen] = useState(false)
+  const [pgnInput, setPgnInput] = useState('')
+
+  // ==========================================
+  // 🔁 LOAD EXISTING PUZZLE (EDIT MODE)
+  // ==========================================
+  useEffect(() => {
+    if (!puzzle) return
+
+    try {
+      game.current.load(puzzle.fen)
+    } catch {}
+
+    setFen(puzzle.fen)
+    setManualFen(puzzle.fen)
+    setStartFen(puzzle.fen)
+
+    const loadedStars = puzzle.data?.stars || []
+    setStars([...loadedStars])
+    setInitialStars([...loadedStars])
+
+    setTitle(puzzle.title)
+
+    if (puzzle.solution) {
+      setMoves(puzzle.solution.split(' '))
+      setMode('RECORD')
+    }
+  }, [puzzle])
+
+  // ==========================================
+  // SYNC MANUAL FEN
+  // ==========================================
+  useEffect(() => {
+    setManualFen(fen)
+  }, [fen])
+
+  const handleManualFenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value
+    setManualFen(input)
+    try {
+      game.current.load(input)
+      setFen(game.current.fen())
+    } catch {
+      setFen(input)
+    }
+  }
+
+  // ==========================================
+  // MODE SWITCH
+  // ==========================================
+  const toggleMode = () => {
+    if (mode === 'SETUP') {
+      setInitialStars([...stars])
+      setStartFen(fen)
+      setMoves([])
+      setMode('RECORD')
+    } else {
+      setMode('SETUP')
+      setStars([...initialStars])
+      if (startFen) {
+        game.current.load(startFen)
+        setFen(startFen)
+      }
+    }
+  }
+
+  // ==========================================
+  // BOARD INTERACTIONS
+  // ==========================================
+  const onSquareRightClick = (square: string) => {
+    if (mode !== 'SETUP') return
+    setStars((prev) =>
+      prev.includes(square)
+        ? prev.filter((s) => s !== square)
+        : [...prev, square]
+    )
+  }
+
+  const onPieceDrop = (source: string, target: string) => {
+    if (mode === 'SETUP') {
+      const p = game.current.get(source)
+      if (!p) return false
+      game.current.remove(source)
+      game.current.put(p, target)
+      setFen(game.current.fen())
+      return true
+    }
+
+    if (mode === 'RECORD') {
+      if (stars.includes(target)) {
+        setStars(stars.filter((s) => s !== target))
+        const p = game.current.get(source)
+        game.current.remove(source)
+        game.current.put(p, target)
+        setMoves([...moves, `${source}-${target}`])
+        setFen(game.current.fen())
+        return true
+      }
+
+      const move = game.current.move({
+        from: source,
+        to: target,
+        promotion: 'q',
+      })
+      if (!move) return false
+      setMoves([...moves, move.san])
+      setFen(game.current.fen())
+      return true
+    }
+
+    return false
+  }
+
+  // ==========================================
+  // SAVE (POST / PUT)
+  // ==========================================
+  const savePuzzle = async () => {
+    if (!title || !startFen || moves.length === 0) return
+
+    const payload = {
+      type: 'PUZZLE',
+      id: puzzle?.id,
+      title,
+      fen: startFen,
+      solution: moves.join(' '),
+      parentId: folderId === 'root' ? null : folderId,
+      data: { stars: initialStars },
+    }
+
+    const res = await fetch('/api/content', {
+      method: puzzle ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    if (res.ok) {
+      alert(puzzle ? 'Puzzle Updated!' : 'Puzzle Created!')
+      onBack()
+    } else {
+      alert('Save failed')
+    }
+  }
+
+  // ==========================================
+  // RENDER
+  // ==========================================
+  const customSquareStyles: Record<string, React.CSSProperties> = {}
+  stars.forEach((s) => {
+    customSquareStyles[s] = {
+      backgroundImage:
+        'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9ImdvbGQiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBvbHlnb24gcG9pbnRzPSIxMiAyIDE1LjA5IDguMjYgMjIgOS4yNyAxNyAxNC4xNCAxOC4xOCAyMS4wMiAxMiAxNyAxNyA1LjgyIDIxLjAyIDcgMTQuMTQgMiA5LjI3IDguOTEgOC4yNiAxMiAyIi8+PC9zdmc+")',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center',
+      backgroundSize: '50%',
+    }
+  })
+
+  return (
+    <div className="p-6">
+      <Chessboard
+        position={fen}
+        onPieceDrop={onPieceDrop}
+        onSquareRightClick={onSquareRightClick}
+        customSquareStyles={customSquareStyles}
+      />
+
+      <input
+        className="mt-4 w-full border p-2"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Puzzle Title"
+      />
+
+      <div className="flex gap-4 mt-4">
+        <button onClick={toggleMode} className="px-4 py-2 bg-gray-200">
+          {mode === 'SETUP' ? 'Record Solution' : 'Back to Setup'}
+        </button>
+        <button
+          onClick={savePuzzle}
+          className="px-6 py-2 bg-orange-600 text-white"
+        >
+          {puzzle ? 'Update Puzzle' : 'Save Puzzle'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 
 // // ==========================================
 // // 4. PUZZLE CREATOR (Updated: Correct Star Saving)
