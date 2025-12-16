@@ -6,7 +6,7 @@ import {
   Users, Folder, FileText, ChevronRight, Save, RotateCcw,
   MousePointer2, Trash2, Plus, Edit, ArrowLeft, Check,
   Play, Copy, Settings, ArrowUpDown, BookOpen, Video, List, Loader2,
-  MoreVertical, FolderInput, X, Search, Star, CheckSquare, Square
+  MoreVertical, FolderInput, X, Search, Star, CheckSquare, Square, Pencil
 } from 'lucide-react'
 // --- TYPES ---
 type Tool = { type: string, color: 'w' | 'b' } | 'TRASH' | null
