@@ -15,7 +15,7 @@ export async function GET(req: Request) {
       // Subfolders
       whereClause.parentId = parentId;
     } else if (stage) {
-      // Root folders
+      // Root folders within a stage
       whereClause.stage = stage;
       whereClause.parentId = null;
     }
@@ -27,6 +27,7 @@ export async function GET(req: Request) {
 
     // --- FETCH PUZZLES ---
     let puzzles = [];
+    // Only fetch puzzles if we are inside a specific folder (parentId exists)
     if (parentId && parentId !== "root") {
       puzzles = await prisma.puzzle.findMany({
         where: { folderId: parentId },
@@ -62,13 +63,6 @@ export async function POST(req: Request) {
         );
       }
 
-      if (!body.parentId && !body.stage) {
-        return NextResponse.json(
-          { error: "Stage is required for root folders" },
-          { status: 400 }
-        );
-      }
-
       const folder = await prisma.folder.create({
         data: {
           name: body.name,
@@ -89,6 +83,7 @@ export async function POST(req: Request) {
         );
       }
 
+      // Handle folder association
       let folderId = body.folderId || body.parentId;
       if (folderId === "root") folderId = null;
 
@@ -98,9 +93,7 @@ export async function POST(req: Request) {
           fen: body.fen,
           solution: body.solution,
           folderId: folderId,
-
-          // ⭐⭐⭐ THIS IS THE FIX ⭐⭐⭐
-          // Stars / annotations / future metadata
+          // Store stars and metadata
           data: body.data ?? {},
         },
       });
@@ -118,7 +111,47 @@ export async function POST(req: Request) {
   }
 }
 
-// 3. DELETE: Remove Folder or Puzzle
+// 3. PUT: Update Puzzle (Edit Functionality)
+export async function PUT(req: Request) {
+  try {
+    const body = await req.json();
+    const { id, type, title, fen, solution, data } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "ID required" }, { status: 400 });
+    }
+
+    // --- UPDATE PUZZLE ---
+    if (type === "PUZZLE") {
+      const updatedPuzzle = await prisma.puzzle.update({
+        where: { id },
+        data: {
+          title,
+          fen,
+          solution,
+          // Update stars/metadata
+          data: data ?? {}, 
+        },
+      });
+      return NextResponse.json(updatedPuzzle);
+    }
+
+    // --- UPDATE FOLDER (Optional, if needed later) ---
+    if (type === "FOLDER") {
+        // Logic for renaming folders if needed
+    }
+
+    return NextResponse.json({ error: "Invalid update type" }, { status: 400 });
+  } catch (error) {
+    console.error("PUT /content error:", error);
+    return NextResponse.json(
+      { error: "Update failed" },
+      { status: 500 }
+    );
+  }
+}
+
+// 4. DELETE: Remove Folder or Puzzle
 export async function DELETE(req: Request) {
   try {
     const body = await req.json();
@@ -132,6 +165,8 @@ export async function DELETE(req: Request) {
     }
 
     if (type === "FOLDER") {
+      // Prisma usually handles cascade delete if configured in schema.
+      // Otherwise, you might need to delete puzzles inside first.
       await prisma.folder.delete({
         where: { id },
       });
@@ -158,7 +193,7 @@ export async function DELETE(req: Request) {
     console.error("DELETE /content error:", error);
     return NextResponse.json(
       {
-        error: "Failed to delete item. It might contain sub-items.",
+        error: "Failed to delete item. Ensure folders are empty before deleting.",
       },
       { status: 500 }
     );
