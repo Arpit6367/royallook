@@ -7,6 +7,7 @@ import Link from "next/link";
 
 // IMAGES FOR SLIDER (ADD YOUR OWN URLs)
 const sliderImages = [
+  "/homepage.jpeg",
   "/gallery1.avif",
   "/gallery2.jpg",
   "/gallery6.jpg",

@@ -20,6 +20,7 @@ const galleryCategories = [
 
 // Dummy Images
 const dummyImages = [
+  "/homepage.jpeg",
   "/gallery1.avif",
   "/gallery3.avif",
   "/gallery6.avif",
@@ -29,6 +30,9 @@ const dummyImages = [
   "/gallery4.avif",
   "/gallery5.webp",
   "/gallery9.webp",
+  "/gal1.jpeg",
+  "/gal2.jpeg",
+  "/gal3.jpeg",
 ];
 
 const galleryImages = [
@@ -91,6 +95,46 @@ const galleryImages = [
   {
     id: 8,
     src: dummyImages[7],
+    alt: "Summer Chess Camp",
+    category: "events",
+    title: "Summer Chess Camp",
+    description: "Fun learning with grandmaster coaches",
+  },
+  {
+    id: 9,
+    src: dummyImages[8],
+    alt: "Summer Chess Camp",
+    category: "events",
+    title: "Summer Chess Camp",
+    description: "Fun learning with grandmaster coaches",
+  },
+  {
+    id: 10,
+    src: dummyImages[9],
+    alt: "Summer Chess Camp",
+    category: "events",
+    title: "Summer Chess Camp",
+    description: "Fun learning with grandmaster coaches",
+  },
+  {
+    id: 11,
+    src: dummyImages[10],
+    alt: "Summer Chess Camp",
+    category: "events",
+    title: "Summer Chess Camp",
+    description: "Fun learning with grandmaster coaches",
+  },
+  {
+    id: 12,
+    src: dummyImages[11],
+    alt: "Summer Chess Camp",
+    category: "events",
+    title: "Summer Chess Camp",
+    description: "Fun learning with grandmaster coaches",
+  },
+  {
+    id: 13,
+    src: dummyImages[12],
     alt: "Summer Chess Camp",
     category: "events",
     title: "Summer Chess Camp",
