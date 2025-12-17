@@ -422,6 +422,7 @@
 //   );
 // }
 
+
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
@@ -461,9 +462,7 @@ export default function PuzzlePage() {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  const puzzleId = Array.isArray(params?.id)
-    ? params.id[0]
-    : (params?.id as string | undefined);
+  const puzzleId = Array.isArray(params?.id) ? params.id[0] : (params?.id as string | undefined);
   const context = searchParams.get("context") || null;
   const folderId = searchParams.get("folderId") || null;
 
@@ -479,44 +478,26 @@ export default function PuzzlePage() {
   const [orientation, setOrientation] = useState<"white" | "black">("white");
 
   const [stars, setStars] = useState<string[]>([]);
-  const [hintSquares, setHintSquares] = useState<
-    Record<string, React.CSSProperties>
-  >({});
+  const [hintSquares, setHintSquares] = useState<Record<string, React.CSSProperties>>({});
+  
+  const [statusState, setStatusState] =
+    useState<"IDLE" | "CORRECT" | "WRONG" | "COMPLETED">("IDLE");
 
-  const [statusState, setStatusState] = useState<
-    "IDLE" | "CORRECT" | "WRONG" | "COMPLETED"
-  >("IDLE");
-
-  // Layout State
-  const [containerWidth, setContainerWidth] = useState(300); // Default safe width
+  const [containerWidth, setContainerWidth] = useState(500);
   const boardContainerRef = useRef<HTMLDivElement>(null);
 
-  // Resize Observer - Responsive Board Sizing
+  // Resize Observer for responsive board
   useEffect(() => {
     if (!boardContainerRef.current) return;
-    
-    const updateWidth = () => {
-      if(boardContainerRef.current) {
-        setContainerWidth(boardContainerRef.current.offsetWidth);
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
       }
-    };
-
-    // Initial calcs
-    updateWidth();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateWidth();
     });
-    
-    resizeObserver.observe(boardContainerRef.current);
-    
-    // Add window listener as fallback for rapid orientation changes on mobile
-    window.addEventListener('resize', updateWidth);
 
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', updateWidth);
-    };
+    resizeObserver.observe(boardContainerRef.current);
+    return () => resizeObserver.disconnect();
   }, []);
 
   // --- HELPER: Safe Board Loading ---
@@ -526,8 +507,8 @@ export default function PuzzlePage() {
     try {
       g.load(fen);
     } catch (e) {
-      const [placement] = fen.split(" ");
-      const rows = placement.split("/");
+      const [placement] = fen.split(' ');
+      const rows = placement.split('/');
       rows.forEach((row, rIdx) => {
         let cIdx = 0;
         for (const char of row) {
@@ -535,12 +516,9 @@ export default function PuzzlePage() {
             cIdx += parseInt(char);
           } else {
             const square = String.fromCharCode(97 + cIdx) + (8 - rIdx);
-            const color = char === char.toUpperCase() ? "w" : "b";
+            const color = char === char.toUpperCase() ? 'w' : 'b';
             const type = char.toLowerCase();
-            g.put(
-              { type: type as PieceSymbol, color: color as Color },
-              square as any
-            );
+            g.put({ type: type as PieceSymbol, color: color as Color }, square as any);
             cIdx++;
           }
         }
@@ -558,7 +536,7 @@ export default function PuzzlePage() {
     if (status !== "authenticated" || !puzzleId) return;
 
     setError(null);
-    setHintSquares({});
+    setHintSquares({}); 
 
     const loadPuzzle = async () => {
       try {
@@ -566,31 +544,21 @@ export default function PuzzlePage() {
         if (!res.ok) throw new Error("Puzzle not found.");
 
         const data: Puzzle = await res.json();
-
-        // Parse Stars
+        
         let parsedData: PuzzleData = {};
         if (typeof data.data === "string") {
-          try {
-            parsedData = JSON.parse(data.data);
-          } catch (e) {}
+          try { parsedData = JSON.parse(data.data); } catch (e) {}
         } else if (typeof data.data === "object" && data.data !== null) {
           parsedData = data.data as PuzzleData;
         }
-        setStars(
-          parsedData.stars && Array.isArray(parsedData.stars)
-            ? parsedData.stars
-            : []
-        );
+        setStars(parsedData.stars && Array.isArray(parsedData.stars) ? parsedData.stars : []);
 
-        // Load Game State
         const newGame = getSafeGame(data.fen);
         setGame(newGame);
-        setCurrentFen(data.fen);
-
-        // Determine Orientation based on Side to Move
-        if (data.fen.includes(" w ")) setOrientation("white");
-        else if (data.fen.includes(" b ")) setOrientation("black");
-
+        setCurrentFen(data.fen); 
+        
+        setOrientation(data.fen.includes(" w ") ? "white" : "black");
+        
         setPuzzle(data);
         setSolutionMoves(data.solution.trim().split(" "));
         setMoveIndex(0);
@@ -598,25 +566,19 @@ export default function PuzzlePage() {
 
         // Fetch Next Puzzle ID
         let url = "";
-        if (context === "todo")
-          url = `/api/assignments/next?currentId=${puzzleId}`;
-        else if (folderId)
-          url = `/api/content/next?folderId=${folderId}&currentId=${puzzleId}`;
+        if (context === "todo") url = `/api/assignments/next?currentId=${puzzleId}`;
+        else if (folderId) url = `/api/content/next?folderId=${folderId}&currentId=${puzzleId}`;
 
         if (url) {
           try {
             const nextRes = await fetch(url);
             if (nextRes.ok) {
               const nextData = await nextRes.json();
-              setNextPuzzleId(
-                nextData?.id ||
-                  nextData?.nextId ||
-                  (Array.isArray(nextData) && nextData[0]?.id) ||
-                  null
-              );
+              setNextPuzzleId(nextData?.id || nextData?.nextId || (Array.isArray(nextData) && nextData[0]?.id) || null);
             }
           } catch (e) {}
         }
+
       } catch (err: any) {
         console.error(err);
         setError(err.message || "Failed to load puzzle");
@@ -640,8 +602,7 @@ export default function PuzzlePage() {
   const handleSkip = () => handleNext();
 
   const handleHint = () => {
-    if (statusState === "COMPLETED" || moveIndex >= solutionMoves.length)
-      return;
+    if (statusState === "COMPLETED" || moveIndex >= solutionMoves.length) return;
     const correctMoveStr = solutionMoves[moveIndex];
     let fromSquare = "";
 
@@ -650,15 +611,13 @@ export default function PuzzlePage() {
     } else {
       try {
         const temp = getSafeGame(currentFen);
-        const move = temp.move(correctMoveStr); 
+        const move = temp.move(correctMoveStr);
         if (move) fromSquare = move.from;
-      } catch (e) {}
+      } catch(e) {}
     }
 
     if (fromSquare) {
-      setHintSquares({
-        [fromSquare]: { backgroundColor: "rgba(255, 255, 0, 0.5)" },
-      });
+      setHintSquares({ [fromSquare]: { backgroundColor: "rgba(255, 255, 0, 0.5)" } });
       toast.info("Piece to move highlighted!");
     } else {
       toast.warning("Cannot determine hint.");
@@ -666,38 +625,30 @@ export default function PuzzlePage() {
   };
 
   const isGeometryValid = (piece: string, from: string, to: string) => {
-    const type = piece[1].toLowerCase();
-    const x1 = from.charCodeAt(0),
-      y1 = parseInt(from[1]);
-    const x2 = to.charCodeAt(0),
-      y2 = parseInt(to[1]);
+    const type = piece[1].toLowerCase(); 
+    const x1 = from.charCodeAt(0), y1 = parseInt(from[1]);
+    const x2 = to.charCodeAt(0), y2 = parseInt(to[1]);
     const dx = Math.abs(x1 - x2);
     const dy = Math.abs(y1 - y2);
 
-    if (type === "n")
-      return (dx === 1 && dy === 2) || (dx === 2 && dy === 1);
-    if (type === "r") return dx === 0 || dy === 0;
-    if (type === "b") return dx === dy;
-    if (type === "q") return dx === 0 || dy === 0 || dx === dy;
-    if (type === "k") return dx <= 1 && dy <= 1;
-    if (type === "p")
-      return (
-        (piece[0] === "w" ? y2 > y1 : y2 < y1) && dx <= 1 && dy <= 2
-      );
-
+    if (type === 'n') return (dx === 1 && dy === 2) || (dx === 2 && dy === 1);
+    if (type === 'r') return dx === 0 || dy === 0;
+    if (type === 'b') return dx === dy;
+    if (type === 'q') return dx === 0 || dy === 0 || dx === dy;
+    if (type === 'k') return dx <= 1 && dy <= 1;
+    if (type === 'p') return (piece[0] === 'w' ? (y2 > y1) : (y2 < y1)) && dx <= 1 && dy <= 2; 
+    
     return false;
   };
 
-  // --- MAIN MOVE VALIDATION LOGIC ---
   const onDrop = (from: string, to: string, piece: string) => {
     if (statusState === "COMPLETED" || statusState === "WRONG") return false;
 
     const gameCopy = getSafeGame(currentFen);
     let validMove = false;
     let newFen = "";
-    let moveObject: any = null; 
+    let moveObject: any = null;
 
-    // 1. Try Standard Chess Move
     try {
       const move = gameCopy.move({ from, to, promotion: "q" });
       if (move) {
@@ -707,42 +658,30 @@ export default function PuzzlePage() {
       }
     } catch (e) {}
 
-    // 2. Try Custom Move (if standard illegal but geometry ok, for star puzzles)
-    if (!validMove) {
-      if (isGeometryValid(piece, from, to)) {
-        validMove = true;
-        gameCopy.remove(from as any);
-        gameCopy.put(
-          {
-            type: piece[1].toLowerCase() as PieceSymbol,
-            color: piece[0] as Color,
-          },
-          to as any
-        );
-        newFen = gameCopy.fen();
-      }
+    if (!validMove && isGeometryValid(piece, from, to)) {
+      validMove = true;
+      gameCopy.remove(from as any);
+      gameCopy.put({ type: piece[1].toLowerCase() as PieceSymbol, color: piece[0] as Color }, to as any);
+      newFen = gameCopy.fen();
     }
 
     if (!validMove) return false;
 
-    // 3. Check Solution against Expected
     const expected = solutionMoves[moveIndex];
-
-    const isCorrect =
-      (moveObject && moveObject.san === expected) ||
-      expected === `${from}-${to}` ||
+    const isCorrect = 
+      (moveObject && moveObject.san === expected) || 
+      expected === `${from}-${to}` || 
       expected === `${from}${to}`;
 
     if (isCorrect) {
       setGame(gameCopy);
       setCurrentFen(newFen);
 
-      // Remove Star if landed on
       if (stars.includes(to)) {
         setStars((prev) => prev.filter((s) => s !== to));
       }
 
-      setHintSquares({});
+      setHintSquares({}); 
       handleCorrectStep(newFen);
       return true;
     } else {
@@ -765,20 +704,17 @@ export default function PuzzlePage() {
     setStatusState("CORRECT");
 
     const reply = solutionMoves[nextIndex];
-
-    // Auto-play opponent move ONLY IF no stars remaining
+    
     if (stars.length === 0 && reply && !reply.includes("-")) {
       setTimeout(() => {
         const g = getSafeGame(fenAfterMove);
-        try {
-          g.move(reply);
+        try { 
+          g.move(reply); 
           const replyFen = g.fen();
           setGame(g);
           setCurrentFen(replyFen);
           setMoveIndex(nextIndex + 1);
-        } catch (e) {
-          // If standard move fails, custom logic could go here
-        }
+        } catch (e) {}
         setStatusState("IDLE");
       }, 500);
     } else {
@@ -806,186 +742,161 @@ export default function PuzzlePage() {
   const resetPuzzle = () => {
     if (!puzzle) return;
     const newGame = getSafeGame(puzzle.fen);
-
+    
     setGame(newGame);
     setCurrentFen(puzzle.fen);
     setMoveIndex(0);
     setStatusState("IDLE");
     setHintSquares({});
-
+    
     let parsedData: PuzzleData = {};
-    try {
-      parsedData =
-        typeof puzzle.data === "string"
-          ? JSON.parse(puzzle.data)
-          : puzzle.data || {};
-    } catch {}
+    try { parsedData = typeof puzzle.data === 'string' ? JSON.parse(puzzle.data) : puzzle.data || {}; } catch {}
     setStars(parsedData.stars || []);
   };
 
   const customSquareStyles = useMemo(() => {
     const styles: Record<string, React.CSSProperties> = {};
-    // Add Stars
     stars.forEach((square) => {
       styles[square] = {
-        backgroundImage:
-          'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZDcwMCIgc3Ryb2tlPSJnb2xkIiBzdHJva2Utd2lkdGg9IjMiPjxwb2x5Z29uIHBvaW50cz0iMTIgMiAxNS4wOSA4LjI2IDIyIDkuMjcgMTcgMTQuMTQgMTguMTggMjEuMDIgMTIgMTcuNzcgNS44MiAyMS4wMiA3IDE0LjE0IDIgOS4yNyA4LjkxIDguMjYgMTIgMiIvPjwvc3ZnPg==")',
+        backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZDcwMCIgc3Ryb2tlPSJnb2xkIiBzdHJva2Utd2lkdGg9IjMiPjxwb2x5Z29uIHBvaW50cz0iMTIgMiAxNS4wOSA4LjI2IDIyIDkuMjcgMTcgMTQuMTQgMTguMTggMjEuMDIgMTIgMTcuNzcgNS44MiAyMS4wMiA3IDE0LjE0IDIgOS4yNyA4LjkxIDguMjYgMTIgMiIvPjwvc3ZnPg==")',
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
         backgroundSize: "60%",
       };
     });
-    // Add Hints
     Object.entries(hintSquares).forEach(([square, style]) => {
       styles[square] = { ...styles[square], ...style };
     });
     return styles;
   }, [stars, hintSquares]);
 
-  if (!puzzle)
+  if (!puzzle) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-          <p className="text-slate-500 font-medium">Loading your puzzle...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-12 w-12 animate-spin text-orange-500" />
       </div>
     );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-6 sm:py-10 px-3 sm:px-6 flex flex-col items-center">
-      {/* Container Max Width */}
-      <div className="w-full max-w-7xl space-y-6">
-        
-        {/* Header Section */}
-        <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors p-2 hover:bg-slate-100 rounded-lg"
-          >
-            <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="hidden sm:inline font-bold">Back</span>
-          </button>
-
-          <div className="text-center flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold truncate text-slate-800">
-              {puzzle.title}
-            </h1>
-            <span className="inline-block mt-1 px-3 py-0.5 text-[10px] sm:text-xs font-bold rounded-full bg-orange-100 text-orange-700 uppercase tracking-wide">
-              {puzzle.stage}
-            </span>
-          </div>
-
-          <button
-            onClick={handleSkip}
-            className="flex items-center gap-2 text-slate-500 hover:text-orange-600 transition-colors p-2 hover:bg-orange-50 rounded-lg"
-          >
-            <span className="hidden sm:inline font-bold">Skip</span>
-            <SkipForward className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-        </div>
-
-        {/* Game Layout Grid: Stacks on mobile, Side-by-side on LG screens */}
-        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8 lg:items-start">
-          
-          {/* Left Column: Chess Board */}
-          <div className="flex justify-center w-full lg:col-span-7 xl:col-span-8">
-            <div
-              ref={boardContainerRef}
-              className="w-full max-w-[95vw] sm:max-w-[550px] lg:max-w-[650px] aspect-square rounded-xl shadow-xl bg-white border-[6px] border-white ring-1 ring-slate-200 overflow-hidden"
+    <div className="min-h-screen bg-slate-50">
+      {/* Increased top padding on larger screens for more space below navbar */}
+      <div className="pt-8 pb-12 px-4 sm:pt-12 sm:px-6 lg:pt-20 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-lg font-semibold hover:text-orange-600 transition"
             >
-              <Chessboard
-                position={currentFen}
-                onPieceDrop={onDrop}
-                boardOrientation={orientation}
-                boardWidth={containerWidth}
-                customDarkSquareStyle={{ backgroundColor: "#779556" }}
-                customLightSquareStyle={{ backgroundColor: "#ebecd0" }}
-                customSquareStyles={customSquareStyles}
-                animationDuration={200}
-                arePiecesDraggable={statusState !== "COMPLETED"}
-              />
-            </div>
-          </div>
+              <ArrowLeft className="h-5 w-5" /> Back
+            </button>
 
-          {/* Right Column: Controls & Info */}
-          <div className="flex flex-col w-full lg:col-span-5 xl:col-span-4 space-y-4 lg:space-y-6 lg:sticky lg:top-6">
-            
-            {/* Status Card */}
-            <div
-              className={`p-5 sm:p-6 rounded-2xl border-2 transition-all shadow-sm ${
-                statusState === "COMPLETED"
-                  ? "bg-green-50 border-green-200"
-                  : statusState === "WRONG"
-                  ? "bg-red-50 border-red-200"
-                  : "bg-white border-slate-200"
-              }`}
-            >
-              <div className="flex items-center gap-4">
-                <div className="shrink-0">
-                  {statusState === "COMPLETED" ? (
-                    <CheckCircle className="h-10 w-10 sm:h-12 sm:w-12 text-green-600" />
-                  ) : statusState === "WRONG" ? (
-                    <XCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-600" />
-                  ) : (
-                    <Play className="h-10 w-10 sm:h-12 sm:w-12 text-blue-500 fill-blue-500/20" />
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
-                    {statusState === "COMPLETED"
-                      ? "Solved!"
-                      : statusState === "WRONG"
-                      ? "Try Again"
-                      : `${orientation === "white" ? "White" : "Black"} to Move`}
-                  </h2>
-                  <p className="text-sm sm:text-base text-slate-500 font-medium">
-                    {statusState === "COMPLETED"
-                      ? "Great job!"
-                      : statusState === "WRONG"
-                      ? "That wasn't quite right."
-                      : stars.length > 0
-                      ? `${stars.length} stars remaining`
-                      : "Find the best move"}
-                  </p>
-                </div>
-              </div>
+            <div className="text-center flex-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900">
+                {puzzle.title}
+              </h1>
+              <span className="inline-block mt-3 px-4 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-700 uppercase tracking-wider">
+                {puzzle.stage}
+              </span>
             </div>
 
-            {/* Buttons */}
-            {statusState !== "COMPLETED" ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <button
-                  onClick={resetPuzzle}
-                  className="flex items-center justify-center gap-2 py-3 sm:py-4 rounded-xl font-bold bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95"
-                >
-                  <RotateCcw className="w-5 h-5" /> Reset
-                </button>
-                <button
-                  onClick={handleHint}
-                  className="flex items-center justify-center gap-2 py-3 sm:py-4 rounded-xl font-bold bg-blue-50 border-2 border-blue-100 text-blue-700 hover:bg-blue-100 hover:border-blue-200 transition-all active:scale-95"
-                >
-                  <Lightbulb className="w-5 h-5" /> Hint
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleNext}
-                className="w-full py-4 rounded-xl font-bold text-lg bg-orange-500 text-white shadow-lg shadow-orange-500/30 hover:bg-orange-600 hover:shadow-orange-600/40 transition-all active:scale-95 flex items-center justify-center gap-2"
+            <button
+              onClick={handleSkip}
+              className="flex items-center justify-center gap-2 text-lg font-semibold text-gray-600 hover:text-gray-900 transition sm:justify-end"
+            >
+              Skip <SkipForward className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16">
+            {/* Chessboard */}
+            <div className="flex justify-center lg:justify-end">
+              <div
+                ref={boardContainerRef}
+                className="w-full max-w-lg aspect-square rounded-2xl shadow-2xl overflow-hidden bg-white"
               >
-                Next Puzzle <ArrowRight className="w-6 h-6" />
-              </button>
-            )}
-
-            {/* Description */}
-            {puzzle.description && (
-              <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
-                <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Instructions</h3>
-                <p className="text-sm sm:text-base text-slate-700 leading-relaxed">
-                  {puzzle.description}
-                </p>
+                <Chessboard
+                  position={currentFen}
+                  onPieceDrop={onDrop}
+                  boardOrientation={orientation}
+                  boardWidth={containerWidth}
+                  customDarkSquareStyle={{ backgroundColor: "#779556" }}
+                  customLightSquareStyle={{ backgroundColor: "#ebecd0" }}
+                  customSquareStyles={customSquareStyles}
+                  animationDuration={200}
+                />
               </div>
-            )}
+            </div>
+
+            {/* Controls & Info */}
+            <div className="flex flex-col justify-center space-y-8">
+              {/* Status Card */}
+              <div
+                className={`p-6 sm:p-8 rounded-2xl border-2 transition-all duration-300 ${
+                  statusState === "COMPLETED"
+                    ? "bg-green-50 border-green-300"
+                    : statusState === "WRONG"
+                    ? "bg-red-50 border-red-300"
+                    : "bg-white border-slate-200 shadow-lg"
+                }`}
+              >
+                <div className="flex items-center gap-5">
+                  {statusState === "COMPLETED" ? (
+                    <CheckCircle className="h-12 w-12 text-green-600" />
+                  ) : statusState === "WRONG" ? (
+                    <XCircle className="h-12 w-12 text-red-600" />
+                  ) : (
+                    <Play className="h-12 w-12 text-blue-600" />
+                  )}
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {statusState === "COMPLETED"
+                        ? "Solved!"
+                        : statusState === "WRONG"
+                        ? "Try Again"
+                        : `${orientation === "white" ? "White" : "Black"} to Move`}
+                    </h2>
+                    <p className="mt-1 text-lg text-gray-600">
+                      {stars.length > 0 ? `${stars.length} star${stars.length > 1 ? 's' : ''} remaining` : "Find the best move"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              {statusState !== "COMPLETED" ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={resetPuzzle}
+                    className="flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-bold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition"
+                  >
+                    <RotateCcw className="h-5 w-5" /> Reset
+                  </button>
+                  <button
+                    onClick={handleHint}
+                    className="flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-bold text-blue-700 bg-blue-50 border-2 border-blue-200 hover:bg-blue-100 transition"
+                  >
+                    <Lightbulb className="h-5 w-5" /> Hint
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  className="w-full py-5 px-6 rounded-xl font-bold text-xl bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 transition flex items-center justify-center gap-3 shadow-lg"
+                >
+                  Next Puzzle <ArrowRight className="h-6 w-6" />
+                </button>
+              )}
+
+              {/* Description */}
+              {puzzle.description && (
+                <div className="p-5 bg-slate-100 rounded-xl text-gray-700 leading-relaxed">
+                  {puzzle.description}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
