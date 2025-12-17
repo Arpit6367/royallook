@@ -9,7 +9,7 @@ import {
   Users, Folder, FileText, ChevronRight, ChevronLeft,
   CheckCircle, XCircle, Clock, RotateCcw, Plus, MousePointer2, 
   Loader2, AlertCircle, ArrowUpDown, Settings, Trash2, 
-  Trophy, Target, Activity, BookOpen, Layers, Filter
+  Trophy, Target, Activity, BookOpen, Layers
 } from 'lucide-react'
 
 // --- HELPER: MODAL ---
@@ -274,14 +274,13 @@ function MyStudentsView({ coachId }: { coachId: string }) {
 }
 
 // ==========================================
-// 2. COURSES VIEW (Updated with Filter)
+// 2. COURSES VIEW (Updated with Navigation)
 // ==========================================
 function CoursesView() {
   const [courses, setCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCourse, setSelectedCourse] = useState<any>(null)
   const [activeChapter, setActiveChapter] = useState<any>(null)
-  const [filter, setFilter] = useState('ALL') // New filter state
   
   // Board State
   const game = useRef(new Chess())
@@ -397,11 +396,6 @@ function CoursesView() {
     })
   }
 
-  // --- FILTER LOGIC ---
-  const filteredCourses = filter === 'ALL' 
-    ? courses 
-    : courses.filter(c => c.level === filter)
-
   if (loading && !selectedCourse) {
     return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-orange-600 w-8 h-8"/></div>
   }
@@ -410,35 +404,14 @@ function CoursesView() {
   if (!selectedCourse) {
     return (
       <div className="animate-in fade-in slide-in-from-bottom-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <BookOpen className="text-orange-600"/> Available Courses
-            </h2>
-            
-            {/* Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
-                <span className="text-sm font-medium text-slate-500 flex items-center gap-1 mr-2"><Filter size={14}/> Filter:</span>
-                {['ALL', 'BEGINNER', 'INTERMEDIATE', 'ADVANCED'].map((f) => (
-                    <button
-                        key={f}
-                        onClick={() => setFilter(f)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                            filter === f 
-                            ? 'bg-orange-600 text-white shadow-md' 
-                            : 'bg-white border text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                        }`}
-                    >
-                        {f.charAt(0) + f.slice(1).toLowerCase()}
-                    </button>
-                ))}
-            </div>
-        </div>
-
+        <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+          <BookOpen className="text-orange-600"/> Available Courses
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map(c => (
+          {courses.map(c => (
             <div key={c.id} className="bg-white border rounded-xl p-6 hover:shadow-lg transition-all group flex flex-col h-full">
               <div className="flex justify-between items-start mb-3">
-                 <span className={`px-2 py-1 rounded text-xs font-bold ${c.level === 'BEGINNER' ? 'bg-green-100 text-green-700' : c.level === 'INTERMEDIATE' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                 <span className={`px-2 py-1 rounded text-xs font-bold ${c.level === 'BEGINNER' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                    {c.level}
                  </span>
               </div>
@@ -457,11 +430,7 @@ function CoursesView() {
               </div>
             </div>
           ))}
-          {filteredCourses.length === 0 && (
-            <div className="col-span-3 text-center py-10 text-slate-400 bg-white rounded-xl border border-dashed">
-                {filter === 'ALL' ? "No courses found." : `No ${filter.toLowerCase()} courses found.`}
-            </div>
-          )}
+          {courses.length === 0 && <div className="col-span-3 text-center py-10 text-slate-400 bg-white rounded-xl border border-dashed">No courses found. Ask Admin to create some.</div>}
         </div>
       </div>
     )
@@ -899,7 +868,7 @@ function AnalysisView() {
 function getPieceSymbol(type: string, color: string) {
   const symbols: any = {
     w: { p: '♙', n: '♘', b: '♗', r: '♖', q: '♕', k: '♔' },
-    b: { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛', k: '♔' }
+    b: { p: '♟', n: '♞', b: '♝', r: '♜', q: '♛', k: '♚' }
   }
   return symbols[color][type]
 }
