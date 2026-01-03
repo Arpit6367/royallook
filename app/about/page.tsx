@@ -75,12 +75,18 @@ export default function AboutPage() {
           </p>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
+              <Link
+                  href="/contact"
+                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#FFC727]/20 hover:text-[#5C1F1C] text-sm sm:text-base"
+                >
               <Button
                 size="lg"
                 className="bg-white text-[#5C1F1C] hover:bg-[#FFC727] hover:text-[#5C1F1C] border-2 border-white text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-full shadow-lg transition-all duration-300"
               >
+                
                 Start Your Journey <ChevronDown className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
+              </Link>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 sm:w-60 bg-white border border-gray-200 shadow-xl rounded-lg mt-2">
               <DropdownMenuItem asChild>

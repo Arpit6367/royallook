@@ -23,8 +23,8 @@ import {
   Send,
   CheckCircle,
   ChevronDown,
-  Link,
 } from "lucide-react";
+import Link from "next/link"; // Ensure Link is imported from next/link
 
 // Brand Colors
 const primaryColor = "#5C1F1C";
@@ -178,12 +178,12 @@ function FAQSection() {
               <span style={{ color: primaryColor }}>We’re here to answer them.</span>
             </h2>
             <Link href="/contact" target="_blank">
-            <Button
-              className="w-full sm:w-auto bg-gradient-to-r from-[#FFC727] to-[#FFD700] hover:from-[#FFD700] hover:to-[#FFC727] text-[#5C1F1C] font-bold text-base sm:text-lg px-8 py-6 rounded-full shadow-2xl hover:shadow-yellow-500/40 transform hover:scale-105 transition-all duration-300 group"
-            >
-              <Phone className="w-5 h-5 sm:w-6 sm:h-6 mr-2 group-hover:scale-110 transition-transform" />
-              Book a Free Trial
-            </Button>
+              <Button
+                className="w-full sm:w-auto bg-gradient-to-r from-[#FFC727] to-[#FFD700] hover:from-[#FFD700] hover:to-[#FFC727] text-[#5C1F1C] font-bold text-base sm:text-lg px-8 py-6 rounded-full shadow-2xl hover:shadow-yellow-500/40 transform hover:scale-105 transition-all duration-300 group"
+              >
+                <Phone className="w-5 h-5 sm:w-6 sm:h-6 mr-2 group-hover:scale-110 transition-transform" />
+                Book a Free Trial
+              </Button>
             </Link>
           </motion.div>
 
@@ -274,34 +274,40 @@ export default function ContactPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const response = await fetch("https://formspree.io/f/xldwygeq", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      if (response.ok) {
-        setIsSubmitted(true);
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          subject: "",
-          message: "",
-          inquiryType: "",
-        });
-        setTimeout(() => setIsSubmitted(false), 4000);
-      } else {
-        alert("Error sending message.");
-      }
-    } catch (error) {
-      alert("Error sending message.");
-    }
+
+    // Construct Mailto link
+    const recipient = "contact@chesspure.com";
+    const mailSubject = encodeURIComponent(formData.subject || "Contact Inquiry - Chess Pure");
+    
+    // Construct Email Body
+    const bodyLines = [
+      `Name: ${formData.name}`,
+      `Email: ${formData.email}`,
+      `Phone: ${formData.phone || "Not provided"}`,
+      `Inquiry Type: ${formData.inquiryType}`,
+      `--------------------------------------`,
+      `Message:`,
+      formData.message
+    ];
+    
+    const mailBody = encodeURIComponent(bodyLines.join("\n"));
+
+    // Trigger Mail Client
+    window.location.href = `mailto:${recipient}?subject=${mailSubject}&body=${mailBody}`;
+
+    // Show success UI
+    setIsSubmitted(true);
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: "",
+      inquiryType: "",
+    });
+    setTimeout(() => setIsSubmitted(false), 5000);
   };
 
   return (
@@ -371,10 +377,10 @@ export default function ContactPage() {
                   >
                     <CheckCircle className="mx-auto w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-6" style={{ color: "#10B981" }} />
                     <h3 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3" style={{ color: "#10B981" }}>
-                      Message Sent!
+                      Opening Email Client...
                     </h3>
                     <p className="text-gray-600 text-sm sm:text-lg">
-                      Thank you! We'll get back to you within 24 hours.
+                      Please send the draft in your mail app. We'll get back to you soon!
                     </p>
                   </motion.div>
                 ) : (
@@ -421,6 +427,7 @@ export default function ContactPage() {
                         <Select
                           value={formData.inquiryType}
                           onValueChange={(value) => handleInputChange("inquiryType", value)}
+                          required
                         >
                           <SelectTrigger className="mt-1.5 h-11 sm:h-12 bg-white/80 border-gray-300 text-sm sm:text-base">
                             <SelectValue placeholder="Select type" />
@@ -463,7 +470,7 @@ export default function ContactPage() {
                       type="submit"
                       className="w-full py-6 sm:py-7 text-base sm:text-lg font-bold rounded-2xl bg-gradient-to-r from-[#FFC727] to-[#FFD700] text-[#5C1F1C] hover:shadow-xl hover:shadow-yellow-500/40 transform hover:scale-105 transition-all duration-300"
                     >
-                      Send Message <Send className="ml-2 w-5 h-5 sm:w-6 sm:h-6" />
+                      Draft Email <Send className="ml-2 w-5 h-5 sm:w-6 sm:h-6" />
                     </Button>
                   </form>
                 )}
@@ -528,8 +535,6 @@ export default function ContactPage() {
               </ThreeDCard>
             ))}
           </div>
-
-
         </div>
       </section>
 

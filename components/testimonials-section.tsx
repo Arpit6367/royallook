@@ -55,15 +55,6 @@ export function TestimonialsSection() {
         "We are very happy with our chess coach. He is patient, knowledgeable, and explains concepts in a very clear and structured way. My child’s understanding of chess, especially strategic thinking, has improved noticeably. He encourages logical thinking and confidence, not just winning games. We truly appreciate his dedication and highly recommend him.",
       image: "/demo-ananya.jpg",
     },
-    {
-      id: 5,
-      name: "Ananya Desai",
-      role: "Intermediate Player",
-      rating: 5,
-      content:
-        "The tactical puzzles and endgame drills are gold. My coach gives personalized feedback — I just won my first rated tournament!",
-      image: "/demo-ananya.jpg",
-    }
   ];
 
   // Auto-rotate every 5 seconds

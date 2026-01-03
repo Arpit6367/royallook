@@ -351,14 +351,6 @@ export default function GalleryPage() {
             >
               <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </Button>
-
-            {/* Caption */}
-            <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 rounded-lg sm:rounded-xl bg-white/95 backdrop-blur-sm p-3 sm:p-4 shadow-lg">
-              <h3 className="text-base sm:text-lg lg:text-xl font-bold mb-1 sm:mb-2" style={{ color: primaryColor }}>
-                {selectedImage.title}
-              </h3>
-              <p className="text-xs sm:text-sm lg:text-base text-gray-700">{selectedImage.description}</p>
-            </div>
           </div>
         </motion.div>
       )}
