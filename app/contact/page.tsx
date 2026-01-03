@@ -23,6 +23,7 @@ import {
   Send,
   CheckCircle,
   ChevronDown,
+  Link,
 } from "lucide-react";
 
 // Brand Colors
@@ -176,13 +177,14 @@ function FAQSection() {
               Have <span className="block">Questions?</span>
               <span style={{ color: primaryColor }}>We’re here to answer them.</span>
             </h2>
-
+            <Link href="/contact" target="_blank">
             <Button
               className="w-full sm:w-auto bg-gradient-to-r from-[#FFC727] to-[#FFD700] hover:from-[#FFD700] hover:to-[#FFC727] text-[#5C1F1C] font-bold text-base sm:text-lg px-8 py-6 rounded-full shadow-2xl hover:shadow-yellow-500/40 transform hover:scale-105 transition-all duration-300 group"
             >
               <Phone className="w-5 h-5 sm:w-6 sm:h-6 mr-2 group-hover:scale-110 transition-transform" />
               Book a Free Trial
             </Button>
+            </Link>
           </motion.div>
 
           {/* Right – Gradient Accordion */}
@@ -496,7 +498,7 @@ export default function ContactPage() {
               {
                 icon: Mail,
                 title: "Email",
-                details: ["Chesspureacademy@gmail.com"],
+                details: ["contact@chesspure.com"],
               },
               {
                 icon: Clock,
@@ -527,19 +529,7 @@ export default function ContactPage() {
             ))}
           </div>
 
-          <div className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-gray-200">
-            <div className="relative pb-[56.25%] h-0">
-              <iframe
-                title="Chesspure Academy Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3799.3160668424007!2d83.35651567463543!3d17.77683669147027!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a395becebe46b37%3A0xebf2ea02cafa2720!2sChesspure%20Chess%20Academy!5e0!3m2!1sen!2sin!4v1763215846078!5m2!1sen!2sin"
-                className="absolute top-0 left-0 w-full h-full"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
-          </div>
+
         </div>
       </section>
 

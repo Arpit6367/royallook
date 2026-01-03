@@ -135,7 +135,7 @@ function HeroLeft() {
       </p>
 
       <div className="flex justify-center lg:justify-start mb-6">
-        <Link href="" target="_blank">
+        <Link href="/contact" target="_blank">
           <Button
             size="lg"
             className="px-8 py-4 text-lg"

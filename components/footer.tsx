@@ -152,7 +152,7 @@ export function Footer() {
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: accentColor }} />
                 <div>
-                  <p style={{ color: textLight }}>chesspureacademy@gmail.com</p>
+                  <p style={{ color: textLight }}>contact@chesspure.com</p>
                   <p className="text-xs" style={{ color: textMuted }}>Response within 24 hrs</p>
                 </div>
               </div>
