@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 // IMAGES FOR SLIDER
 const sliderImages = [
   "/image1.jpg",
-  "/image2.jpg",
+  "/image6.jpg",
   "/image4.jpg",
   "/image.jpg",
 ];
