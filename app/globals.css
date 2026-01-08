@@ -4,40 +4,51 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to chess-themed color palette: deep green, beige, and gold */
-  --background: #eeeed2; /* Beige background */
-  --foreground: #2d3748; /* Dark gray for text */
-  --card: #ffffff; /* White cards for contrast */
-  --card-foreground: #2d3748;
-  --popover: #ffffff;
-  --popover-foreground: #2d3748;
-  --primary: #769656; /* Deep green for primary actions */
-  --primary-foreground: #ffffff;
-  --secondary: #baca44; /* Gold for secondary elements */
-  --secondary-foreground: #2d3748;
-  --muted: #f7f7f0; /* Lighter beige for muted elements */
-  --muted-foreground: #4a5568;
-  --accent: #baca44; /* Gold accent color */
-  --accent-foreground: #2d3748;
-  --destructive: #e53e3e;
-  --destructive-foreground: #ffffff;
-  --border: #d4d4aa; /* Muted gold for borders */
-  --input: #ffffff;
-  --ring: rgba(118, 150, 86, 0.5); /* Deep green ring */
-  --chart-1: #769656;
-  --chart-2: #baca44;
-  --chart-3: #2d3748;
-  --chart-4: #eeeed2;
-  --chart-5: #e53e3e;
-  --radius: 0.5rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #2d3748;
-  --sidebar-primary: #769656;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #baca44;
-  --sidebar-accent-foreground: #2d3748;
-  --sidebar-border: #d4d4aa;
-  --sidebar-ring: rgba(118, 150, 86, 0.5);
+  /* Warm Modern Chess Palette */
+  --background: #FDFBF7; /* Warm Cream */
+  --foreground: #2D2A26; /* Warm Charcoal */
+  
+  --card: #FFFFFF;
+  --card-foreground: #2D2A26;
+  
+  --popover: #FFFFFF;
+  --popover-foreground: #2D2A26;
+  
+  --primary: #8B2E2E; /* Deep Warm Red/Terracotta */
+  --primary-foreground: #FFFFFF;
+  
+  --secondary: #FFDA44; /* Golden Yellow */
+  --secondary-foreground: #2D2A26;
+  
+  --muted: #F3EFE6;
+  --muted-foreground: #7D7A73;
+  
+  --accent: #E76F51; /* Burnt Orange */
+  --accent-foreground: #FFFFFF;
+  
+  --destructive: #D9381E;
+  --destructive-foreground: #FFFFFF;
+  
+  --border: #E6E0D4;
+  --input: #FFFFFF;
+  --ring: rgba(139, 46, 46, 0.5); /* Primary match */
+  
+  --chart-1: #8B2E2E;
+  --chart-2: #E76F51;
+  --chart-3: #FFDA44;
+  --chart-4: #2A9D8F; /* Complementary Teal */
+  --chart-5: #2D2A26;
+  
+  --radius: 0.75rem; /* Slightly more rounded for modern feel */
+  
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #2D2A26;
+  --sidebar-primary: #8B2E2E;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F3EFE6;
+  --sidebar-accent-foreground: #2D2A26;
+  --sidebar-border: #E6E0D4;
+  --sidebar-ring: rgba(139, 46, 46, 0.5);
 }
 
 .dark {

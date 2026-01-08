@@ -3,71 +3,68 @@
 import { useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Brain, Target, Lightbulb, Zap, BookOpen, Trophy } from "lucide-react";
+import { Brain, Target, Lightbulb, Zap, BookOpen, Trophy, Sparkles } from "lucide-react";
 
-// Brand Colors
-const primaryColor = "#5C1F1C";
-const accentColor = "#FFC727";
+// Brand Colors & Styles
+const bgWarm = "#FDFBF7";
+const primaryColor = "#5C1F1C"; // Dark Red
+const accentColor = "#E76F51";  // Burnt Orange
+const goldColor = "#FFDA44";    // Golden Yellow
 const fontFamily = "'Poppins', 'Montserrat', 'Nunito', sans-serif";
 
 const smallBenefits = [
-  { icon: Brain, title: "Develops Memory", color: "text-amber-600" },
-  { icon: Target, title: "Develops Logical Thinking", color: "text-blue-600" },
-  { icon: Zap, title: "Improves Concentration", color: "text-green-600" },
-  { icon: Lightbulb, title: "Develops Imagination & Creativity", color: "text-yellow-600" },
-  { icon: BookOpen, title: "Improves Schoolwork & Grades", color: "text-purple-600" },
+  { icon: Brain, title: "Develops Memory", color: "text-[#E76F51]" },
+  { icon: Target, title: "Logical Thinking", color: "text-[#2A9D8F]" },
+  { icon: Zap, title: "Concentration", color: "text-[#E9C46A]" },
+  { icon: Lightbulb, title: "Creativity", color: "text-[#F4A261]" },
+  { icon: BookOpen, title: "School Grades", color: "text-[#264653]" },
 ];
 
 const detailedBenefits = [
   {
     icon: Trophy,
     title: "Develops Memory",
-    description:
-      "Chess develops memory by requiring players to remember past moves, patterns, and strategies while planning future moves.",
-    bg: "bg-amber-50",
-    border: "border-amber-200",
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
+    description: "Chess requires players to remember moves, patterns, and strategies, significantly boosting memory retention.",
+    bg: "bg-[#5C1F1C]/5",
+    border: "border-[#5C1F1C]/10",
+    iconBg: "bg-[#5C1F1C]/10",
+    iconColor: "text-[#5C1F1C]",
   },
   {
     icon: Target,
-    title: "Develops Logical Thinking",
-    description:
-      "Chess develops logical thinking by requiring players to analyze positions, anticipate opponent moves, and strategize several steps ahead.",
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
+    title: "Logical Thinking",
+    description: "Players analyze positions and anticipate opponent moves, fostering critical logical reasoning skills.",
+    bg: "bg-[#E76F51]/5",
+    border: "border-[#E76F51]/10",
+    iconBg: "bg-[#E76F51]/10",
+    iconColor: "text-[#E76F51]",
   },
   {
     icon: Zap,
     title: "Improves Concentration",
-    description:
-      "Chess enhances concentration by requiring players to focus intensely on the game, blocking out distractions and maintaining mental clarity.",
-    bg: "bg-green-50",
-    border: "border-green-200",
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
+    description: "The intense focus required to play chess helps children block out distractions and maintain mental clarity.",
+    bg: "bg-[#F4A261]/5",
+    border: "border-[#F4A261]/10",
+    iconBg: "bg-[#F4A261]/10",
+    iconColor: "text-[#F4A261]",
   },
   {
     icon: Lightbulb,
-    title: "Develops Imagination & Creativity",
-    description:
-      "Chess sparks imagination and creativity as players envision strategic possibilities and devise innovative plans within the game's constraints.",
-    bg: "bg-yellow-50",
-    border: "border-yellow-200",
-    iconBg: "bg-yellow-100",
-    iconColor: "text-yellow-600",
+    title: "Imagination & Creativity",
+    description: "Chess sparks creativity as players envision strategic possibilities and devise innovative plans on the board.",
+    bg: "bg-[#2A9D8F]/5",
+    border: "border-[#2A9D8F]/10",
+    iconBg: "bg-[#2A9D8F]/10",
+    iconColor: "text-[#2A9D8F]",
   },
   {
     icon: Brain,
-    title: "Boosts Problem-Solving Skills",
-    description:
-      "Every chess game is a new puzzle. Kids learn to evaluate options, make decisions under pressure, and find creative solutions — skills that translate to math, science, and life.",
-    bg: "bg-purple-50",
-    border: "border-purple-200",
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
+    title: "Problem Solving",
+    description: "Every game is a puzzle. Kids learn to evaluate options and make decisions under pressure, a vital life skill.",
+    bg: "bg-[#264653]/5",
+    border: "border-[#264653]/10",
+    iconBg: "bg-[#264653]/10",
+    iconColor: "text-[#264653]",
   },
 ];
 
@@ -94,58 +91,66 @@ export function WhyChessForKids() {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-      },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
-
-  const cardHover = {
-    rest: { y: 0, boxShadow: "0 4px 6px rgba(0,0,0,0.1)" },
-    hover: {
-      y: -10,
-      boxShadow: "0 20px 30px rgba(0,0,0,0.15)",
-      transition: { duration: 0.4, ease: "easeOut" },
-    },
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
 
   return (
     <section
       id="why-chess-section"
-      className="py-12 sm:py-16 md:py-20 bg-white overflow-hidden"
-      style={{ fontFamily }}
+      className="py-20 lg:py-24 overflow-hidden relative"
+      style={{ backgroundColor: bgWarm, fontFamily }}
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isVisible ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-10 sm:mb-12 md:mb-16"
-        >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#5C1F1C] mb-3">
-            Why Chess for Kids?
-          </h2>
-          <div className="w-16 sm:w-20 h-1 bg-gradient-to-r from-amber-500 to-yellow-500 mx-auto rounded-full"></div>
-        </motion.div>
+      {/* Decorative Elements */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-[#E76F51]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#FFDA44]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
-        {/* Small Benefit Icons */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+        {/* Heading */}
+        <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center space-x-2 bg-white px-4 py-2 rounded-full shadow-sm border border-[#E6E0D4] mb-6"
+          >
+            <Sparkles className="w-4 h-4 text-[#E76F51]" />
+            <span className="text-sm font-bold text-[#2D2A26] tracking-wide uppercase">Benefits of Chess</span>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#2D2A26] mb-6 leading-tight"
+          >
+            Why Chess <span className="text-[#E76F51]">for Kids?</span>
+            <div className="h-2 w-24 bg-[#FFDA44] mx-auto mt-4 rounded-full" />
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-[#5C5852] text-lg max-w-2xl mx-auto"
+          >
+            More than just a game, chess is a powerful tool for intellectual growth, character building, and life skills.
+          </motion.p>
+        </div>
+
+        {/* Small Benefit Icons Row */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
-          animate={isVisible ? "visible" : "hidden"}
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-12 sm:mb-16 max-w-6xl mx-auto"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-20 max-w-6xl mx-auto"
         >
           {smallBenefits.map((b, i) => {
             const Icon = b.icon;
@@ -153,13 +158,13 @@ export function WhyChessForKids() {
               <motion.div
                 key={i}
                 variants={itemVariants}
-                whileHover={{ scale: 1.05 }}
-                className="flex flex-col items-center text-center p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-50 to-yellow-50 hover:shadow-lg transition-shadow duration-300"
+                whileHover={{ y: -5, scale: 1.02 }}
+                className="flex flex-col items-center text-center p-6 rounded-2xl bg-white border border-[#E6E0D4] shadow-sm hover:shadow-md transition-all duration-300 group"
               >
-                <div className="mb-3 p-2.5 sm:p-3 bg-white rounded-full shadow-md">
-                  <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${b.color}`} />
+                <div className="mb-4 p-3 bg-[#FDFBF7] rounded-full group-hover:bg-[#FFDA44]/20 transition-colors">
+                  <Icon className={`w-6 h-6 ${b.color}`} />
                 </div>
-                <p className="text-xs sm:text-sm font-bold text-gray-800 leading-tight">
+                <p className="text-sm font-bold text-[#2D2A26] leading-tight">
                   {b.title}
                 </p>
               </motion.div>
@@ -167,54 +172,54 @@ export function WhyChessForKids() {
           })}
         </motion.div>
 
-        {/* Detailed Benefit Cards – Responsive Grid */}
+        {/* Detailed Benefit Cards */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
-          animate={isVisible ? "visible" : "hidden"}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-7xl mx-auto"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
         >
           {detailedBenefits.map((b, i) => {
             const Icon = b.icon;
+            // Span 2 columns for the last item if odd count, for balance
+            const isLast = i === detailedBenefits.length - 1;
+
             return (
               <motion.div
                 key={i}
                 variants={itemVariants}
-                initial="rest"
-                whileHover="hover"
-                animate={controls}
-                className="h-full"
+                className={`h-full ${isLast ? "md:col-span-2 lg:col-span-1" : ""}`}
               >
-                <Card
-                  className={`
-                    ${b.bg} ${b.border} border-2 p-5 sm:p-6 lg:p-8 
-                    h-full transform-gpu transition-all duration-300
-                    cursor-pointer rounded-2xl
-                  `}
-                >
-                  <motion.div
-                    variants={cardHover}
-                    className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 h-full"
-                  >
-                    <div
-                      className={`p-3 sm:p-4 ${b.iconBg} rounded-full shadow-lg flex-shrink-0`}
-                    >
-                      <Icon className={`w-8 h-8 sm:w-10 sm:h-10 ${b.iconColor}`} />
+                <div className={`
+                    h-full relative overflow-hidden rounded-[2rem] p-8 border hover:border-transparent transition-all duration-500
+                    bg-white hover:shadow-xl group
+                    ${b.border}
+                  `}>
+
+                  {/* Hover Gradient Background */}
+                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br from-white ${b.bg.replace('/5', '/20')}`} />
+
+                  <div className="relative z-10 flex flex-col items-start gap-5">
+                    <div className={`p-4 rounded-2xl ${b.iconBg} group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className={`w-8 h-8 ${b.iconColor}`} />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">
+
+                    <div>
+                      <h3 className="text-xl font-bold text-[#2D2A26] mb-3 group-hover:text-[#5C1F1C] transition-colors">
                         {b.title}
                       </h3>
-                      <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                      <p className="text-[#5C5852] leading-relaxed font-medium text-sm">
                         {b.description}
                       </p>
                     </div>
-                  </motion.div>
-                </Card>
+                  </div>
+                </div>
               </motion.div>
             );
           })}
         </motion.div>
+
       </div>
     </section>
   );
