@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -20,53 +20,20 @@ import {
   Filter,
   Crown,
   Zap,
+  Ticket,
 } from "lucide-react";
 import { format } from "date-fns";
 
-// Brand Colors
-const primaryColor = "#5C1F1C";
-const accentColor = "#FFC727";
-
-function ThreeDCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const [rotate, setRotate] = useState({ x: 0, y: 0 });
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = (y - centerY) / 15;
-    const rotateY = (centerX - x) / 15;
-    setRotate({ x: rotateX, y: rotateY });
-  };
-
-  const handleMouseLeave = () => setRotate({ x: 0, y: 0 });
-
-  return (
-    <motion.div
-      ref={cardRef}
-      className={`transform-gpu transition-all duration-300 ease-out ${className}`}
-      style={{
-        transform: `perspective(1200px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
-      }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      {children}
-    </motion.div>
-  );
-}
+// Brand Colors & Styles
+const THEME = {
+  bg: "#FDFBF7", // Cream
+  text: "#2D2A26", // Charcoal
+  textLight: "#5C5852",
+  accent: "#E76F51", // Burnt Orange
+  gold: "#FFDA44", // Gold
+  white: "#FFFFFF",
+  border: "#E6E0D4",
+};
 
 export default function EventsPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -75,58 +42,58 @@ export default function EventsPage() {
   const events = [
     {
       id: 1,
-      title: "Chesspure State Open 2025",
+      title: "Royal State Open 2026",
       category: "tournament",
-      date: "2025-12-20",
+      date: "2026-02-20",
       time: "09:00 AM",
-      location: "Visakhapatnam International Convention Centre",
+      location: "Vizag Convention Centre",
       participants: "300+",
       prize: "₹1,00,000",
-      description: "FIDE-rated classical tournament. 7 rounds, 90+30 time control. Open to all.",
+      description: "FIDE-rated classical tournament. 7 rounds, 90+30 time control. The ultimate test of endurance and strategy.",
       image: "/blog-1.jpeg",
-      status: "upcoming",
+      status: "open",
       registrationFee: "₹800",
     },
     {
       id: 2,
       title: "GM Strategy Masterclass",
       category: "workshop",
-      date: "2025-11-28",
+      date: "2026-03-15",
       time: "02:00 PM",
-      location: "Chesspure Academy, Visakhapatnam",
+      location: "Royal Look Academy, Vizag",
       participants: "60",
-      prize: "Certificate + Opening PDF",
-      description: "3-hour deep dive into Ruy Lopez with GM Rajesh Kumar. Live analysis + Q&A.",
+      prize: "Certificate + PDF",
+      description: "3-hour deep dive into advanced positional play with GM Rajesh Kumar. Live analysis and interactive Q&A.",
       image: "/blog-2.jpg",
-      status: "upcoming",
+      status: "filling-fast",
       registrationFee: "₹1,200",
     },
     {
       id: 3,
-      title: "Under-14 Rapid Championship",
+      title: "Junior Rapid Championship",
       category: "tournament",
-      date: "2026-01-11",
+      date: "2026-01-25",
       time: "10:00 AM",
       location: "Online (Lichess Team)",
       participants: "200+",
       prize: "₹25,000",
-      description: "15+10 rapid. Free entry for weekly students. Titled prizes.",
+      description: "Fast-paced 15+10 rapid action for players under 14. Titled prizes and scholarships available.",
       image: "/blog-3.webp",
-      status: "upcoming",
+      status: "open",
       registrationFee: "₹400",
     },
     {
       id: 4,
-      title: "Chess Psychology & Focus",
+      title: "Chess Psychology Seminar",
       category: "seminar",
       date: "2025-12-06",
       time: "11:00 AM",
       location: "Academy Conference Hall",
       participants: "40",
       prize: "Mindset Workbook",
-      description: "Learn breathing, visualization, and handling time pressure from sports psychologist.",
+      description: "Master the mental game. Learn visualization, stress management, and tournament psychology.",
       image: "/blog-4.png",
-      status: "upcoming",
+      status: "closed",
       registrationFee: "₹900",
     },
     {
@@ -137,22 +104,22 @@ export default function EventsPage() {
       time: "04:00 PM",
       location: "City Chess Arena",
       participants: "30",
-      prize: "Photo + Signed Board",
-      description: "Play against IM Tejavath Aruna in a 30-board simul. First come, first served.",
+      prize: "Signed Board",
+      description: "A rare opportunity to play against International Master Tejavath Aruna in a 30-board simultaneous exhibition.",
       image: "/blog-5.jpg",
-      status: "upcoming",
+      status: "closed",
       registrationFee: "₹500",
     },
     {
       id: 6,
-      title: "Women's Chess Festival 2026",
+      title: "Women's Chess Festival",
       category: "special",
       date: "2026-03-08",
       time: "09:00 AM",
-      location: "Chesspure Academy",
+      location: "Royal Look Academy",
       participants: "150+",
       prize: "₹50,000 + Trophies",
-      description: "Full-day event: Blitz tournament, GM lecture, networking lunch. All women welcome.",
+      description: "Celebrating women in chess with a full-day blitz tournament, GM lectures, and networking.",
       image: "/blog-5.jpg",
       status: "upcoming",
       registrationFee: "₹600",
@@ -164,7 +131,7 @@ export default function EventsPage() {
     { id: "tournament", name: "Tournaments", icon: Trophy },
     { id: "workshop", name: "Workshops", icon: BookOpen },
     { id: "seminar", name: "Seminars", icon: Zap },
-    { id: "exhibition", name: "Simul", icon: Crown },
+    { id: "exhibition", name: "Simuls", icon: Crown },
     { id: "special", name: "Special", icon: Star },
   ];
 
@@ -174,262 +141,228 @@ export default function EventsPage() {
       : events.filter((event) => event.category === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Hero Section */}
-      <section
-        className="relative py-30 sm:py-32 md:py-40 text-white overflow-hidden text-center"
-        style={{
-          backgroundImage: 'url("/galbg.png")',
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/70" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <Badge
-            className="mb-4 sm:mb-6 text-sm sm:text-lg px-4 py-1"
-            style={{ backgroundColor: accentColor, color: primaryColor }}
+    <div className="min-h-screen font-sans selection:bg-[#E76F51] selection:text-white" style={{ backgroundColor: THEME.bg }}>
+
+      {/* 1. HERO: The Grand Arena */}
+      <section className="relative pt-32 pb-20 px-6 overflow-hidden">
+        <div className="max-w-7xl mx-auto relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            Events & Tournaments
-          </Badge>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 sm:mb-6 leading-tight">
-            Chess Events Calendar
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl max-w-4xl mx-auto leading-relaxed opacity-90 px-4">
-            Compete, learn, and grow with India’s top chess events.
-          </p>
+            <span className="inline-block py-2 px-6 rounded-full bg-[#E76F51]/10 text-[#E76F51] font-bold text-sm tracking-widest uppercase mb-6 border border-[#E76F51]/20">
+              Official Calendar
+            </span>
+            <h1 className="text-5xl md:text-7xl font-extrabold text-[#2D2A26] mb-8 leading-tight tracking-tight">
+              The Grand <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E76F51] to-[#FFDA44]">Arena</span>
+            </h1>
+            <p className="text-xl text-[#5C5852] max-w-2xl mx-auto leading-relaxed">
+              Step into the spotlight. From local blitz battles to international classical tournaments, find your next challenge here.
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Ambient Background Elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FFDA44]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#E76F51]/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
         </div>
       </section>
 
-      {/* Event Categories */}
-      <section className="py-10 sm:py-12 px-4 sm:px-6 lg:px-8 bg-white/60 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto">
-          <h2
-            className="text-3xl sm:text-4xl font-extrabold text-center mb-8 sm:mb-10"
-            style={{ color: primaryColor }}
-          >
-            Explore by Category
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-            {categories.map((category) => {
-              const Icon = category.icon;
+      {/* 2. FILTERS & CONTROLS */}
+      <section className="sticky top-20 z-40 bg-[#FDFBF7]/80 backdrop-blur-md border-y border-[#E6E0D4] py-4 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+
+          {/* Category Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full md:w-auto pb-2 md:pb-0">
+            {categories.map((cat) => {
+              const Icon = cat.icon;
+              const isActive = selectedCategory === cat.id;
               return (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.id ? "default" : "outline"}
-                  className={`h-16 sm:h-20 flex flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-xl transition-all text-xs sm:text-sm font-medium ${
-                    selectedCategory === category.id
-                      ? "bg-[#5C1F1C] text-white hover:bg-[#8B4513]"
-                      : "border-[#5C1F1C]/30 text-[#5C1F1C] hover:bg-[#5C1F1C]/5"
-                  }`}
-                  onClick={() => setSelectedCategory(category.id)}
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap ${isActive
+                    ? "bg-[#2D2A26] text-white shadow-lg scale-105"
+                    : "bg-white border border-[#E6E0D4] text-[#5C5852] hover:border-[#E76F51] hover:text-[#E76F51]"
+                    }`}
                 >
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span>{category.name}</span>
-                </Button>
-              );
+                  <Icon className="w-4 h-4" />
+                  {cat.name}
+                </button>
+              )
             })}
+          </div>
+
+          <div className="flex items-center gap-4 text-sm font-medium text-[#5C5852]">
+            <span className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-[#E6E0D4]">
+              <Filter className="w-4 h-4" />
+              {filteredEvents.length} Events
+            </span>
           </div>
         </div>
       </section>
 
-      {/* Main Content */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+      {/* 3. MAIN CONTENT */}
+      <section className="py-16 px-6">
         <div className="max-w-7xl mx-auto">
           <Tabs defaultValue="grid" className="w-full">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-              <TabsList className="bg-white/80 backdrop-blur-sm border border-[#5C1F1C]/20 w-full md:w-auto">
-                <TabsTrigger
-                  value="grid"
-                  className="data-[state=active]:bg-[#5C1F1C] data-[state=active]:text-white text-sm sm:text-base"
-                >
-                  Grid View
-                </TabsTrigger>
-                <TabsTrigger
-                  value="calendar"
-                  className="data-[state=active]:bg-[#5C1F1C] data-[state=active]:text-white text-sm sm:text-base"
-                >
-                  Calendar View
-                </TabsTrigger>
+            <div className="flex justify-end mb-8">
+              <TabsList className="bg-white border border-[#E6E0D4] p-1 rounded-xl h-auto">
+                <TabsTrigger value="grid" className="data-[state=active]:bg-[#2D2A26] data-[state=active]:text-white rounded-lg px-4 py-2 font-medium transition-all">Grid View</TabsTrigger>
+                <TabsTrigger value="calendar" className="data-[state=active]:bg-[#2D2A26] data-[state=active]:text-white rounded-lg px-4 py-2 font-medium transition-all">Calendar</TabsTrigger>
               </TabsList>
-              <div className="flex items-center gap-2 text-gray-700 w-full md:w-auto justify-center md:justify-end">
-                <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="text-sm font-medium">
-                  Showing {filteredEvents.length} of {events.length} events
-                </span>
-              </div>
             </div>
 
-            {/* Grid View */}
-            <TabsContent value="grid" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
-                {filteredEvents.map((event, i) => (
+            {/* --- GRID VIEW --- */}
+            <TabsContent value="grid">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {filteredEvents.map((event, idx) => (
                   <motion.div
                     key={event.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="h-full"
+                    transition={{ delay: idx * 0.1 }}
                   >
-                    <ThreeDCard className="h-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl">
-                      <div
-                        className="bg-gradient-to-br from-[#5C1F1C] to-[#8B4513] p-1 sm:p-1.5 rounded-3xl h-full"
-                      >
-                        <div className="bg-white/95 backdrop-blur-xl rounded-3xl h-full overflow-hidden flex flex-col">
-                          {/* Image */}
-                          <div className="relative h-48 sm:h-56 overflow-hidden">
-                            <img
-                              src={event.image}
-                              alt={event.title}
-                              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-                            />
-                            <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
-                              <Badge className="bg-gradient-to-r from-[#FFC727] to-[#FFD700] text-[#5C1F1C] font-bold text-xs px-2 py-0.5">
-                                {event.category.charAt(0).toUpperCase() + event.category.slice(1)}
-                              </Badge>
-                            </div>
+                    {/* TICKET CARD DESIGN */}
+                    <div className="group relative bg-white rounded-3xl border border-[#E6E0D4] shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col sm:flex-row h-full">
+
+                      {/* Left: Visual */}
+                      <div className="relative w-full sm:w-2/5 h-48 sm:h-auto overflow-hidden">
+                        <img
+                          src={event.image}
+                          alt={event.title}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute bottom-4 left-4 text-white">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge className="bg-[#FFDA44] text-[#2D2A26] hover:bg-[#FFDA44] border-none font-bold">
+                              {event.category}
+                            </Badge>
                           </div>
-
-                          {/* Content */}
-                          <div className="p-4 sm:p-6 flex-1 flex flex-col">
-                            <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold mb-2 sm:mb-3 text-[#5C1F1C]">
-                              {event.title}
-                            </h3>
-                            <p className="text-gray-600 mb-3 sm:mb-5 leading-relaxed text-sm line-clamp-2">
-                              {event.description}
-                            </p>
-
-                            <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm mb-4 sm:mb-6">
-                              <div className="flex items-center gap-2">
-                                <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFC727]" />
-                                <span className="font-medium">{format(new Date(event.date), "MMM dd, yyyy")}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFC727]" />
-                                <span>{event.time}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFC727]" />
-                                <span className="text-xs line-clamp-1">{event.location}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFC727]" />
-                                <span>{event.participants} expected</span>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-                              <div className="text-center bg-gradient-to-br from-[#5C1F1C]/10 to-[#8B4513]/10 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-[#5C1F1C]/20">
-                                <Trophy className="w-6 h-6 sm:w-7 sm:h-7 mx-auto mb-1 sm:mb-2 text-[#5C1F1C]" />
-                                <p className="text-xs font-medium text-gray-600">Prize</p>
-                                <p className="font-bold text-[#5C1F1C] text-sm sm:text-lg">{event.prize}</p>
-                              </div>
-                              <div className="text-center bg-gradient-to-br from-[#8B4513]/10 to-[#A0522D]/10 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-[#5C1F1C]/20">
-                                <CalendarIcon className="w-6 h-6 sm:w-7 sm:h-7 mx-auto mb-1 sm:mb-2 text-[#5C1F1C]" />
-                                <p className="text-xs font-medium text-gray-600">Fee</p>
-                                <p className="font-bold text-[#5C1F1C] text-sm sm:text-lg">{event.registrationFee}</p>
-                              </div>
-                            </div>
-
-                            <Link href="/contact" className="block mt-auto">
-                              <Button
-                                className="w-full bg-gradient-to-r from-[#FFC727] to-[#FFD700] text-[#5C1F1C] font-bold text-sm sm:text-lg py-5 sm:py-6 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl hover:shadow-yellow-500/40 transform hover:scale-105 transition-all duration-300"
-                              >
-                                Register Now <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
-                              </Button>
-                            </Link>
-                          </div>
+                          {event.status === 'open' && (
+                            <span className="text-xs font-bold text-green-400 flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /> Registration Open
+                            </span>
+                          )}
                         </div>
                       </div>
-                    </ThreeDCard>
+
+                      {/* Right: Details (Ticket Stub) */}
+                      <div className="relative w-full sm:w-3/5 p-6 sm:p-8 flex flex-col justify-between border-l-0 sm:border-l-2 border-dashed border-[#E6E0D4]">
+                        {/* Cutout Decorations */}
+                        <div className="absolute -top-3 -left-[9px] w-4 h-4 bg-[#FDFBF7] rounded-full sm:block hidden border border-[#E6E0D4]" />
+                        <div className="absolute -bottom-3 -left-[9px] w-4 h-4 bg-[#FDFBF7] rounded-full sm:block hidden border border-[#E6E0D4]" />
+
+                        <div>
+                          <h3 className="text-2xl font-bold text-[#2D2A26] mb-2 group-hover:text-[#E76F51] transition-colors line-clamp-2">
+                            {event.title}
+                          </h3>
+                          <div className="flex items-center gap-3 text-sm text-[#5C5852] font-medium mb-4">
+                            <span className="flex items-center gap-1.5"><CalendarIcon className="w-4 h-4" /> {format(new Date(event.date), "MMM d")}</span>
+                            <span className="w-1 h-1 rounded-full bg-[#E6E0D4]" />
+                            <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {event.time}</span>
+                          </div>
+                          <p className="text-[#5C5852]/80 text-sm leading-relaxed mb-6 line-clamp-2">
+                            {event.description}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-auto pt-6 border-t border-[#E6E0D4]">
+                          <div>
+                            <p className="text-xs text-[#5C5852] uppercase tracking-wider font-bold mb-0.5">Entry Fee</p>
+                            <p className="text-xl font-black text-[#E76F51]">{event.registrationFee}</p>
+                          </div>
+                          <Link href="/contact">
+                            <Button className="bg-[#2D2A26] text-white rounded-xl hover:bg-[#E76F51] transition-colors">
+                              Register
+                              <Ticket className="w-4 h-4 ml-2" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
               </div>
             </TabsContent>
 
-            {/* Calendar View */}
-            <TabsContent value="calendar" className="mt-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-                {/* Calendar */}
-                <div className="lg:col-span-1">
-                  <Card className="shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden border-0">
-                    <div className="bg-gradient-to-br from-[#5C1F1C] to-[#8B4513] p-1 sm:p-1.5 rounded-3xl">
-                      <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-extrabold mb-3 sm:mb-4" style={{ color: primaryColor }}>
-                          Pick a Date
-                        </h3>
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          disabled={(date) => date < new Date()}
-                          className="rounded-xl border border-[#5C1F1C]/20 w-full"
-                        />
+            {/* --- CALENDAR VIEW --- */}
+            <TabsContent value="calendar">
+              <div className="flex flex-col lg:flex-row gap-8">
+                {/* 1. Calendar Widget */}
+                <div className="w-full lg:w-[400px] flex-shrink-0">
+                  <div className="bg-white rounded-3xl p-6 border border-[#E6E0D4] shadow-lg sticky top-32">
+                    <h3 className="text-xl font-bold text-[#2D2A26] mb-6 flex items-center gap-2">
+                      <CalendarIcon className="w-6 h-6 text-[#E76F51]" /> Select Date
+                    </h3>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      className="rounded-xl border border-[#E6E0D4] w-full"
+                      classNames={{
+                        day_selected: "bg-[#E76F51] text-white hover:bg-[#E76F51] focus:bg-[#E76F51]",
+                        day_today: "bg-[#FDFBF7] text-[#2D2A26] font-bold border border-[#E76F51]",
+                      }}
+                    />
+                    <div className="mt-6 pt-6 border-t border-[#E6E0D4]">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#E76F51]" /> Event Day</span>
+                        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full border border-[#2D2A26]" /> Today</span>
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 </div>
 
-                {/* Events List */}
-                <div className="lg:col-span-2">
-                  <Card className="shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl border-0 h-full">
-                    <div className="bg-gradient-to-br from-[#5C1F1C] to-[#8B4513] p-1 sm:p-1.5 rounded-3xl h-full">
-                      <div className="bg-white/95 backdrop-blur-xl rounded-3xl p-4 sm:p-6 h-full flex flex-col">
-                        <h3 className="text-lg sm:text-xl font-extrabold mb-4 sm:mb-6" style={{ color: primaryColor }}>
-                          Events on{" "}
-                          {selectedDate
-                            ? format(selectedDate, "MMMM dd, yyyy")
-                            : "Selected Date"}
-                        </h3>
-                        <div className="space-y-3 sm:space-y-4 flex-1 overflow-y-auto">
-                          {filteredEvents
-                            .filter((e) =>
-                              selectedDate
-                                ? e.date === format(selectedDate, "yyyy-MM-dd")
-                                : true
-                            )
-                            .map((event) => (
-                              <div
-                                key={event.id}
-                                className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 sm:p-5 border border-[#5C1F1C]/20 rounded-xl sm:rounded-2xl hover:border-[#5C1F1C]/40 transition-all bg-white/50 backdrop-blur-sm"
-                              >
-                                <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gradient-to-r from-[# event.category === 'tournament' ? '#FFC727' : '#FF8C42'] to-[#FFD700] flex-shrink-0" />
-                                <div className="flex-1">
-                                  <h4 className="font-bold text-base sm:text-lg" style={{ color: primaryColor }}>
-                                    {event.title}
-                                  </h4>
-                                  <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 mt-1">
-                                    <div className="flex items-center gap-1">
-                                      <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                                      {event.time}
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
-                                      <span className="line-clamp-1">{event.location}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <Button
-                                  variant="outline"
-                                  className="border-[#5C1F1C] text-[#5C1F1C] hover:bg-[#5C1F1C] hover:text-white text-xs sm:text-sm font-medium mt-2 sm:mt-0"
-                                >
-                                  View
-                                </Button>
+                {/* 2. Events List for Date */}
+                <div className="flex-1">
+                  <div className="bg-white rounded-3xl p-8 border border-[#E6E0D4] min-h-[600px]">
+                    <h3 className="text-2xl font-bold text-[#2D2A26] mb-8 pb-4 border-b border-[#E6E0D4] flex items-center justify-between">
+                      <span>Events on {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Selected Date"}</span>
+                      {selectedDate && <Badge variant="outline" className="text-sm font-normal py-1"> {filteredEvents.filter(e => e.date === format(selectedDate, "yyyy-MM-dd")).length} Events</Badge>}
+                    </h3>
+
+                    <div className="space-y-4">
+                      {filteredEvents
+                        .filter((e) => selectedDate ? e.date === format(selectedDate, "yyyy-MM-dd") : true)
+                        .map((event) => (
+                          <motion.div
+                            key={event.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="flex flex-col sm:flex-row items-center gap-6 p-6 rounded-2xl bg-[#FDFBF7] border border-[#E6E0D4] hover:border-[#E76F51] transition-all group"
+                          >
+                            <div className="w-full sm:w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
+                              <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 text-center sm:text-left">
+                              <h4 className="text-lg font-bold text-[#2D2A26] mb-2">{event.title}</h4>
+                              <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm text-[#5C5852]">
+                                <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-[#E76F51]" /> {event.time}</span>
+                                <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-[#E76F51]" /> {event.location}</span>
                               </div>
-                            ))}
-                          {filteredEvents.filter((e) =>
-                            selectedDate
-                              ? e.date === format(selectedDate, "yyyy-MM-dd")
-                              : true
-                          ).length === 0 && (
-                            <p className="text-center text-gray-500 py-10 sm:py-12 text-base sm:text-lg">
-                              No events on this date.
-                            </p>
-                          )}
+                            </div>
+                            <div className="flex flex-col items-center gap-2">
+                              <span className="text-lg font-bold text-[#E76F51]">{event.registrationFee}</span>
+                              <Button size="sm" variant="outline" className="border-[#2D2A26] text-[#2D2A26] hover:bg-[#2D2A26] hover:text-white">
+                                Details
+                              </Button>
+                            </div>
+                          </motion.div>
+                        ))}
+
+                      {filteredEvents.filter(e => selectedDate ? e.date === format(selectedDate, "yyyy-MM-dd") : true).length === 0 && (
+                        <div className="text-center py-20 opacity-60">
+                          <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-[#E6E0D4]" text-gray-300 />
+                          <p className="text-xl font-medium text-[#5C5852]">No events scheduled for this day.</p>
+                          <p className="text-sm mt-2">Try selecting another date or check our upcoming tournaments.</p>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  </Card>
+                  </div>
                 </div>
               </div>
             </TabsContent>

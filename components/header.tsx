@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDown, Menu, X, Crown } from "lucide-react";
+import { ChevronDown, Menu, X, Crown, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthNav } from "./auth-nav";
 
@@ -37,81 +36,49 @@ export function Header() {
     { name: "Contact", href: "/contact" },
   ];
 
-  const primaryColor = "#5C1F1C";
-  const accentColor = "#FFDA44";
-
   return (
     <>
       <header
-        className={`fixed w-full z-50 top-0 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-md shadow-lg py-2" : "bg-white py-4"
+        className={`fixed w-full z-50 top-0 transition-all duration-500 border-b border-transparent ${scrolled
+          ? "bg-[#FDFBF7]/90 backdrop-blur-xl shadow-sm border-[#E6E0D4] py-3"
+          : "bg-transparent py-6"
           }`}
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-6 lg:px-12">
           <div className="flex justify-between items-center">
 
             {/* Logo + Title */}
-            <Link href="/" className="flex items-center space-x-3 group animate-fade-in-up">
-              <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-[#FFDA44]/20 rounded-xl group-hover:rotate-12 transition-transform duration-300">
-                <Crown className="w-6 h-6 sm:w-7 sm:h-7 text-[#5C1F1C]" />
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-[#2D2A26] rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-300">
+                <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFDA44]" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm sm:text-base md:text-lg font-bold text-[#2D2A26] tracking-tight leading-none group-hover:text-[#5C1F1C] transition-colors">
+                <span className="text-xl font-bold text-[#2D2A26] tracking-tight leading-none font-serif group-hover:text-[#E76F51] transition-colors">
                   ROYAL LOOK
                 </span>
-                <span className="text-xs sm:text-sm font-semibold text-[#FFDA44] tracking-widest uppercase">
+                <span className="text-[10px] font-bold text-[#E76F51] tracking-[0.2em] uppercase mt-0.5">
                   Academy
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2">
-              {navItems.map((item) => (
-                <div key={item.name} className="relative group">
-                  {item.hasDropdown ? (
-                    <div className="relative">
-                      <button
-                        onClick={() => setIsAboutOpen(!isAboutOpen)}
-                        className="flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium text-[#2D2A26] hover:text-[#5C1F1C] hover:bg-[#FFDA44]/10 transition-all"
-                      >
-                        <span>{item.name}</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isAboutOpen ? "rotate-180" : ""}`} />
-                      </button>
-                      <AnimatePresence>
-                        {isAboutOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-[#FFE082] overflow-hidden p-1"
-                          >
-                            {item.dropdownItems?.map((dropItem) => (
-                              <Link
-                                key={dropItem.name}
-                                href={dropItem.href}
-                                className="block px-4 py-2 text-sm text-[#5C5852] hover:bg-[#FFF8E1] hover:text-[#5C1F1C] rounded-lg transition-colors"
-                              >
-                                {dropItem.name}
-                              </Link>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ) : (
+            <nav className="hidden lg:flex items-center gap-1">
+              <div className="flex bg-white/50 backdrop-blur-md rounded-full px-2 py-1.5 border border-[#E6E0D4]/50 shadow-sm mr-4">
+                {navItems.map((item) => (
+                  <div key={item.name} className="relative px-1">
                     <Link
                       href={item.href}
-                      className="relative px-4 py-2 text-sm font-bold text-[#2D2A26] transition-colors group-hover:text-[#5C1F1C]"
+                      className="relative block px-5 py-2 text-sm font-semibold text-[#5C5852] hover:text-[#2D2A26] transition-colors rounded-full hover:bg-white/80"
                     >
                       {item.name}
-                      <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-[#FFDA44] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
                     </Link>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))}
+              </div>
 
               {/* Desktop Auth Nav */}
-              <div className="ml-6 pl-6 border-l border-gray-200">
+              <div className="pl-4 border-l border-[#E6E0D4]">
                 <AuthNav />
               </div>
             </nav>
@@ -120,16 +87,17 @@ export function Header() {
             <div className="lg:hidden flex items-center gap-4">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-lg text-[#2D2A26] bg-gray-50 hover:bg-[#FFF8E1] transition-colors border border-gray-100"
+                className="p-2.5 rounded-full text-[#2D2A26] bg-white hover:bg-[#FDFBF7] transition-colors border border-[#E6E0D4] shadow-sm active:scale-95"
               >
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={isMobileMenuOpen ? "close" : "open"}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.8, opacity: 0 }}
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                   </motion.div>
                 </AnimatePresence>
               </button>
@@ -137,17 +105,17 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown - Full Width */}
+        {/* Mobile Menu Dropdown - Full Screen Overlay */}
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "100vh", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:hidden fixed inset-0 top-[72px] bg-[#FDFBF7] z-40 overflow-y-auto pb-20"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="lg:hidden fixed inset-0 top-[88px] bg-[#FDFBF7] z-40 overflow-y-auto"
             >
-              <div className="px-6 py-8 space-y-2">
+              <div className="p-6 space-y-1">
                 {navItems.map((item, i) => (
                   <motion.div
                     key={item.name}
@@ -158,18 +126,16 @@ export function Header() {
                     <Link
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="block p-4 text-lg font-bold text-[#2D2A26] border-b border-[#E6E0D4] active:bg-[#FFDA44]/20 rounded-xl transition-colors"
+                      className="group flex items-center justify-between p-5 text-2xl font-bold text-[#2D2A26] border-b border-[#E6E0D4] hover:bg-white transition-all active:scale-[0.98]"
                     >
-                      <span className="flex items-center justify-between">
-                        {item.name}
-                        <ChevronDown className="-rotate-90 text-[#FFDA44] opacity-50" />
-                      </span>
+                      <span className="font-serif italic group-hover:not-italic transition-all">{item.name}</span>
+                      <ArrowRight className="w-5 h-5 text-[#E76F51] opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300" />
                     </Link>
                   </motion.div>
                 ))}
 
-                <div className="mt-8 p-4 bg-white rounded-2xl border border-[#E6E0D4] shadow-sm">
-                  <p className="text-xs font-bold text-[#E76F51] uppercase tracking-wide mb-4 text-center">Student Access</p>
+                <div className="mt-8 p-6 bg-white rounded-3xl border border-[#E6E0D4] shadow-sm text-center">
+                  <p className="text-xs font-bold text-[#5C5852] uppercase tracking-widest mb-6">Student Portal</p>
                   <AuthNav isMobile={true} />
                 </div>
               </div>

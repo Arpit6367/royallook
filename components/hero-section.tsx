@@ -108,7 +108,7 @@ export function HeroSection() {
             </div>
 
             {/* Main Image Container */}
-            <div className="relative w-80 h-[450px] sm:w-96 sm:h-[500px] lg:w-[420px] lg:h-[580px] z-20">
+            <div className="relative w-80 h-[40px] sm:w-96 sm:h-[400px] lg:w-[420px] lg:h-[480px] z-20">
               {/* Image Frame */}
               <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden border-8 border-white shadow-2xl bg-[#2D2A26]">
                 {sliderImages.map((img, index) => (

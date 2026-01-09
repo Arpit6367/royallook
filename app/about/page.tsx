@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,443 +22,263 @@ import {
   Zap,
   CheckCircle2,
   Heart,
+  Crown,
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
 import Link from "next/link";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 export default function AboutPage() {
-  const [radius, setRadius] = useState(260);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width < 640) setRadius(110);        // sm
-      else if (width < 768) setRadius(130);   // md
-      else if (width < 1024) setRadius(180);  // lg
-      else setRadius(260);                    // xl+
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const { scrollYProgress } = useScroll();
+  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section
-        className="relative py-24 sm:py-32 md:py-40 text-white overflow-hidden"
-        style={{
-          backgroundImage: 'url("/aboutbg.png")',
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/70" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <Badge
-            className="mb-4 sm:mb-6 text-sm sm:text-base md:text-lg"
-            style={{ backgroundColor: "#FFC727", color: "#5C1F1C" }}
+    <div className="min-h-screen bg-[#FDFBF7] font-sans text-[#2D2A26] selection:bg-[#FFDA44]/30">
+
+      {/* 1. HERO: The Manifesto - Bold, Editorial Style */}
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center overflow-hidden py-24">
+        {/* Abstract Background Art */}
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#E76F51]/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-[#FFDA44]/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
+
+        <div className="container max-w-6xl mx-auto px-6 relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-8"
           >
-            One Pure Move at a Time
-          </Badge>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 sm:mb-6 leading-tight">
-            Welcome to <span style={{ color: "#FFC727" }}>ChessPure</span>
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-10 opacity-95">
-            We focus on helping beginner and intermediate players build strong,
-            lasting chess skills through clear coaching, structured training,
-            and a supportive learning environment.
-          </p>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Link
-                  href="/contact"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#FFC727]/20 hover:text-[#5C1F1C] text-sm sm:text-base"
-                >
-              <Button
-                size="lg"
-                className="bg-white text-[#5C1F1C] hover:bg-[#FFC727] hover:text-[#5C1F1C] border-2 border-white text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-full shadow-lg transition-all duration-300"
-              >
-                
-                Start Your Journey <ChevronDown className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-              </Link>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 sm:w-60 bg-white border border-gray-200 shadow-xl rounded-lg mt-2">
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/contact"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#FFC727]/20 hover:text-[#5C1F1C] text-sm sm:text-base"
-                >
-                  <Mail className="mr-3 h-4 w-4 sm:h-5 sm:w-5" /> Contact Us
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/coaches"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#FFC727]/20 hover:text-[#5C1F1C] text-sm sm:text-base"
-                >
-                  <UserCheck className="mr-3 h-4 w-4 sm:h-5 sm:w-5" /> Our Coaches
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/blogs"
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-[#FFC727]/20 hover:text-[#5C1F1C] text-sm sm:text-base"
-                >
-                  <FileText className="mr-3 h-4 w-4 sm:h-5 sm:w-5" /> Blogs & Articles
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <span className="font-serif italic text-2xl md:text-3xl text-[#E76F51] tracking-wide">
+              More than just a game
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="text-6xl md:text-8xl lg:text-[7rem] font-extrabold leading-[0.9] text-[#2D2A26] mb-12 tracking-tight"
+          >
+            MASTER<br />
+            THE <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5C1F1C] to-[#E76F51]">MIND</span>
+          </motion.h1>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.6 }}
+            className="max-w-xl mx-auto space-y-8"
+          >
+            <p className="text-xl md:text-2xl font-light text-[#5C5852] leading-relaxed">
+              We don't just teach pieces moving on a board. We teach logic, resilience, and the art of pure thinking.
+            </p>
+
+            <div className="flex justify-center gap-4">
+              <div className="h-16 w-[1px] bg-[#2D2A26]/20"></div>
+            </div>
+
+            <Link href="#mission" className="inline-flex flex-col items-center gap-2 text-sm font-bold uppercase tracking-widest text-[#2D2A26]/60 hover:text-[#E76F51] transition-colors">
+              Scroll to Explore
+              <ChevronDown className="animate-bounce" />
+            </Link>
+          </motion.div>
         </div>
       </section>
 
-      {/* Mission & Vision */}
-      <section className="py-12 sm:py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10">
-            <Card className="bg-[#5C1F1C] text-white border-0 shadow-xl rounded-2xl p-6 sm:p-8 transform hover:scale-105 transition-transform duration-300 group">
-              <CardContent className="p-0 flex flex-col items-start">
-                <Target className="w-12 h-12 sm:w-14 sm:h-14 mb-4 sm:mb-6 text-[#FFC727] group-hover:rotate-12 transition-transform duration-300" />
-                <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Our Focus</h3>
-                <p className="text-base sm:text-lg leading-relaxed opacity-90">
-                  To provide structured curriculum and patient instruction that helps 
-                  every student move from beginner to intermediate — and beyond.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-[#8B4513] text-white border-0 shadow-xl rounded-2xl p-6 sm:p-8 transform hover:scale-105 transition-transform duration-300 group">
-              <CardContent className="p-0 flex flex-col items-start">
-                <Heart className="w-12 h-12 sm:w-14 sm:h-14 mb-4 sm:mb-6 text-[#FFC727] group-hover:scale-125 transition-transform duration-300" />
-                <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Our Belief</h3>
-                <p className="text-base sm:text-lg leading-relaxed opacity-90">
-                  That every student can grow with the right training. We aim to be the 
-                  perfect place to learn, progress, and enjoy the game.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+      {/* 2. MISSION: The Split Layout */}
+      <section id="mission" className="py-24 px-6 relative">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
 
-
-
-      {/* Pillars of Academy - Center Image + Orbiting Cards */}
-      <section className="py-16 sm:py-20 px-4 bg-[#5C1F1C] text-white">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-10 sm:mb-16">
-            The Pillars of <span style={{ color: "#FFC727" }}>ChessPure</span>
-          </h2>
-          <div className="relative w-full h-80 sm:h-96 md:h-[600px] flex items-center justify-center">
-            {/* Central Chess King Image */}
-            <div className="absolute z-20">
-              <div className="bg-white p-3 sm:p-4 md:p-6 rounded-full shadow-2xl flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 border-6 sm:border-8 border-[#FFC727] transform hover:scale-110 transition-transform duration-300">
-                <img
-                  src="/chesscenter.jpg"
-                  alt="Chess King"
-                  className="w-full h-full object-contain rounded-full"
-                />
+          {/* Sticky Text Side */}
+          <div className="lg:sticky lg:top-32 h-fit space-y-10">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-[2px] bg-[#E76F51]"></div>
+                <span className="text-sm font-bold uppercase tracking-wider text-[#E76F51]">Our Mission</span>
               </div>
-            </div>
-            {/* Orbiting Cards */}
-            <div className="absolute inset-0">
-              {[
-                { icon: Brain, title: "Clear Concepts", color: "bg-purple-600" },
-                { icon: Lightbulb, title: "Core Understanding", color: "bg-green-600" },
-                { icon: Scale, title: "Step by Step", color: "bg-red-600" },
-                { icon: Gem, title: "Confidence", color: "bg-yellow-600" },
-                { icon: Zap, title: "Real Improvement", color: "bg-teal-600" },
-                { icon: BookOpen, title: "Supportive", color: "bg-orange-600" },
-              ].map((item, index) => {
-                const angle = (index * 60) - 90;
-                const x = radius * Math.cos((angle * Math.PI) / 180);
-                const y = radius * Math.sin((angle * Math.PI) / 180);
-                return (
-                  <div
-                    key={index}
-                    className="absolute w-24 h-24 sm:w-28 sm:h-28 md:w-40 md:h-40 transform -translate-x-1/2 -translate-y-1/2"
-                    style={{
-                      left: `50%`,
-                      top: `50%`,
-                      marginLeft: `${x}px`,
-                      marginTop: `${y}px`,
-                    }}
-                  >
-                    <Card className="w-full h-full rounded-xl shadow-xl flex flex-col items-center justify-center text-center p-2 sm:p-3 md:p-4 bg-white text-gray-800 border-4 border-white hover:scale-110 transition-transform duration-300">
-                      <div
-                        className={`${item.color} rounded-full w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center mx-auto mb-1 sm:mb-2`}
-                      >
-                        <item.icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
-                      </div>
-                      <h4 className="text-xs sm:text-sm md:text-base font-semibold leading-tight">{item.title}</h4>
-                    </Card>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Our Journey Timeline */}
-      <section className="py-16 sm:py-20 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-10 sm:mb-16" style={{ color: "#5C1F1C" }}>
-            Our <span style={{ color: "#8B4513" }}>Journey</span> Through Time
-          </h2>
-          <div className="relative">
-            {/* Desktop timeline line */}
-            <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-[#5C1F1C] rounded-full" />
-            <div className="space-y-12 sm:space-y-20">
-              {[
-                {
-                  year: "2010",
-                  title: "The Beginning",
-                  description:
-                    "Chesspure was founded with a simple yet powerful vision — to make high-quality chess coaching accessible to every aspiring player. Recognizing the need for structured, personalized, and practical training, focusing on making the game fun and understandable.  Chesspure was founded to help beginners and intermediate players build strong fundamentals, improve confidence, and succeed in competitive play.",
-                  image: "/found.png",
-                  position: "left",
-                  icon: <Star className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
-                },
-                {
-                  year: "2014",
-                  title: "Growing the Community",
-                  description:
-                    "Parents saw the value in our structured approach. We expanded to a dedicated training center, helping students win their first local tournaments and gain confidence.",
-                  image: "national.png",
-                  position: "right",
-                  icon: <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
-                },
-                {
-                  year: "2018",
-                  title: "Online Expansion",
-                  description:
-                    "To reach more students, we launched our online coaching. This allowed us to bring our 'step-by-step' teaching method to students across different states.",
-                  image: "online.png",
-                  position: "left",
-                  icon: <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
-                },
-                {
-                  year: "2020",
-                  title: "Building Champions",
-                  description:
-                    "Our students began consistently performing well in rated tournaments. We introduced advanced intermediate modules to bridge the gap between casual play and competitive chess.",
-                  image: "champion.png",
-                  position: "right",
-                  icon: <Award className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
-                },
-                {
-                  year: "2023",
-                  title: "Personalized Learning Era",
-                  description:
-                    "We refined our curriculum to offer 1-on-1 coaching and interactive group classes that adapt to the student's level, ensuring no one feels left behind.",
-                  image: "ai.png",
-                  position: "left",
-                  icon: <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white" />,
-                },
-              ].map((event, index) => (
-                <div
-                  key={index}
-                  className={`flex flex-col md:flex-row items-center relative ${
-                    event.position === "right" ? "md:justify-end" : "md:justify-start"
-                  }`}
-                >
-                  {/* Desktop left side */}
-                  <div className="hidden md:block w-1/2">
-                    {event.position === "left" && (
-                      <div className="flex justify-end pr-8 sm:pr-10">
-                        <Card className="bg-[#5C1F1C] p-5 sm:p-6 md:p-8 rounded-xl shadow-lg max-w-md lg:max-w-lg border border-gray-200 hover:scale-105 transition-transform duration-300">
-                          <img
-                            src={event.image}
-                            alt={event.title}
-                            className="w-full h-40 sm:h-48 object-cover rounded-lg mb-3 sm:mb-4"
-                          />
-                          <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-white">
-                            {event.title}
-                          </h3>
-                          <p className="text-white text-sm sm:text-base leading-relaxed">{event.description}</p>
-                        </Card>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Timeline dot */}
-                  <div className="absolute left-1/2 transform -translate-x-1/2 md:relative w-10 h-10 sm:w-12 sm:h-12 bg-[#5C1F1C] rounded-full flex items-center justify-center z-10 shadow-xl border-4 border-white">
-                    {event.icon}
-                  </div>
-                  <div className="absolute text-lg sm:text-xl font-bold -mt-12 md:hidden" style={{ color: "#5C1F1C" }}>
-                    {event.year}
-                  </div>
-
-                  {/* Desktop right side */}
-                  <div className="hidden md:block w-1/2">
-                    {event.position === "right" && (
-                      <div className="flex justify-start pl-8 sm:pl-10">
-                        <Card className="bg-[#5C1F1C] p-5 sm:p-6 md:p-8 rounded-xl shadow-lg max-w-md lg:max-w-lg border border-gray-200 hover:scale-105 transition-transform duration-300">
-                          <img
-                            src={event.image}
-                            alt={event.title}
-                            className="w-full h-40 sm:h-48 object-cover rounded-lg mb-3 sm:mb-4"
-                          />
-                          <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-white">
-                            {event.title}
-                          </h3>
-                          <p className="text-white text-sm sm:text-base leading-relaxed">{event.description}</p>
-                        </Card>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Mobile card */}
-                  <div className="md:hidden mt-8 w-full px-2 sm:px-4">
-                    <Card className="bg-white p-5 sm:p-6 rounded-xl shadow-lg border border-gray-200">
-                      <img
-                        src={event.image}
-                        alt={event.title}
-                        className="w-full h-40 sm:h-48 object-cover rounded-lg mb-3 sm:mb-4"
-                      />
-                      <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3" style={{ color: "#5C1F1C" }}>
-                        {event.title}
-                      </h3>
-                      <p className="text-gray-700 text-sm sm:text-base">{event.description}</p>
-                    </Card>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Educational Philosophy - UPDATED CONTENT */}
-      <section className="py-16 sm:py-20 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-center mb-10 sm:mb-16" style={{ color: "#5C1F1C" }}>
-            Our Teaching <span style={{ color: "#8B4513" }}>Approach</span>
-          </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            
-            {/* Left Side: Text Description */}
-            <div className="space-y-6">
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Designed for Your Level
-              </h3>
-              <p className="text-lg text-gray-700 leading-relaxed">
-                Whether you&apos;re just starting out or aiming to move beyond the basics, our lessons are designed to fit your level. We offer <strong>1-on-1 coaching</strong> and <strong>interactive group classes</strong> that cover everything from piece fundamentals and opening principles to tactical patterns, middlegame planning, and endgames.
+              <h2 className="text-4xl md:text-6xl font-extrabold text-[#2D2A26] leading-tight mb-8">
+                To Create <br />
+                <span className="italic font-serif text-[#E76F51]">Thinking</span> Players.
+              </h2>
+              <p className="text-lg text-[#5C5852] leading-relaxed mb-6">
+                Most academies teach you ‘what’ to move. At ChessPure, we obsess over ‘why’. We are building a generation of players who understand that every move has a consequence, and every position holds a possibility.
               </p>
-              
-              <div className="bg-yellow-50 border-l-4 border-[#FFC727] p-5 my-6">
-                <p className="text-gray-800 font-medium italic">
-                  &quot;At ChessPure, we believe every student can grow with the right training. That’s why we focus on patient instruction and personalized feedback.&quot;
+              <p className="text-lg text-[#5C5852] leading-relaxed">
+                Whether you are 6 or 60, our structured path takes you from absolute beginner to confident competitor, one pure move at a time.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 pt-8 border-t border-[#E6E0D4]">
+              <div>
+                <h3 className="text-4xl font-extrabold text-[#2D2A26] mb-1">600+</h3>
+                <p className="text-sm text-[#5C5852] uppercase font-bold tracking-wide">Active Students</p>
+              </div>
+              <div>
+                <h3 className="text-4xl font-extrabold text-[#2D2A26] mb-1">50+</h3>
+                <p className="text-sm text-[#5C5852] uppercase font-bold tracking-wide">Expert Coaches</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Visual Side - Overlapping Images */}
+          <div className="relative h-[600px] w-full hidden lg:block">
+            <motion.div
+              style={{ y }}
+              className="absolute top-0 right-0 w-3/4 h-[400px] rounded-[2rem] overflow-hidden shadow-2xl z-10 border-8 border-white"
+            >
+              <img src="/aboutbg.png" alt="Chess Focus" className="w-full h-full object-cover" />
+            </motion.div>
+
+            <div className="absolute bottom-0 left-0 w-2/3 h-[350px] rounded-[2rem] overflow-hidden shadow-2xl z-20 border-8 border-white">
+              <img src="/chesscenter.jpg" alt="Child Learning" className="w-full h-full object-cover" />
+            </div>
+
+            {/* Floating Icon */}
+            <div className="absolute bottom-1/4 right-10 bg-[#FFDA44] p-6 rounded-2xl shadow-xl z-30">
+              <Crown className="w-10 h-10 text-[#2D2A26]" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. PILLARS: The Foundation (Light & Clean REFRESHED) */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <span className="text-sm font-bold uppercase tracking-wider text-[#E76F51] mb-2 block">Our Philosophy</span>
+            <h2 className="text-4xl md:text-6xl font-extrabold text-[#2D2A26] mb-6">
+              The <span className="text-[#E76F51]">Foundation</span>
+            </h2>
+            <p className="text-xl text-[#5C5852] max-w-2xl mx-auto font-light">
+              Our philosophy is built on six unshakeable pillars designed to guarantee your improvement.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* 1. Clear Concepts */}
+            <Card className="bg-[#FDFBF7] border border-[#E6E0D4] hover:border-[#FFDA44] shadow-sm hover:shadow-xl rounded-3xl p-8 transition-all duration-300 group">
+              <div className="bg-[#FFDA44]/20 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Brain className="w-7 h-7 text-[#2D2A26]" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3 text-[#2D2A26]">Clear Concepts</h3>
+              <p className="text-[#5C5852] leading-relaxed">
+                We break down complex grandmaster ideas into simple, digestible concepts that stick.
+              </p>
+            </Card>
+
+            {/* 2. Real Improvement (Highlighted) */}
+            <Card className="bg-[#2D2A26] border border-[#2D2A26] shadow-xl rounded-3xl p-8 relative overflow-hidden group transform md:-translate-y-4">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+              <div className="bg-[#E76F51] w-14 h-14 rounded-2xl flex items-center justify-center mb-6 z-10 relative">
+                <Target className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3 text-white relative z-10">Real Improvement</h3>
+              <p className="text-white/80 leading-relaxed relative z-10">
+                We don't just play; we train. Verify your skills through rated tournaments and consistent rating gains.
+              </p>
+              <ArrowRight className="w-6 h-6 text-[#E76F51] mt-6 relative z-10" />
+            </Card>
+
+            {/* 3. Step by Step */}
+            <Card className="bg-[#FDFBF7] border border-[#E6E0D4] hover:border-[#FFDA44] shadow-sm hover:shadow-xl rounded-3xl p-8 transition-all duration-300 group">
+              <div className="bg-[#E76F51]/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Scale className="w-7 h-7 text-[#E76F51]" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3 text-[#2D2A26]">Step by Step</h3>
+              <p className="text-[#5C5852] leading-relaxed">
+                A structured curriculum that ensures you never feel lost or overwhelmed.
+              </p>
+            </Card>
+
+            {/* 4. Confidence */}
+            <Card className="bg-[#FDFBF7] border border-[#E6E0D4] hover:border-[#FFDA44] shadow-sm hover:shadow-xl rounded-3xl p-8 transition-all duration-300 group">
+              <div className="bg-green-100 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Gem className="w-7 h-7 text-green-600" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3 text-[#2D2A26]">Confidence</h3>
+              <p className="text-[#5C5852] leading-relaxed">
+                Building self-assurance through solving problems and winning games.
+              </p>
+            </Card>
+
+            {/* 5. Supportive Community */}
+            <Card className="md:col-span-2 bg-gradient-to-r from-[#FDFBF7] to-white border border-[#E6E0D4] hover:border-[#E76F51] shadow-sm hover:shadow-xl rounded-3xl p-8 transition-all duration-300 group flex flex-col md:flex-row items-start md:items-center gap-6">
+              <div className="bg-[#E76F51]/20 w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                <Heart className="w-8 h-8 text-[#E76F51]" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold mb-2 text-[#2D2A26]">Supportive Community</h3>
+                <p className="text-[#5C5852] leading-relaxed">
+                  A place where mistakes are celebrated as learning opportunities, and every player supports one another.
                 </p>
               </div>
-
-              <div className="pt-4">
-                <Button className="bg-[#5C1F1C] hover:bg-[#8B4513] text-white px-8 py-6 rounded-full text-lg shadow-xl">
-                  Start Your Journey
-                </Button>
-              </div>
-            </div>
-
-            {/* Right Side: The Checklist */}
-            <div className="bg-[#5C1F1C] text-white rounded-2xl p-8 sm:p-12 shadow-2xl relative overflow-hidden">
-               {/* Decorative background element */}
-               <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-[#FFC727] rounded-full opacity-10 blur-3xl"></div>
-
-              <h3 className="text-2xl sm:text-3xl font-bold mb-8" style={{ color: "#FFC727" }}>
-                The ChessPure Method
-              </h3>
-              <ul className="space-y-6 text-lg">
-                {[
-                  "Explain concepts clearly",
-                  "Guide students step by step",
-                  "Strengthen core understanding",
-                  "Build confidence through practice",
-                  "Help players see real improvement"
-                ].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-4 transform transition-all hover:translate-x-2">
-                    <div className="bg-white/10 p-2 rounded-full">
-                      <CheckCircle2 className="w-5 h-5 text-[#FFC727]" />
-                    </div>
-                    <span className="pt-1 font-medium tracking-wide">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <div className="mt-10 pt-8 border-t border-white/20 text-center">
-                 <p className="text-xl font-serif italic text-white/90">
-                   "One pure move at a time."
-                 </p>
-              </div>
-            </div>
+            </Card>
 
           </div>
         </div>
       </section>
 
-      {/* Core Values */}
-      <section className="py-16 sm:py-20 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-10 sm:mb-16" style={{color: "#5C1F1C"}}>
-            Why Choose <span style={{ color: "#8B4513" }}>ChessPure?</span>
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
+      {/* 4. JOURNEY: The Winding Path */}
+      <section className="py-32 px-6 overflow-hidden">
+        <div className="max-w-4xl mx-auto text-center mb-24">
+          <span className="text-sm font-bold uppercase tracking-wider text-[#E76F51]">Since 2010</span>
+          <h2 className="text-5xl md:text-7xl font-extrabold text-[#2D2A26] mt-4">The Journey</h2>
+        </div>
+
+        <div className="max-w-5xl mx-auto relative">
+          {/* Central Line */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-[#E6E0D4] -translate-x-1/2 hidden md:block"></div>
+
+          <div className="space-y-24 md:space-y-36">
             {[
-              {
-                title: "Structured Training",
-                description: "Curriculum that helps players move from beginner to intermediate logic effectively.",
-                icon: <Brain className="w-10 h-10 sm:w-12 sm:h-12 text-[#5C1F1C]" />,
-              },
-              {
-                title: "Supportive Environment",
-                description: "A perfect place to learn where mistakes are seen as stepping stones to mastery.",
-                icon: <Heart className="w-10 h-10 sm:w-12 sm:h-12 text-[#5C1F1C]" />,
-              },
-              {
-                title: "Personalized Feedback",
-                description: "We don't just teach moves; we help you understand the 'Why' behind them.",
-                icon: <Lightbulb className="w-10 h-10 sm:w-12 sm:h-12 text-[#5C1F1C]" />,
-              },
-            ].map((value, index) => (
-              <Card
-                key={index}
-                className="bg-white text-gray-800 p-6 sm:p-8 md:p-10 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 transform hover:-translate-y-2 transition-all duration-300 group"
-              >
-                <CardContent className="p-0 flex flex-col items-center">
-                  <div className="mb-4 sm:mb-6 p-4 bg-orange-50 rounded-full group-hover:bg-[#FFC727] transition-colors duration-300">
-                    {value.icon}
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4" style={{ color: "#5C1F1C" }}>
-                    {value.title}
-                  </h3>
-                  <p className="text-base sm:text-lg text-gray-600">{value.description}</p>
-                </CardContent>
-              </Card>
+              { year: "2010", title: "The Spark", desc: "Founded with a single board and a simple vision.", align: "left" },
+              { year: "2014", title: "The Expansion", desc: "Moved to our first dedicated center. The family grew.", align: "right" },
+              { year: "2018", title: "Going Digital", desc: "Breaking barriers. Launched online coaching globally.", align: "left" },
+              { year: "2023", title: "The Future", desc: "1-on-1 AI integrated learning and grandmaster mentorship.", align: "right" }
+            ].map((item, i) => (
+              <div key={i} className={`flex flex-col md:flex-row items-center gap-12 ${item.align === 'right' ? 'md:flex-row-reverse' : ''}`}>
+
+                {/* Text Content */}
+                <div className={`flex-1 text-center ${item.align === 'right' ? 'md:text-left' : 'md:text-right'}`}>
+                  <div className="text-6xl font-black text-[#E6E0D4] mb-2">{item.year}</div>
+                  <h3 className="text-3xl font-bold text-[#2D2A26] mb-4">{item.title}</h3>
+                  <p className="text-lg text-[#5C5852] font-medium leading-relaxed">{item.desc}</p>
+                </div>
+
+                {/* Center Node */}
+                <div className="relative z-10 w-4 h-4 rounded-full bg-[#E76F51] ring-8 ring-white shadow-xl"></div>
+
+                {/* Empty Flex Space */}
+                <div className="flex-1 hidden md:block"></div>
+
+              </div>
             ))}
           </div>
         </div>
       </section>
-      <section className="py-24 px-6 bg-gradient-to-r from-[#5C1F1C] to-[#8B4513] text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl md:text-6xl font-extrabold mb-6">
-            Ready to Transform Your Chess?
+
+      {/* 5. CTA: Full Width Impact */}
+      <section className="relative py-32 bg-[#FDFBF7] border-t border-[#E6E0D4]">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-5xl md:text-7xl font-extrabold text-[#2D2A26] mb-8 leading-tight">
+            Your Move, <br />
+            <span className="text-[#E76F51]">Champion.</span>
           </h2>
-          <p className="text-2xl mb-10 opacity-90">
-            Join 500+ students who went from beginner to advanced.
-          </p>
-          <Link href="/contact">
-            <Button size="lg" className="bg-white text-[#5C1F1C] hover:bg-[#FFC727] px-16 py-10 text-3xl font-bold rounded-full shadow-2xl">
-              Claim Your Free Trial Class
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-12">
+            <Link href="/contact">
+              <Button className="h-16 px-10 rounded-full bg-[#2D2A26] text-white text-lg font-bold hover:bg-[#E76F51] hover:px-12 transition-all duration-300 shadow-2xl">
+                Book Free Trial
+              </Button>
+            </Link>
+            <span className="text-[#5C5852] font-medium">or</span>
+            <Link href="/courses" className="text-lg font-bold text-[#2D2A26] border-b-2 border-[#2D2A26] hover:text-[#E76F51] hover:border-[#E76F51] transition-colors pb-1">
+              View Curriculum
+            </Link>
+          </div>
         </div>
       </section>
+
     </div>
   );
 }
