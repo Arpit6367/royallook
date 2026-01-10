@@ -25,19 +25,19 @@ const dummyImages = [
 ];
 
 const galleryImages = [
-  { id: 1, src: dummyImages[0], category: "tournaments", title: "National Championship", desc: "The intense focus of the final round." },
-  { id: 2, src: dummyImages[1], category: "tournaments", title: "Beginner Bootcamp", desc: "First moves towards mastery." },
-  { id: 3, src: dummyImages[2], category: "tournaments", title: "Tactics Mastery", desc: "Solving complex puzzles together." },
-  { id: 4, src: dummyImages[3], category: "certificate", title: "FIDE Arbiter", desc: "Official certification ceremony." },
-  { id: 5, src: dummyImages[4], category: "certificate", title: "National Arbiter", desc: "Recognized excellence in officiating." },
-  { id: 6, src: dummyImages[5], category: "certificate", title: "Arena Master", desc: "Online dominance confirmed." },
-  { id: 7, src: dummyImages[6], category: "events", title: "Inter-School Cup", desc: "Schools clashing on the 64 squares." },
-  { id: 8, src: dummyImages[7], category: "events", title: "Summer Camp", desc: "Fun, friends, and chess." },
-  { id: 9, src: dummyImages[8], category: "events", title: "Simul Exhibition", desc: "One master, twenty challengers." },
-  { id: 10, src: dummyImages[9], category: "events", title: "Prize Giving", desc: "Winners take the stage." },
-  { id: 11, src: dummyImages[10], category: "events", title: "Analysis Room", desc: "Learning from mistakes." },
-  { id: 12, src: dummyImages[11], category: "events", title: "Grandmaster Visit", desc: "Inspiration from a legend." },
-  { id: 13, src: dummyImages[12], category: "events", title: "Community Day", desc: "Chess brings us together." },
+  { id: 1, src: dummyImages[0], category: "tournaments", title: "Victory Moment", desc: "" },
+  { id: 2, src: dummyImages[1], category: "tournaments", title: "Focus & Strategy", desc: "" },
+  { id: 3, src: dummyImages[2], category: "tournaments", title: "The Winning Move", desc: "" },
+  { id: 4, src: dummyImages[3], category: "certificate", title: "Certification Ceremony", desc: "" },
+  { id: 5, src: dummyImages[4], category: "certificate", title: "Award Recognition", desc: "" },
+  { id: 6, src: dummyImages[5], category: "certificate", title: "Master Achievement", desc: "" },
+  { id: 7, src: dummyImages[6], category: "events", title: "Academy Gathering", desc: "" },
+  { id: 8, src: dummyImages[7], category: "events", title: "Summer Training", desc: "" },
+  { id: 9, src: dummyImages[8], category: "events", title: "Grandmaster Session", desc: "" },
+  { id: 10, src: dummyImages[9], category: "events", title: "Prize Distribution", desc: "" },
+  { id: 11, src: dummyImages[10], category: "events", title: "Game Analysis", desc: "" },
+  { id: 12, src: dummyImages[11], category: "events", title: "Special Guest", desc: "" },
+  { id: 13, src: dummyImages[12], category: "events", title: "Community Event", desc: "" },
 ];
 
 export default function GalleryPage() {
@@ -254,7 +254,7 @@ export default function GalleryPage() {
 
                 <div className="pt-8 border-t border-[#E6E0D4] flex justify-between items-center">
                   <span className="text-xs font-bold text-[#5C5852]/50 uppercase tracking-widest">
-                    ChessPure Gallery
+                    Royal Look Gallery
                   </span>
                   <Button variant="ghost" size="icon" className="text-[#2D2A26] hover:bg-[#FDFBF7]">
                     <Share2 className="w-5 h-5" />

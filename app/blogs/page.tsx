@@ -119,9 +119,28 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] font-sans selection:bg-[#E76F51]/20 text-[#2D2A26]">
-
+      {/* 1. HERO: The Manifesto - Bold, Editorial Style */}
+      <section className="relative pt-32 pb-20 px-6 text-center overflow-hidden">
+        <div className="relative z-10 max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <span className="text-sm font-bold uppercase tracking-[0.2em] text-[#E76F51] mb-4 block">
+              Curriculum Roadmap
+            </span>
+            <h1 className="text-5xl md:text-7xl font-extrabold text-[#2D2A26] mb-6 leading-tight tracking-tight">
+              Choose Your <span className="italic font-serif text-[#E76F51]">Battlefield</span>
+            </h1>
+            <p className="text-xl text-[#5C5852] max-w-2xl mx-auto leading-relaxed">
+              A structured path from learning the rules to breaking them like a Master. Select your starting point.
+            </p>
+          </motion.div>
+        </div>
+      </section>
       {/* 1. HEADER: Minimalist Editorial */}
-      <header className="pt-32 pb-12 px-6 border-b border-[#E6E0D4]">
+      <header className="pt-22 pb-12 px-6 border-b border-[#E6E0D4]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">

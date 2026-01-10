@@ -112,7 +112,7 @@ export function TestimonialsSection() {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#2D2A26] mb-6 leading-tight"
           >
-            Student <span className="text-[#E76F51]">Success Stories</span>
+            Student <span className="text-[#E76F51]">Reviews</span>
             <div className="h-2 w-24 bg-[#FFDA44] mx-auto mt-4 rounded-full" />
           </motion.h2>
 
@@ -123,7 +123,7 @@ export function TestimonialsSection() {
             transition={{ delay: 0.2 }}
             className="text-[#5C5852] text-lg max-w-2xl mx-auto"
           >
-            Hear from parents and students who have experienced the transformative power of Chesspure Academy.
+            Hear from parents and students who have experienced the transformative power of Royal Look Academy.
           </motion.p>
         </div>
 

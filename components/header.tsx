@@ -32,6 +32,7 @@ export function Header() {
     { name: "About", href: "/about" },
     { name: "Courses", href: "/courses" },
     { name: "Gallery", href: "/gallery" },
+    { name: "Achievements", href: "/achievements" },
     { name: "Blogs", href: "/blogs" },
     { name: "Contact", href: "/contact" },
   ];
@@ -49,15 +50,21 @@ export function Header() {
 
             {/* Logo + Title */}
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-[#2D2A26] rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-300">
-                <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFDA44]" />
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
+                <img
+                  src="/logo.jpg"
+                  alt="Royal Look Chess Academy Logo"
+                  width={28}
+                  height={28}
+                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-[#2D2A26] tracking-tight leading-none font-serif group-hover:text-[#E76F51] transition-colors">
                   ROYAL LOOK
                 </span>
                 <span className="text-[10px] font-bold text-[#E76F51] tracking-[0.2em] uppercase mt-0.5">
-                  Academy
+                  Chess Academy
                 </span>
               </div>
             </Link>

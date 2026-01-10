@@ -32,9 +32,9 @@ export function Footer() {
 
   const socialLinks = [
     { icon: Facebook, href: "https://www.facebook.com/chessacademy", label: "Facebook" },
-    { icon: Twitter, href: "https://twitter.com/chesspure", label: "Twitter" },
-    { icon: Instagram, href: "https://instagram.com/chesspureacademy", label: "Instagram" },
-    { icon: Youtube, href: "https://youtube.com/@chesspureacademy", label: "YouTube" },
+    { icon: Twitter, href: "https://twitter.com/Royal Look", label: "Twitter" },
+    { icon: Instagram, href: "https://instagram.com/Royal Lookacademy", label: "Instagram" },
+    { icon: Youtube, href: "https://youtube.com/@Royal Lookacademy", label: "YouTube" },
   ];
 
   const quickLinks = [
@@ -42,7 +42,7 @@ export function Footer() {
     { name: "About", href: "/about" },
     { name: "Courses", href: "/courses" },
     { name: "Coaches", href: "/coaches" },
-    { name: "Events", href: "/events" },
+    { name: "Achievements", href: "/achievements" },
     { name: "Contact", href: "/contact" },
   ];
 
@@ -74,8 +74,13 @@ export function Footer() {
                 className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-transform duration-500 group-hover:rotate-12"
                 style={{ backgroundColor: THEME.text }}
               >
-                <Crown className="w-8 h-8" style={{ color: THEME.bg }} />
-              </div>
+                <img
+                  src="/logo.jpg"
+                  alt="Royal Look Chess Academy Logo"
+                  width={28}
+                  height={28}
+                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                />              </div>
               <div>
                 <h3 className="font-serif font-bold text-2xl leading-none tracking-tight">Royal Look<br /><span className="text-[#FFDA44] text-sm font-sans tracking-[0.2em] uppercase">Academy</span></h3>
               </div>

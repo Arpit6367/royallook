@@ -6,12 +6,14 @@ import { useEffect } from "react"
 
 // Your existing components
 import { HeroSection } from "@/components/hero-section"
-import { EventsPreview } from "@/components/events-preview"
-import { CTASection } from "@/components/demo-booking-cta"
 import { TestimonialsSection } from "@/components/testimonials-section"
 import { StatsSection } from "@/components/stats-section"
 import { WhyChessForKids } from "@/components/why"
 import { CoursesSection } from "@/components/courses-section"
+import { AchievementsSection } from "@/components/achievements-section"
+import { FaqSection } from "@/components/faq-section"
+import { WhyChooseUs } from "@/components/why-choose-us"
+import { HomeCTA } from "@/components/home-cta"
 
 export default function HomePage() {
   const { data: session, status } = useSession()
@@ -42,13 +44,17 @@ export default function HomePage() {
 
   // 2. If NOT logged in (Unauthenticated), show the Landing Page
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen py-10">
       <main>
         <HeroSection />
-        <CoursesSection/>
+        <CoursesSection />
         <StatsSection />
-        <WhyChessForKids/>
+        <WhyChessForKids />
+        <WhyChooseUs />
+        <AchievementsSection />
         <TestimonialsSection />
+        <FaqSection />
+        <HomeCTA />
       </main>
     </div>
   )

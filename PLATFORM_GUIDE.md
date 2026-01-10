@@ -1,1 +1,1 @@
-# Chesspure Academy
+# Royal Look Academy

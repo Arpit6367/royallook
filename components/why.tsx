@@ -96,7 +96,7 @@ export function WhyChessForKids() {
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const } },
   };
 
   return (
@@ -192,9 +192,9 @@ export function WhyChessForKids() {
                 className={`h-full ${isLast ? "md:col-span-2 lg:col-span-1" : ""}`}
               >
                 <div className={`
-                    h-full relative overflow-hidden rounded-[2rem] p-8 border hover:border-transparent transition-all duration-500
-                    bg-white hover:shadow-xl group
-                    ${b.border}
+                    h-full relative overflow-hidden rounded-[2rem] p-8 border-2 transition-all duration-500
+                    ${b.bg} hover:shadow-xl group
+                    hover:border-transparent border-[#E6E0D4]
                   `}>
 
                   {/* Hover Gradient Background */}

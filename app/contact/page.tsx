@@ -20,94 +20,11 @@ import {
   Clock,
   Send,
   CheckCircle,
-  ChevronDown,
-  MessageSquare,
   Globe,
   Coffee
 } from "lucide-react";
-
-// Brand Colors
-const primaryColor = "#5C1F1C";
-const accentColor = "#FFDA44";
-
-function FAQSection() {
-  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
-
-  const faqs = [
-    {
-      q: "What time are the classes?",
-      a: "We run classes on weekdays 4 PM – 8 PM and weekends 9 AM – 6 PM. Morning, afternoon and evening batches available.",
-    },
-    {
-      q: "Are there any pre-requisites?",
-      a: "No prior chess knowledge is required. Our beginner program can take you from knowing nothing to playing confidently.",
-    },
-    {
-      q: "Can I get a discount?",
-      a: "Yes! Quarterly plans give 10% off. We also offer sibling discounts and school partnership rates.",
-    },
-    {
-      q: "Who will take my classes?",
-      a: "All sessions are conducted by FIDE-rated coaches (2000+ ELO) with 8+ years of teaching experience.",
-    },
-    {
-      q: "Is there a weekend-only batch?",
-      a: "Absolutely – we have dedicated Saturday & Sunday batches for busy students.",
-    },
-  ];
-
-  return (
-    <section className="py-24 bg-[#F9F7F2] border-t border-[#E6E0D4]">
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <span className="text-sm font-bold uppercase tracking-widest text-[#E76F51] mb-2 block">The Rulebook</span>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#2D2A26]">Common Questions</h2>
-        </div>
-
-        <div className="space-y-4">
-          {faqs.map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-white border border-[#E6E0D4] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-            >
-              <button
-                onClick={() => setOpenFAQ(openFAQ === idx ? null : idx)}
-                className="w-full flex items-center justify-between p-6 text-left"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-full ${openFAQ === idx ? 'bg-[#E76F51]/10 text-[#E76F51]' : 'bg-[#FDFBF7] text-[#5C5852]'}`}>
-                    <MessageSquare className="w-5 h-5" />
-                  </div>
-                  <span className="text-lg font-bold text-[#2D2A26]">{item.q}</span>
-                </div>
-                <ChevronDown
-                  className={`w-5 h-5 text-[#5C5852] transition-transform duration-300 ${openFAQ === idx ? 'rotate-180' : ''}`}
-                />
-              </button>
-
-              <AnimatePresence>
-                {openFAQ === idx && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-6 pb-6 pt-0 pl-[4.5rem]">
-                      <p className="text-[#5C5852] leading-relaxed">
-                        {item.a}
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+import Link from "next/link";
+import { FaqSection } from "@/components/faq-section";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -135,8 +52,8 @@ export default function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const recipient = "contact@chesspure.com";
-    const mailSubject = encodeURIComponent(formData.subject || "Contact Inquiry - Chess Pure");
+    const recipient = "contact@Royal Look.com";
+    const mailSubject = encodeURIComponent(formData.subject || "Contact Inquiry - Royal Lokk");
     const bodyLines = [
       `Name: ${formData.name}`,
       `Email: ${formData.email}`,
@@ -322,7 +239,42 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <FAQSection />
+      {/* 3. MAP SECTION */}
+      <section className="h-[500px] w-full relative grayscale hover:grayscale-0 transition-all duration-700">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15200.0!2d83.3!3d17.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDQyJzAwLjAiTiA4M8KwMTgnMDAuMCJF!5e0!3m2!1sen!2sin!4v1620000000000!5m2!1sen!2sin"
+          width="100%"
+          height="100%"
+          style={{ border: 0 }}
+          allowFullScreen={true}
+          loading="lazy"
+          className="w-full h-full"
+        ></iframe>
+        <div className="absolute inset-0 pointer-events-none border-t-4 border-[#FFDA44]" />
+      </section>
+
+      {/* 4. SHARED FAQ SECTION */}
+      <FaqSection />
+
+      {/* 5. CTA SECTION */}
+      <section className="relative py-32 bg-white text-[#2D2A26] border-t border-[#E6E0D4] overflow-hidden">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-5xl md:text-7xl font-extrabold mb-8 leading-tight tracking-tight">
+            Stop Searching.<br />
+            <span className="text-[#E76F51]">Start Playing.</span>
+          </h2>
+          <p className="text-xl text-[#5C5852] mb-12 max-w-2xl mx-auto">
+            The board is waiting. Your first lesson is on us.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <Link href="/courses">
+              <Button className="h-16 px-10 rounded-full bg-[#E76F51] text-white text-lg font-bold hover:bg-[#2D2A26] transition-all duration-300 shadow-xl hover:shadow-[#E76F51]/30">
+                Explore Courses
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
 
     </div>
   );
