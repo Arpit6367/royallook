@@ -55,16 +55,13 @@ export function Footer() {
 
   return (
     <footer className="relative font-sans overflow-hidden" style={{ backgroundColor: THEME.bg, color: THEME.text }}>
-      {/* 1. TOP DECORATION */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#E76F51] via-[#FFDA44] to-[#E76F51] opacity-80" />
-
       {/* 2. BACKGROUND AMBIENCE */}
       <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-[#E76F51] rounded-full blur-[150px]" />
         <div className="absolute bottom-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30" />
       </div>
 
-      <div className="container mx-auto px-6 py-16 sm:py-24 relative z-10">
+      <div className="container mx-auto px-6 py-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
 
           {/* COLUMN 1: BRAND */}
@@ -162,7 +159,7 @@ export function Footer() {
               <div className="group flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-[#E76F51]/30 hover:bg-[#E76F51]/5 transition-all">
                 <Phone className="w-5 h-5 text-[#E76F51] mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-bold text-sm mb-1 group-hover:text-[#FFDA44] transition-colors">+91 00000 00000</p>
+                  <p className="font-bold text-sm mb-1 group-hover:text-[#FFDA44] transition-colors">+91 73560 26170</p>
                   <p className="text-xs opacity-50">Mon - Sun, 10 AM - 8 PM</p>
                 </div>
               </div>
@@ -178,8 +175,8 @@ export function Footer() {
               <div className="group flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-[#E76F51]/30 hover:bg-[#E76F51]/5 transition-all">
                 <MapPin className="w-5 h-5 text-[#E76F51] mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-bold text-sm mb-1 group-hover:text-[#FFDA44] transition-colors">Visakhapatnam, India</p>
-                  <p className="text-xs opacity-50">Andhra Pradesh</p>
+                  <p className="font-bold text-sm mb-1 group-hover:text-[#FFDA44] transition-colors">Kerala, India</p>
+                  <p className="text-xs opacity-50">Prarthana Nagar, Thekkumbhagam, Kannankulangara, Thrippunithura, Ernakulam, Kerala 682301</p>
                 </div>
               </div>
             </div>
@@ -189,10 +186,10 @@ export function Footer() {
         {/* BOTTOM BAR */}
         <div className="border-t border-white/10 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs opacity-40">
           <p className="text-center md:text-left">© {new Date().getFullYear()} Royal Look Chess Academy. All rights reserved. • India Time: {currentTime}</p>
-          <div className="flex gap-6">
+          {/* <div className="flex gap-6">
             <Link href="/terms" className="hover:text-[#FFDA44] hover:underline transition-colors">Terms & Conditions</Link>
             <Link href="/privacy" className="hover:text-[#FFDA44] hover:underline transition-colors">Privacy Policy</Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>

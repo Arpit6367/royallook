@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { FaqSection } from "@/components/faq-section";
+import Image from "next/image";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -70,15 +71,29 @@ export default function ContactPage() {
     setTimeout(() => setIsSubmitted(false), 5000);
   };
 
+
+  const dummyImages = [
+    "/image.jpg", "/image1.jpg", "/image13.jpg",
+    "/image3.jpg", "/image4.jpg", "/image5.jpg",
+    "/image6.jpg", "/image7.jpg", "/image13.jpg",
+    "/image9.jpg", "/image10.jpg", "/image11.jpg", "/image12.jpg"
+  ];
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] font-sans selection:bg-[#E76F51]/20">
 
       {/* 1. HERO: Get In Touch */}
       <section className="relative pt-32 pb-20 px-6 text-center overflow-hidden">
-        {/* Background Subtle Decor */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#E76F51]/5 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#FFDA44]/10 rounded-full blur-[80px] pointer-events-none" />
-
+        {/* Background "Film Strip" Effect */}
+        <div className="absolute inset-0 opacity-5 pointer-events-none overflow-hidden select-none">
+          <div className="grid grid-cols-4 gap-4 transform -rotate-12 scale-110">
+            {dummyImages.slice(0, 8).map((src, i) => (
+              <div key={i} className="aspect-square relative grayscale">
+                <Image src={src} alt="" fill className="object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="relative z-10 max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -113,8 +128,8 @@ export default function ContactPage() {
 
               <div className="space-y-8">
                 {[
-                  { icon: MapPin, title: "Our Academy", lines: ["Plot No 401, Green Valley", "Yendada, Vizag - 530045"] },
-                  { icon: Phone, title: "Direct Line", lines: ["+91 00000 00000", "WhatsApp Support Available"] },
+                  { icon: MapPin, title: "Our Academy", lines: [" Prarthana Nagar, Thekkumbhagam, Kannankulangara, Thrippunithura, Ernakulam", "Kerala - 682301"] },
+                  { icon: Phone, title: "Direct Line", lines: ["+91 73560 26170", "WhatsApp Support Available"] },
                   { icon: Mail, title: "Digital Mail", lines: ["contact@royallook.com", "support@royallook.com"] },
                   { icon: Clock, title: "Office Hours", lines: ["Mon-Sun: 10 AM - 8 PM", "Walk-ins Welcome"] },
                 ].map((item, i) => (

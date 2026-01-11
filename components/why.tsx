@@ -1,117 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useAnimation } from "framer-motion";
-import { Card } from "@/components/ui/card";
-import { Brain, Target, Lightbulb, Zap, BookOpen, Trophy, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { Brain, Target, Lightbulb, Zap, BookOpen, Sparkles } from "lucide-react";
 
-// Brand Colors & Styles
-const bgWarm = "#FDFBF7";
-const primaryColor = "#5C1F1C"; // Dark Red
-const accentColor = "#E76F51";  // Burnt Orange
-const goldColor = "#FFDA44";    // Golden Yellow
-const fontFamily = "'Poppins', 'Montserrat', 'Nunito', sans-serif";
-
-const smallBenefits = [
-  { icon: Brain, title: "Develops Memory", color: "text-[#E76F51]" },
-  { icon: Target, title: "Logical Thinking", color: "text-[#2A9D8F]" },
-  { icon: Zap, title: "Concentration", color: "text-[#E9C46A]" },
-  { icon: Lightbulb, title: "Creativity", color: "text-[#F4A261]" },
-  { icon: BookOpen, title: "School Grades", color: "text-[#264653]" },
-];
-
-const detailedBenefits = [
+const benefits = [
   {
-    icon: Trophy,
-    title: "Develops Memory",
-    description: "Chess requires players to remember moves, patterns, and strategies, significantly boosting memory retention.",
-    bg: "bg-[#5C1F1C]/5",
-    border: "border-[#5C1F1C]/10",
-    iconBg: "bg-[#5C1F1C]/10",
-    iconColor: "text-[#5C1F1C]",
+    icon: Brain,
+    title: "Memory Power",
+    description: "Chess requires remembering moves, patterns, and strategies, significantly boosting memory retention.",
+    color: "#E76F51",
   },
   {
     icon: Target,
     title: "Logical Thinking",
-    description: "Players analyze positions and anticipate opponent moves, fostering critical logical reasoning skills.",
-    bg: "bg-[#E76F51]/5",
-    border: "border-[#E76F51]/10",
-    iconBg: "bg-[#E76F51]/10",
-    iconColor: "text-[#E76F51]",
+    description: "Players analyze positions and anticipate moves, fostering critical logical reasoning skills.",
+    color: "#2A9D8F",
   },
   {
     icon: Zap,
-    title: "Improves Concentration",
-    description: "The intense focus required to play chess helps children block out distractions and maintain mental clarity.",
-    bg: "bg-[#F4A261]/5",
-    border: "border-[#F4A261]/10",
-    iconBg: "bg-[#F4A261]/10",
-    iconColor: "text-[#F4A261]",
+    title: "Focus & Concentration",
+    description: "The intense focus required helps children block out distractions and maintain mental clarity.",
+    color: "#FFDA44",
   },
   {
     icon: Lightbulb,
-    title: "Imagination & Creativity",
-    description: "Chess sparks creativity as players envision strategic possibilities and devise innovative plans on the board.",
-    bg: "bg-[#2A9D8F]/5",
-    border: "border-[#2A9D8F]/10",
-    iconBg: "bg-[#2A9D8F]/10",
-    iconColor: "text-[#2A9D8F]",
+    title: "Creativity",
+    description: "Chess sparks creativity as players envision strategic possibilities and devise innovative plans.",
+    color: "#F4A261",
   },
   {
-    icon: Brain,
-    title: "Problem Solving",
-    description: "Every game is a puzzle. Kids learn to evaluate options and make decisions under pressure, a vital life skill.",
-    bg: "bg-[#264653]/5",
-    border: "border-[#264653]/10",
-    iconBg: "bg-[#264653]/10",
-    iconColor: "text-[#264653]",
+    icon: BookOpen,
+    title: "Academic Performance",
+    description: "Studies show chess players perform better in math, reading, and problem-solving at school.",
+    color: "#264653",
   },
 ];
 
 export function WhyChessForKids() {
-  const [isVisible, setIsVisible] = useState(false);
-  const controls = useAnimation();
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          controls.start("visible");
-        }
-      },
-      { threshold: 0.2 }
-    );
-
-    const el = document.getElementById("why-chess-section");
-    if (el) observer.observe(el);
-
-    return () => observer.disconnect();
-  }, [controls]);
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const } },
-  };
-
   return (
-    <section
-      id="why-chess-section"
-      className="py-20 lg:py-24 overflow-hidden relative"
-      style={{ backgroundColor: bgWarm, fontFamily }}
-    >
+    <section className="py-24 relative overflow-hidden" style={{ backgroundColor: "#FDFBF7" }}>
       {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-[#E76F51]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#FFDA44]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#E76F51]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#FFDA44]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-
-        {/* Heading */}
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Header */}
         <div className="text-center mb-16">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -129,9 +62,9 @@ export function WhyChessForKids() {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#2D2A26] mb-6 leading-tight"
           >
-            Why Chess <span className="text-[#E76F51]">for Kids?</span>
-            <div className="h-2 w-24 bg-[#FFDA44] mx-auto mt-4 rounded-full" />
+            Why Chess <span className="text-[#E76F51]">For Kids?</span>
           </motion.h2>
+          <div className="h-1.5 w-24 bg-[#FFDA44] mx-auto rounded-full mb-6" />
 
           <motion.p
             initial={{ opacity: 0 }}
@@ -140,86 +73,57 @@ export function WhyChessForKids() {
             transition={{ delay: 0.2 }}
             className="text-[#5C5852] text-lg max-w-2xl mx-auto"
           >
-            More than just a game, chess is a powerful tool for intellectual growth, character building, and life skills.
+            More than just a game, chess is a powerful tool for intellectual growth and life skills.
           </motion.p>
         </div>
 
-        {/* Small Benefit Icons Row */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-20 max-w-6xl mx-auto"
-        >
-          {smallBenefits.map((b, i) => {
-            const Icon = b.icon;
+        {/* Benefits Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          {benefits.map((benefit, index) => {
+            const Icon = benefit.icon;
             return (
               <motion.div
-                key={i}
-                variants={itemVariants}
-                whileHover={{ y: -5, scale: 1.02 }}
-                className="flex flex-col items-center text-center p-6 rounded-2xl bg-white border border-[#E6E0D4] shadow-sm hover:shadow-md transition-all duration-300 group"
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -8 }}
+                className={`group ${index === benefits.length - 1 ? "md:col-span-2 lg:col-span-1" : ""}`}
               >
-                <div className="mb-4 p-3 bg-[#FDFBF7] rounded-full group-hover:bg-[#FFDA44]/20 transition-colors">
-                  <Icon className={`w-6 h-6 ${b.color}`} />
-                </div>
-                <p className="text-sm font-bold text-[#2D2A26] leading-tight">
-                  {b.title}
-                </p>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+                <div className="h-full bg-white rounded-[2rem] p-8 border border-[#E6E0D4] shadow-sm hover:shadow-xl hover:border-transparent transition-all duration-500 relative overflow-hidden">
+                  {/* Accent Bar */}
+                  <div
+                    className="absolute top-0 left-0 right-0 h-1 rounded-t-[2rem]"
+                    style={{ backgroundColor: benefit.color }}
+                  />
 
-        {/* Detailed Benefit Cards */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
-        >
-          {detailedBenefits.map((b, i) => {
-            const Icon = b.icon;
-            // Span 2 columns for the last item if odd count, for balance
-            const isLast = i === detailedBenefits.length - 1;
+                  {/* Hover Gradient */}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-500"
+                    style={{ background: `linear-gradient(135deg, ${benefit.color}40, transparent)` }}
+                  />
 
-            return (
-              <motion.div
-                key={i}
-                variants={itemVariants}
-                className={`h-full ${isLast ? "md:col-span-2 lg:col-span-1" : ""}`}
-              >
-                <div className={`
-                    h-full relative overflow-hidden rounded-[2rem] p-8 border-2 transition-all duration-500
-                    ${b.bg} hover:shadow-xl group
-                    hover:border-transparent border-[#E6E0D4]
-                  `}>
-
-                  {/* Hover Gradient Background */}
-                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br from-white ${b.bg.replace('/5', '/20')}`} />
-
-                  <div className="relative z-10 flex flex-col items-start gap-5">
-                    <div className={`p-4 rounded-2xl ${b.iconBg} group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className={`w-8 h-8 ${b.iconColor}`} />
+                  <div className="relative z-10">
+                    <div
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"
+                      style={{ backgroundColor: `${benefit.color}15` }}
+                    >
+                      <Icon className="w-7 h-7" style={{ color: benefit.color }} />
                     </div>
 
-                    <div>
-                      <h3 className="text-xl font-bold text-[#2D2A26] mb-3 group-hover:text-[#5C1F1C] transition-colors">
-                        {b.title}
-                      </h3>
-                      <p className="text-[#5C5852] leading-relaxed font-medium text-sm">
-                        {b.description}
-                      </p>
-                    </div>
+                    <h3 className="text-xl font-bold text-[#2D2A26] mb-3 group-hover:text-[#5C1F1C] transition-colors">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-[#5C5852] leading-relaxed text-sm">
+                      {benefit.description}
+                    </p>
                   </div>
                 </div>
               </motion.div>
             );
           })}
-        </motion.div>
-
+        </div>
       </div>
     </section>
   );

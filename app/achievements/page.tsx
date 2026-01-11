@@ -90,6 +90,13 @@ export default function AchievementsPage() {
         { id: "academy", name: "Academy", icon: Trophy },
     ];
 
+    const dummyImages = [
+        "/image.jpg", "/image1.jpg", "/image13.jpg",
+        "/image3.jpg", "/image4.jpg", "/image5.jpg",
+        "/image6.jpg", "/image7.jpg", "/image13.jpg",
+        "/image9.jpg", "/image10.jpg", "/image11.jpg", "/image12.jpg"
+    ];
+
     const filteredAchievements =
         selectedCategory === "all"
             ? achievements
@@ -100,6 +107,16 @@ export default function AchievementsPage() {
 
             {/* 1. HERO */}
             <section className="relative pt-32 pb-20 px-6 text-center overflow-hidden">
+                {/* Background "Film Strip" Effect */}
+                <div className="absolute inset-0 opacity-5 pointer-events-none overflow-hidden select-none">
+                    <div className="grid grid-cols-4 gap-4 transform -rotate-12 scale-110">
+                        {dummyImages.slice(0, 8).map((src, i) => (
+                            <div key={i} className="aspect-square relative grayscale">
+                                <Image src={src} alt="" fill className="object-cover" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
                 <div className="relative z-10 max-w-4xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

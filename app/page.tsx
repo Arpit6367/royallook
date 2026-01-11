@@ -48,7 +48,7 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <CoursesSection />
-        <StatsSection />
+        {/* <StatsSection /> */}
         <WhyChessForKids />
         <WhyChooseUs />
         <AchievementsSection />
