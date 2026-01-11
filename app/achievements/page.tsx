@@ -15,92 +15,22 @@ import {
     Calendar as CalendarIcon,
     Users,
     Lightbulb,
-    Target
+    Target,
+    ArrowRight,
+    Brain,
+    Sparkles
 } from "lucide-react";
-import { format } from "date-fns";
 import { AchievementsSection } from "@/components/achievements-section";
 import { TestimonialsSection } from "@/components/testimonials-section";
 import { Card } from "@/components/ui/card";
 
 export default function AchievementsPage() {
-    const [selectedCategory, setSelectedCategory] = useState("all");
-
-    const achievements = [
-        {
-            id: 1,
-            title: "State Championship Win",
-            category: "tournament",
-            date: "2025-12-20",
-            description: "Our student Rahul secured 1st place in the Under-14 category at the Royal State Open with a perfect score of 9/9.",
-            image: "/blog-1.jpeg",
-            award: "Gold Medal + Trophy"
-        },
-        {
-            id: 2,
-            title: "New Grandmaster Title",
-            category: "title",
-            date: "2025-11-15",
-            description: "Coach Rajesh Kumar achieved his final GM norm at the International Chess Festival, becoming the city's first Grandmaster.",
-            image: "/blog-2.jpg",
-            award: "Grandmaster Title"
-        },
-        {
-            id: 3,
-            title: "National Team Selection",
-            category: "selection",
-            date: "2025-10-05",
-            description: "Three of our academy students were selected to represent the state in the upcoming National Juniors Championship.",
-            image: "/blog-3.webp",
-            award: "State Team Jersey"
-        },
-        {
-            id: 4,
-            title: "Best Academy Award",
-            category: "academy",
-            date: "2025-09-12",
-            description: "Royal Look Academy was voted 'Best Chess Academy' in the region for the third consecutive year.",
-            image: "/blog-4.png",
-            award: "Excellence Award"
-        },
-        {
-            id: 5,
-            title: "Inter-School Champions",
-            category: "tournament",
-            date: "2025-08-30",
-            description: "Our junior team swept the Inter-School Chess Championship, winning gold in all three age categories.",
-            image: "/blog-5.jpg",
-            award: "Team Trophy"
-        },
-        {
-            id: 6,
-            title: "Rising Star: Ananya",
-            category: "student",
-            date: "2025-08-15",
-            description: "8-year-old Ananya defeated a rated player (1800 ELO) in a simul exhibition, showing incredible promise.",
-            image: "/blog-1.jpeg",
-            award: "Young Achiever"
-        },
-    ];
-
-    const categories = [
-        { id: "all", name: "All Achievements", icon: Trophy },
-        { id: "tournament", name: "Tournaments", icon: Medal },
-        { id: "title", name: "Titles", icon: Crown },
-        { id: "student", name: "Student Success", icon: Star },
-        { id: "academy", name: "Academy", icon: Trophy },
-    ];
-
     const dummyImages = [
         "/image.jpg", "/image1.jpg", "/image13.jpg",
         "/image3.jpg", "/image4.jpg", "/image5.jpg",
         "/image6.jpg", "/image7.jpg", "/image13.jpg",
         "/image9.jpg", "/image10.jpg", "/image11.jpg", "/image12.jpg"
     ];
-
-    const filteredAchievements =
-        selectedCategory === "all"
-            ? achievements
-            : achievements.filter((item) => item.category === selectedCategory);
 
     return (
         <div className="min-h-screen bg-[#FDFBF7] font-sans selection:bg-[#E76F51]/20">
@@ -139,144 +69,151 @@ export default function AchievementsPage() {
             {/* 2. SHARED ACHIEVEMENTS SECTION (Stats) */}
             <AchievementsSection />
 
-            {/* 3. MAIN HALL OF FAME CONTENT */}
-            <section className="py-16 px-6 bg-white" id="hall-of-fame">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-[#2D2A26]">Latest Victories</h2>
-                    </div>
+            {/* 3. MENTORSHIP SECTION: The Master's Path */}
+            <section className="py-32 px-6 bg-white relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none">
+                    <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#E76F51] rounded-full blur-[150px]" />
+                </div>
 
-                    {/* Filters */}
-                    <div className="sticky top-20 z-40 bg-white/80 backdrop-blur-md border-y border-[#E6E0D4] py-4 mb-12">
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full md:w-auto pb-2 md:pb-0 justify-center md:justify-start">
-                                {categories.map((cat) => {
-                                    const Icon = cat.icon;
-                                    const isActive = selectedCategory === cat.id;
-                                    return (
-                                        <button
-                                            key={cat.id}
-                                            onClick={() => setSelectedCategory(cat.id)}
-                                            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 whitespace-nowrap ${isActive
-                                                ? "bg-[#2D2A26] text-white shadow-lg scale-105"
-                                                : "bg-white border border-[#E6E0D4] text-[#5C5852] hover:border-[#E76F51] hover:text-[#E76F51]"
-                                                }`}
-                                        >
-                                            <Icon className="w-4 h-4" />
-                                            {cat.name}
-                                        </button>
-                                    )
-                                })}
-                            </div>
+                <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-20 relative z-10">
+                    <div className="w-full lg:w-1/2 space-y-10">
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                        >
+                            <span className="text-sm font-black uppercase tracking-[0.3em] text-[#E76F51] mb-6 block">Individual Excellence</span>
+                            <h2 className="text-5xl md:text-6xl font-extrabold text-[#2D2A26] leading-tight">
+                                Mentorship of <br />
+                                <span className="text-[#E76F51]">Grandmasters</span>
+                            </h2>
+                            <div className="h-2 w-24 bg-[#FFDA44] rounded-full mt-6" />
+                        </motion.div>
+
+                        <p className="text-xl text-[#5C5852] leading-relaxed max-w-xl">
+                            Our achievements are a direct reflection of our coaching philosophy. We don't just teach moves; we cultivate champions through personalized, deep-dive mentorship that transforms raw talent into strategic dominance.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {[
+                                { icon: Crown, title: "1-on-1 GM sessions", desc: "Direct learning from Grandmasters." },
+                                { icon: Target, title: "Customized Repertoire", desc: "Openings built for your style." },
+                                { icon: Brain, title: "Psychological Prep", desc: "Mental toughness for tournaments." },
+                                { icon: Sparkles, title: "Game Analysis", desc: "Engine-backed move reviews." },
+                            ].map((item, i) => (
+                                <div key={i} className="space-y-3">
+                                    <div className="w-12 h-12 rounded-2xl bg-[#FDFBF7] border border-[#E6E0D4] flex items-center justify-center text-[#E76F51] shadow-sm">
+                                        <item.icon className="w-6 h-6" />
+                                    </div>
+                                    <h4 className="font-bold text-[#2D2A26]">{item.title}</h4>
+                                    <p className="text-sm text-[#5C5852]">{item.desc}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {filteredAchievements.map((item, idx) => (
-                            <motion.div
-                                key={item.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                            >
-                                <div className="group relative bg-white rounded-3xl border border-[#E6E0D4] shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col sm:flex-row h-full">
-                                    <div className="relative w-full sm:w-2/5 h-48 sm:h-auto overflow-hidden">
-                                        <img
-                                            src={item.image}
-                                            alt={item.title}
-                                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                        <div className="absolute bottom-4 left-4 text-white">
-                                            <Badge className="bg-[#FFDA44] text-[#2D2A26] hover:bg-[#FFDA44] border-none font-bold">
-                                                {item.category}
-                                            </Badge>
-                                        </div>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        className="w-full lg:w-1/2 relative"
+                    >
+                        <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden border-[12px] border-[#FDFBF7] shadow-2xl">
+                            <Image src="/image5.jpg" alt="Mentorship" fill className="object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#5C1F1C]/40 to-transparent" />
+
+                            {/* Floating Card */}
+                            <div className="absolute bottom-10 left-10 right-10 p-8 bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-12 h-12 rounded-full bg-[#FFDA44] flex items-center justify-center text-[#5C1F1C]">
+                                        <Trophy className="w-6 h-6" />
                                     </div>
-                                    <div className="relative w-full sm:w-3/5 p-6 sm:p-8 flex flex-col justify-between">
-                                        <div>
-                                            <h3 className="text-2xl font-bold text-[#2D2A26] mb-2 group-hover:text-[#E76F51] transition-colors line-clamp-2">
-                                                {item.title}
-                                            </h3>
-                                            <div className="flex items-center gap-3 text-sm text-[#5C5852] font-medium mb-4">
-                                                <span className="flex items-center gap-1.5"><CalendarIcon className="w-4 h-4" /> {format(new Date(item.date), "MMM d, yyyy")}</span>
-                                            </div>
-                                            <p className="text-[#5C5852]/80 text-sm leading-relaxed mb-6 line-clamp-3">
-                                                {item.description}
-                                            </p>
+                                    <div>
+                                        <p className="text-xs font-black uppercase tracking-widest text-[#5C5852]">Success Rate</p>
+                                        <p className="text-2xl font-black text-[#2D2A26]">100% Guaranteed</p>
+                                    </div>
+                                </div>
+                                <p className="text-[#5C5852] text-sm font-medium italic">"Every student receives a personalized development plan updated weekly."</p>
+                            </div>
+                        </div>
+
+                        {/* Decorative circle */}
+                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#FFDA44] rounded-full -z-10 blur-2xl opacity-30" />
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* 4. LEARNING ENVIRONMENT: Where Growth Happens */}
+            <section className="py-32 px-6 bg-[#FDFBF7] relative overflow-hidden">
+                <div className="max-w-7xl mx-auto relative z-10">
+                    <div className="text-center mb-24">
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                        >
+                            <span className="text-sm font-black uppercase tracking-[0.3em] text-[#E76F51] mb-6 block">The Academy Environment</span>
+                            <h2 className="text-5xl md:text-7xl font-extrabold text-[#2D2A26]">
+                                Where <span className="text-[#E76F51]">Growth</span> Happens
+                            </h2>
+                            <p className="text-lg text-[#5C5852] mt-6 max-w-2xl mx-auto">
+                                We believe the right environment is 50% of the training. Our academy is designed to inspire focus and simulate elite tournament conditions.
+                            </p>
+                        </motion.div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                        {[
+                            {
+                                icon: Users,
+                                title: "Peer Collaboration",
+                                desc: "A vibrant ecosystem where students challenge, debate, and grow together.",
+                                bg: "bg-[#FFDA44]/5",
+                                borderColor: "border-[#FFDA44]/20",
+                                iconColor: "text-[#FFDA44]"
+                            },
+                            {
+                                icon: Lightbulb,
+                                title: "Deep Analysis Hub",
+                                desc: "Advanced DGT boards and engine-backed analysis stations for tactical precision.",
+                                bg: "bg-[#E76F51]/5",
+                                borderColor: "border-[#E76F51]/20",
+                                iconColor: "text-[#E76F51]"
+                            },
+                            {
+                                icon: Target,
+                                title: "Tournament Arena",
+                                desc: "Professional chess environment simulated to build resilience under clock pressure.",
+                                bg: "bg-[#2A9D8F]/5",
+                                borderColor: "border-[#2A9D8F]/20",
+                                iconColor: "text-[#2A9D8F]"
+                            },
+                        ].map((item, i) => (
+                            <motion.div
+                                key={i}
+                                whileHover={{ y: -15 }}
+                                className="group h-full"
+                            >
+                                <div className={`h-full p-10 bg-white rounded-[3rem] border-2 transition-all duration-500 overflow-hidden relative shadow-sm group-hover:shadow-2xl ${item.borderColor} group-hover:border-transparent`}>
+                                    {/* Hover Reveal Background */}
+                                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${item.bg}`} />
+
+                                    <div className="relative z-10">
+                                        <div className={`w-20 h-20 rounded-[2rem] bg-[#FDFBF7] border border-[#E6E0D4] flex items-center justify-center mb-10 group-hover:scale-110 group-hover:bg-white transition-all duration-500 shadow-md`}>
+                                            <item.icon className={`w-10 h-10 ${item.iconColor}`} />
                                         </div>
-                                        <div className="mt-auto pt-4 border-t border-[#E6E0D4] flex items-center justify-between">
-                                            <div className="flex items-center gap-2 text-[#E76F51] font-bold text-sm">
-                                                <Trophy className="w-4 h-4" />
-                                                {item.award}
-                                            </div>
+                                        <h3 className="text-2xl font-black text-[#2D2A26] mb-4">{item.title}</h3>
+                                        <p className="text-[#5C5852] font-medium leading-relaxed group-hover:text-[#2D2A26] transition-colors">
+                                            {item.desc}
+                                        </p>
+
+                                        <div className="mt-10 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#E76F51] opacity-0 group-hover:opacity-100 transition-all">
+                                            <span>Explore Facility</span>
+                                            <ArrowRight className="w-4 h-4" />
                                         </div>
                                     </div>
                                 </div>
                             </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* 4. MENTORSHIP SECTION */}
-            <section className="py-24 px-6 bg-[#FDFBF7]">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
-                    <div className="w-full md:w-1/2 space-y-8 order-2 md:order-1">
-                        <span className="text-sm font-bold uppercase tracking-wider text-[#E76F51]">World-Class Coaching</span>
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-[#2D2A26]">
-                            Guided by <span className="text-[#E76F51]">Masters</span>
-                        </h2>
-                        <p className="text-xl text-[#5C5852] leading-relaxed">
-                            Our achievements are a direct reflection of our coaching philosophy. We don't just teach moves; we cultivate champions through personalized mentorship from FIDE-rated coaches and Grandmasters.
-                        </p>
-                        <ul className="space-y-4">
-                            {[
-                                "1-on-1 Grandmaster Sessions",
-                                "Personalized Opening Reportoire",
-                                "Psychological Match Preparation",
-                            ].map((item, i) => (
-                                <li key={i} className="flex items-center gap-3 text-[#2D2A26] font-bold">
-                                    <div className="w-8 h-8 rounded-full bg-[#FFDA44]/20 flex items-center justify-center">
-                                        <Medal className="w-4 h-4 text-[#2D2A26]" />
-                                    </div>
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                    <div className="w-full md:w-1/2 order-1 md:order-2">
-                        <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl skew-y-3 border-4 border-white">
-                            <Image src="/image5.jpg" alt="Mentorship" fill className="object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-tr from-[#E76F51]/20 to-transparent" />
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* 5. LEARNING ENVIRONMENT SECTION */}
-            <section className="py-24 px-6 bg-white">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-16">
-                        <span className="text-sm font-bold uppercase tracking-wider text-[#E76F51]">The Atmosphere</span>
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-[#2D2A26] mt-2">
-                            Where <span className="text-[#E76F51]">Growth</span> Happens
-                        </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {[
-                            { icon: Users, title: "Peer Learning", desc: "A collaborative environment where students challenge and learn from each other every day." },
-                            { icon: Lightbulb, title: "Analysis Labs", desc: "Dedicated spaces and tools for deep diving into game analysis and engine preparation." },
-                            { icon: Target, title: "Pro-Level Setup", desc: "Train on professional DGT boards and clocks to simulate real tournament pressure." },
-                        ].map((item, i) => (
-                            <Card key={i} className="p-8 bg-[#FDFBF7] border-none hover:bg-[#E76F51] hover:text-white transition-all duration-300 group rounded-[2rem]">
-                                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                                    <item.icon className="w-7 h-7 text-[#E76F51]" />
-                                </div>
-                                <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-                                <p className="opacity-80 leading-relaxed font-medium">{item.desc}</p>
-                            </Card>
                         ))}
                     </div>
                 </div>
